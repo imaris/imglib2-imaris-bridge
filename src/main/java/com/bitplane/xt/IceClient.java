@@ -1,12 +1,12 @@
 package com.bitplane.xt;
 
+import Ice.InitializationData;
+import Ice.Properties;
+import ImarisServer.IServerPrx;
+import ImarisServer.IServerPrxHelper;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-
-import Ice.InitializationData;
-import Ice.Properties;
-import ImarisServer.*;
 
 public class IceClient {
 	Ice.Communicator mCommunicator = null;

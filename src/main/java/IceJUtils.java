@@ -1,15 +1,19 @@
-import java.awt.image.*;
-import java.util.LinkedList;
-import java.util.List;
-
-import ij.*;
+import Imaris.IApplicationPrx;
+import Imaris.IDataSetPrx;
+import Imaris.cColorTable;
+import Imaris.tType;
+import ij.CompositeImage;
+import ij.ImagePlus;
+import ij.LookUpTable;
+import ij.WindowManager;
 import ij.gui.NewImage;
 import ij.measure.Calibration;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
-import Ice.FloatHolder;
-import Imaris.*;
+import java.awt.image.IndexColorModel;
+import java.util.LinkedList;
+import java.util.List;
 
 class IceJUtils {
 
@@ -44,10 +48,10 @@ class IceJUtils {
 		ImagePlus vImage = null;
 
 		String vName = aDataSet.GetParameter("Image", "Name");
-    if (!vName.startsWith(aFileName)) {
-      String vTmp = vName;
-      vName = aFileName + " - " + vTmp;
-    }
+		if (!vName.startsWith(aFileName)) {
+			String vTmp = vName;
+			vName = aFileName + " - " + vTmp;
+		}
 		if (aSizeC != aDataSet.GetSizeC()) {
 			vName += " Ch " + (aBeginC + 1);
 		}
@@ -58,7 +62,7 @@ class IceJUtils {
 				vImage = NewImage.createRGBImage(vName, vSizeX, vSizeY, vSizeZCT / 3, NewImage.FILL_BLACK);
 				vImage.setDimensions(1, vSizeZ, vSizeT);
 				ImageProcessor vProcessor = vImage.getProcessor();
-				ColorProcessor vColorProcessor = (ColorProcessor)vProcessor;
+				ColorProcessor vColorProcessor = (ColorProcessor) vProcessor;
 				for (int vIndexT = 0; vIndexT < vSizeT; vIndexT++) {
 					for (int vIndexZ = 0; vIndexZ < vSizeZ; vIndexZ++) {
 						byte[] vR = aDataSet.GetDataSubVolumeAs1DArrayBytes(0, 0, vIndexZ, 0, vIndexT, 0, 0, 1);
@@ -200,7 +204,7 @@ class IceJUtils {
 		vDataSet.SetParameter("Image", "Name", aImage.getTitle());
 		if (vType == ImagePlus.COLOR_RGB) {
 			RecreateDataSet(vDataSet, tType.eTypeUInt8, vSizeX, vSizeY, vSizeZ, vSizeC * 3, vSizeT);
-			ColorProcessor vColorProcessor = (ColorProcessor)vProcessor;
+			ColorProcessor vColorProcessor = (ColorProcessor) vProcessor;
 			int vSizeXY = vSizeX * vSizeY;
 			byte[] vR = new byte[vSizeXY];
 			byte[] vG = new byte[vSizeXY];
@@ -222,7 +226,7 @@ class IceJUtils {
 					for (int vIndexC = 0; vIndexC < vSizeC; vIndexC++) {
 						aImage.setPosition(vIndexC + 1, vIndexZ + 1, vIndexT + 1);
 						//vIndexC + vIndexZ * vSizeC + vIndexT * vSizeC * vSizeZ + 1);
-						vDataSet.SetDataSubVolumeAs1DArrayBytes((byte[])vProcessor.getPixels(), 0, 0, vIndexZ, vIndexC, vIndexT, 0, 0, 1);
+						vDataSet.SetDataSubVolumeAs1DArrayBytes((byte[]) vProcessor.getPixels(), 0, 0, vIndexZ, vIndexC, vIndexT, 0, 0, 1);
 					}
 				}
 			}
@@ -233,7 +237,7 @@ class IceJUtils {
 				for (int vIndexZ = 0; vIndexZ < vSizeZ; vIndexZ++) {
 					for (int vIndexC = 0; vIndexC < vSizeC; vIndexC++) {
 						aImage.setPosition(vIndexC + 1, vIndexZ + 1, vIndexT + 1);
-						vDataSet.SetDataSubVolumeAs1DArrayShorts((short[])vProcessor.getPixels(), 0, 0, vIndexZ, vIndexC, vIndexT, 0, 0, 1);
+						vDataSet.SetDataSubVolumeAs1DArrayShorts((short[]) vProcessor.getPixels(), 0, 0, vIndexZ, vIndexC, vIndexT, 0, 0, 1);
 					}
 				}
 			}
@@ -244,19 +248,18 @@ class IceJUtils {
 				for (int vIndexZ = 0; vIndexZ < vSizeZ; vIndexZ++) {
 					for (int vIndexC = 0; vIndexC < vSizeC; vIndexC++) {
 						aImage.setPosition(vIndexC + 1, vIndexZ + 1, vIndexT + 1);
-						vDataSet.SetDataSubVolumeAs1DArrayFloats((float[])vProcessor.getPixels(), 0, 0, vIndexZ, vIndexC, vIndexT, 0, 0, 1);
+						vDataSet.SetDataSubVolumeAs1DArrayFloats((float[]) vProcessor.getPixels(), 0, 0, vIndexZ, vIndexC, vIndexT, 0, 0, 1);
 					}
 				}
 			}
 		}
-    aImage.setPosition(1, 1, 1);
+		aImage.setPosition(1, 1, 1);
 		ColorsToDataSet(aImage, vDataSet);
 		ParametersToDataSet(aImage, vDataSet);
 		return vDataSet;
 	}
 
-	private static void RecreateDataSet(IDataSetPrx aDataSet, tType aType,
-			int aSizeX, int aSizeY, int aSizeZ, int aSizeC, int aSizeT) throws Imaris.Error {
+	private static void RecreateDataSet(IDataSetPrx aDataSet, tType aType, int aSizeX, int aSizeY, int aSizeZ, int aSizeC, int aSizeT) throws Imaris.Error {
 		if (aDataSet.GetType() == aType) {
 			aDataSet.Resize(0, aSizeX, 0, aSizeY, 0, aSizeZ, 0, aSizeC, 0, aSizeT);
 		}
@@ -269,11 +272,11 @@ class IceJUtils {
 		int vType = aImage.getType();
 		if (vType == ImagePlus.COLOR_RGB) {
 			aDataSet.SetChannelColorRGBA(0, 255);
-			aDataSet.SetChannelColorRGBA(1, 255*256);
-			aDataSet.SetChannelColorRGBA(2, 255*256*256);
-			aDataSet.SetChannelRange(0, (float)aImage.getDisplayRangeMin(), (float)aImage.getDisplayRangeMax());
-			aDataSet.SetChannelRange(1, (float)aImage.getDisplayRangeMin(), (float)aImage.getDisplayRangeMax());
-			aDataSet.SetChannelRange(2, (float)aImage.getDisplayRangeMin(), (float)aImage.getDisplayRangeMax());
+			aDataSet.SetChannelColorRGBA(1, 255 * 256);
+			aDataSet.SetChannelColorRGBA(2, 255 * 256 * 256);
+			aDataSet.SetChannelRange(0, (float) aImage.getDisplayRangeMin(), (float) aImage.getDisplayRangeMax());
+			aDataSet.SetChannelRange(1, (float) aImage.getDisplayRangeMin(), (float) aImage.getDisplayRangeMax());
+			aDataSet.SetChannelRange(2, (float) aImage.getDisplayRangeMin(), (float) aImage.getDisplayRangeMax());
 		}
 		else {
 			int vSizeC = aImage.getNChannels();
@@ -287,8 +290,8 @@ class IceJUtils {
 				else {
 					aDataSet.SetChannelColorTable(vIndexC, vColor.mColorRGB, vColor.mAlpha);
 				}
-				aDataSet.SetChannelRange(vIndexC, (float)vProcessor.getMin(), (float)vProcessor.getMax());
-				aDataSet.SetChannelRange(vIndexC, (float)aImage.getDisplayRangeMin(), (float)aImage.getDisplayRangeMax());
+				aDataSet.SetChannelRange(vIndexC, (float) vProcessor.getMin(), (float) vProcessor.getMax());
+				aDataSet.SetChannelRange(vIndexC, (float) aImage.getDisplayRangeMin(), (float) aImage.getDisplayRangeMax());
 			}
 		}
 	}
@@ -298,7 +301,7 @@ class IceJUtils {
 		int vInt = aRGBA;
 		float[] vRGBA = new float[4];
 		for (int i = 0; i < 4; ++i) {
-			vRGBA[i] = Value((byte)(vInt % 256)) / 255.0f;
+			vRGBA[i] = Value((byte) (vInt % 256)) / 255.0f;
 			vInt /= 256;
 		}
 		return vRGBA;
@@ -314,10 +317,10 @@ class IceJUtils {
 
 		float[] vRGBA = GetRGBA(aRGBA);
 		for (int i = 0; i < vSize; ++i) {
-		        rLut[i] = (byte) (i*vRGBA[0]);
-		        gLut[i] = (byte) (i*vRGBA[1]);
-		        bLut[i] = (byte) (i*vRGBA[2]);
-		        aLut[i] = (byte) (i*vRGBA[3]);
+			rLut[i] = (byte) (i * vRGBA[0]);
+			gLut[i] = (byte) (i * vRGBA[1]);
+			bLut[i] = (byte) (i * vRGBA[2]);
+			aLut[i] = (byte) (i * vRGBA[3]);
 		}
 		return new IndexColorModel(8, vSize, rLut, gLut, bLut, aLut);
 	}
@@ -333,11 +336,11 @@ class IceJUtils {
 		byte[] aLut = new byte[vSize];
 
 		for (int i = 0; i < vSize; ++i) {
-			int vIndex = (i*vSourceSize)/vSize;
+			int vIndex = (i * vSourceSize) / vSize;
 			float[] vRGBA = GetRGBA(vRGB[vIndex]);
-			rLut[i] = (byte)(vRGBA[0]*255);
-			gLut[i] = (byte)(vRGBA[1]*255);
-			bLut[i] = (byte)(vRGBA[2]*255);
+			rLut[i] = (byte) (vRGBA[0] * 255);
+			gLut[i] = (byte) (vRGBA[1] * 255);
+			bLut[i] = (byte) (vRGBA[2] * 255);
 			aLut[i] = aColor.mAlpha;
 		}
 		return new IndexColorModel(8, vSize, rLut, gLut, bLut, aLut);
@@ -349,7 +352,7 @@ class IceJUtils {
 		byte[] vG = null;
 		byte[] vB = null;
 		if (aImage.isComposite()) {
-			CompositeImage vComposite = (CompositeImage)aImage;
+			CompositeImage vComposite = (CompositeImage) aImage;
 			LUT vTable = vComposite.getChannelLut();
 			int vSize = vTable.getMapSize();
 			vR = new byte[vSize];
@@ -382,8 +385,8 @@ class IceJUtils {
 		int[] vRGB = vColorRGB.mColorRGB;
 		for (int vIndex = 0; vIndex < vSize; vIndex++) {
 			int vColor = Value(vR[vIndexBegin + vIndex]);
-			vColor += 256*Value(vG[vIndexBegin + vIndex]);
-			vColor += 256*256*Value(vB[vIndexBegin + vIndex]);
+			vColor += 256 * Value(vG[vIndexBegin + vIndex]);
+			vColor += 256 * 256 * Value(vB[vIndexBegin + vIndex]);
 			vColorRGB.mColorRGB[vIndex] = vColor;
 		}
 		return vColorRGB;
@@ -423,12 +426,12 @@ class IceJUtils {
 	static void ParametersToDataSet(ImagePlus aImage, IDataSetPrx aDataSet) throws Imaris.Error {
 		// assume aImage.sCalibrated
 		Calibration vCal = aImage.getCalibration();
-		aDataSet.SetExtendMinX((float)vCal.xOrigin);
-		aDataSet.SetExtendMinY((float)vCal.yOrigin);
-		aDataSet.SetExtendMinZ((float)vCal.zOrigin);
-		aDataSet.SetExtendMaxX((float)(vCal.xOrigin + vCal.pixelWidth * aImage.getWidth()));
-		aDataSet.SetExtendMaxY((float)(vCal.yOrigin + vCal.pixelHeight * aImage.getHeight()));
-		aDataSet.SetExtendMaxZ((float)(vCal.zOrigin + vCal.pixelDepth * aImage.getNSlices()));
+		aDataSet.SetExtendMinX((float) vCal.xOrigin);
+		aDataSet.SetExtendMinY((float) vCal.yOrigin);
+		aDataSet.SetExtendMinZ((float) vCal.zOrigin);
+		aDataSet.SetExtendMaxX((float) (vCal.xOrigin + vCal.pixelWidth * aImage.getWidth()));
+		aDataSet.SetExtendMaxY((float) (vCal.yOrigin + vCal.pixelHeight * aImage.getHeight()));
+		aDataSet.SetExtendMaxZ((float) (vCal.zOrigin + vCal.pixelDepth * aImage.getNSlices()));
 		String vUnit = vCal.getUnit().replace('\u00B5', 'u');
 		aDataSet.SetTimePointsDelta(vCal.frameInterval);
 		aDataSet.SetUnit(vUnit);

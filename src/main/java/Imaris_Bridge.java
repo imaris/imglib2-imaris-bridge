@@ -1,70 +1,53 @@
-import java.util.*;
-import java.io.File;
-
-import ij.*;
-import ij.plugin.PlugIn;
-import ij.gui.GenericDialog;
-
-import Imaris.*;
-
+import Imaris.IApplicationPrx;
+import Imaris.IApplicationPrxHelper;
+import Imaris.IDataSetPrx;
 import com.bitplane.xt.IceClient;
-
+import ij.IJ;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.gui.GenericDialog;
+import ij.plugin.PlugIn;
+import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Imaris_Bridge implements PlugIn {
-//	public class Imaris_Bridge extends PlugInFrame {
+	//	public class Imaris_Bridge extends PlugInFrame {
 	private static final long serialVersionUID = 1L;
 
-	static final String[] mCommandsString = {
-		"None",
-		"Plugin",
-		"In",
-		"Out",
-		"SendNewFile",
-		"Quit",
-		"Log",
-		"WaitCloseWindow",
-		"CloseWindow",
-		"CloseAllWindows",
-		"ShowIJ",
-		"CloseIn",
-		"SelectAll",
-		"EndPoints",
-		"ApplicationID",
-		"AskAppID",
-		"SetTool",
-		"Terminate"
-	};
-	
+	static final String[] mCommandsString = { "None", "Plugin", "In", "Out", "SendNewFile", "Quit", "Log", "WaitCloseWindow", "CloseWindow", "CloseAllWindows", "ShowIJ", "CloseIn", "SelectAll", "EndPoints", "ApplicationID", "AskAppID", "SetTool", "Terminate" };
+
 	static class cCommand {
 		public cCommand(String aName) {
 			mName = aName;
 		}
+
 		public String mName = "";
 		public String mParams = "";
 	}
 
 	List<cCommand> mCommands = null;
-	
+
 	StringBuilder mLog = new StringBuilder();
 	IceClient mIceClient = null;
 	List<ImagePlus> mImageIn = null;
 	String mEndPoints = "default -p 4029";
 	int mObjectId = 0;
-	
+
 	public Imaris_Bridge() {
-//		super("Imaris_Bridge");
+		//		super("Imaris_Bridge");
 
 		Log("Imaris Bridge - Log Window\n");
 
-//		if (Macro.getOptions() != null) {
-//			mCommands = CommandsFromString(Macro.getOptions());
-//		}
-//		else {
-////			ShowLog();
-////			Log("Configuration options not provided.");
-////			Log("Imaris_Bridge should be started indirectly by Imaris");
-//			IJ.showMessage("Missing parameters. Could not connect to Imaris.");
-//		}
+		//		if (Macro.getOptions() != null) {
+		//			mCommands = CommandsFromString(Macro.getOptions());
+		//		}
+		//		else {
+		////			ShowLog();
+		////			Log("Configuration options not provided.");
+		////			Log("Imaris_Bridge should be started indirectly by Imaris");
+		//			IJ.showMessage("Missing parameters. Could not connect to Imaris.");
+		//		}
 
 		//IJ.getInstance().setVisible(false);
 	}
@@ -84,7 +67,7 @@ public class Imaris_Bridge implements PlugIn {
 	{
 		Do(args + "Out");
 	}
-	
+
 	public static void SendNewFile(String args)
 	{
 		Do(args + "SendNewFile");
@@ -106,14 +89,14 @@ public class Imaris_Bridge implements PlugIn {
 			CatchException(e.getMessage());
 		}
 	}
-	
+
 	private void CatchException(String aMessage) {
 		if (mCommands != null && mCommands.size() > 0 && mCommands.get(mCommands.size() - 1).mName == "Quit") {
 			Quit(aMessage);
 		}
 		else {
-			Log("Imaris_Bridge: An error occurred");		
-			Log(aMessage);		
+			Log("Imaris_Bridge: An error occurred");
+			Log(aMessage);
 			ShowLog();
 		}
 	}
@@ -127,7 +110,7 @@ public class Imaris_Bridge implements PlugIn {
 			Run(vCommand);
 		}
 	}
-	
+
 	void Run(cCommand aCommand) {
 		if (aCommand.mName == "None") {
 		}
@@ -138,10 +121,10 @@ public class Imaris_Bridge implements PlugIn {
 			DoIn(aCommand.mParams);
 		}
 		else if (aCommand.mName == "Out") {
-			DoOut(aCommand.mParams, false);				
+			DoOut(aCommand.mParams, false);
 		}
 		else if (aCommand.mName == "SendNewFile") {
-			DoOut(aCommand.mParams, true);				
+			DoOut(aCommand.mParams, true);
 		}
 		else if (aCommand.mName == "Quit") {
 			Quit();
@@ -156,7 +139,7 @@ public class Imaris_Bridge implements PlugIn {
 			DoCloseWindow();
 		}
 		else if (aCommand.mName == "CloseAllWindows") {
-			
+
 		}
 		else if (aCommand.mName == "ShowIJ") {
 			IJ.getInstance().setVisible(true);
@@ -183,7 +166,7 @@ public class Imaris_Bridge implements PlugIn {
 			DoTerminate(aCommand.mParams);
 		}
 	}
-	
+
 	private IApplicationPrx GetApplication() {
 		ImarisServer.IServerPrx vServer = GetIceClient().GetServer();
 		return vServer == null ? null : GetApp(vServer, mObjectId);
@@ -208,11 +191,11 @@ public class Imaris_Bridge implements PlugIn {
 		IJ.run("Close");
 	}
 
-//	private void DoCloseAllWindows() {
-//		while (WindowManager.getWindowCount() > 0) {
-//			DoCloseWindow();
-//		}
-//	}
+	//	private void DoCloseAllWindows() {
+	//		while (WindowManager.getWindowCount() > 0) {
+	//			DoCloseWindow();
+	//		}
+	//	}
 
 	private void DoSetTool(String aParams) {
 		IJ.setTool(aParams);
@@ -231,7 +214,7 @@ public class Imaris_Bridge implements PlugIn {
 			}
 			catch (NumberFormatException vError) {
 				Log(vError.toString());
-			}	
+			}
 		}
 	}
 
@@ -292,16 +275,15 @@ public class Imaris_Bridge implements PlugIn {
 			}
 		}
 	}
-	
-	
+
 	private void DoOut(String aOptions, Boolean aMarkAsNewImage) {
 		try {
 			// TODO: merge channels or ask which image if size do not match!
-	//		int vSize = WindowManager.getImageCount();
-	//		if (vSize > 1) {
-	//			int[] vIds = WindowManager.getIDList();
-	//			for (int vIndex : vIds) {
-	//				ImagePlus vImage = WindowManager.getImage(vIndex);
+			//		int vSize = WindowManager.getImageCount();
+			//		if (vSize > 1) {
+			//			int[] vIds = WindowManager.getIDList();
+			//			for (int vIndex : vIds) {
+			//				ImagePlus vImage = WindowManager.getImage(vIndex);
 			ImagePlus vImageOut = WindowManager.getCurrentImage();
 			if (vImageOut == null) {
 				Log("No image to export");
@@ -322,12 +304,12 @@ public class Imaris_Bridge implements PlugIn {
 			Log("SizeC " + vSizeC);
 			Log("SizeT " + vSizeT);
 			Log("Type " + vImageOut.getType() + " (" + ImagePlus.GRAY8 + ", " + ImagePlus.GRAY16 + ", " + ImagePlus.GRAY32 + ", " + ImagePlus.COLOR_256 + ", " + ImagePlus.COLOR_RGB + ")");
-	//		IJ.showMessage("" + WindowManager.getImageCount());
+			//		IJ.showMessage("" + WindowManager.getImageCount());
 			IDataSetPrx vDataSet = IceJUtils.DataSetFromImage(vImageOut, vApplication);
 			if (aMarkAsNewImage) {
 				vDataSet.SetParameter("Fiji", "MarkAsNewImage", "true");
 			}
-	//		IJ.wait(10000);
+			//		IJ.wait(10000);
 			vApplication.DataSetPushUndo("ImageJPlugin");
 			vApplication.SetDataSet(vDataSet);
 			CloseIceClient();
@@ -336,7 +318,7 @@ public class Imaris_Bridge implements PlugIn {
 			DisplayError(vError);
 		}
 	}
-	
+
 	private void DoIn(String aOptions) {
 		try {
 			IApplicationPrx vApplication = GetApplication();
@@ -346,8 +328,8 @@ public class Imaris_Bridge implements PlugIn {
 				return;
 			}
 			boolean vSplit = aOptions != null && aOptions.toLowerCase().equals("splitchannels");
-      File vCurrentPath = new File(vApplication.GetCurrentFileName());
-      String vFilename = vCurrentPath.getName();
+			File vCurrentPath = new File(vApplication.GetCurrentFileName());
+			String vFilename = vCurrentPath.getName();
 			mImageIn = IceJUtils.ImageFromDataSet(vApplication.GetDataSet(), vFilename, vSplit);
 			if (mImageIn == null) {
 				Quit("Could not get image from Imaris");
@@ -367,10 +349,7 @@ public class Imaris_Bridge implements PlugIn {
 	}
 
 	private void DisplayError(Imaris.Error aError) {
-		IJ.showMessage("Imaris_Bridge: An error occurred\n\n" +
-			"Type: " + aError.mType + 
-			"Description: " + aError.mDescription + 
-			"Location: " + aError.mLocation);
+		IJ.showMessage("Imaris_Bridge: An error occurred\n\n" + "Type: " + aError.mType + "Description: " + aError.mDescription + "Location: " + aError.mLocation);
 	}
 
 	private void DoCloseIn() {
@@ -400,65 +379,65 @@ public class Imaris_Bridge implements PlugIn {
 	void Quit() {
 		Quit(null);
 	}
-	
+
 	void Quit(String aReason) {
 		if (aReason != null && aReason.length() > 0) {
 			IJ.showMessage(aReason);
 		}
-//		Log("Quit");
-//		DoCloseAllWindows();
-//		IJ.run("Quit");
+		//		Log("Quit");
+		//		DoCloseAllWindows();
+		//		IJ.run("Quit");
 	}
-	
+
 	IceClient GetIceClient() {
 		if (mIceClient == null) {
 			mIceClient = new IceClient("ImarisServer", mEndPoints, 10000);
 		}
 		return mIceClient;
 	}
-	
+
 	void CloseIceClient() {
 		if (mIceClient != null) {
 			mIceClient.Terminate();
 			mIceClient = null;
 		}
 	}
-	
+
 	void DoEvents() {
 		IJ.wait(100);
 	}
-	
+
 	void Log(String aText) {
 		//mLog.append(aText + "\n");
 	}
-	
+
 	int GetWindowsCount() {
 		//return CountFrames() - MyWindowsCount();
 		return CountWindows() - MyWindowsCount();
 		//return CountIJWindows() - MyWindowsCount();
 	}
-	
+
 	int MyWindowsCount() {
 		return 0; // not working :( isShowing() ? 1 : 0;
 	}
-	
+
 	static int CountFrames() {
 		int vCount = 0;
-//		for (Frame vFrame : getFrames()) {
-//			if (vFrame.isVisible()) {
-//				vCount++;
-//			}
-//		}
+		//		for (Frame vFrame : getFrames()) {
+		//			if (vFrame.isVisible()) {
+		//				vCount++;
+		//			}
+		//		}
 		return vCount;
 	}
-	
+
 	static int CountWindows() {
 		int vCount = 0;
-//		for (Window vWindow : getWindows()) {
-//			if (vWindow.isVisible()) {
-//				vCount++;
-//			}
-//		}
+		//		for (Window vWindow : getWindows()) {
+		//			if (vWindow.isVisible()) {
+		//				vCount++;
+		//			}
+		//		}
 		return vCount;
 	}
 
