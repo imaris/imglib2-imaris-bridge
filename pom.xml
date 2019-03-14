@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>25.0.0</version>
+	</parent>
+
+	<groupId>com.bitplane</groupId>
+	<artifactId>imaris-bridge</artifactId>
+	<version>9.3.0-beta-4-SNAPSHOT</version>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.bitplane</groupId>
+			<artifactId>imaris-lib</artifactId>
+			<version>9.3.0-beta-4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>ij</artifactId>
+		</dependency>
+
+
+		<!-- Test dependencies -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<properties>
+		<license.licenseName>commercial</license.licenseName>
+		<license.copyrightOwners>bitplane</license.copyrightOwners>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>imagej.public</id>
+			<url>http://maven.imagej.net/content/groups/public</url>
+		</repository>
+	</repositories>
+
+	<name>none</name>
+	<description>none</description>
+	<url>none</url>
+	<inceptionYear>none</inceptionYear>
+	<organization>
+		<name>none</name>
+	</organization>
+	<licenses>
+		<license>
+			<name>none</name>
+		</license>
+	</licenses>
+	<mailingLists>
+		<mailingList>
+			<name>none</name>
+		</mailingList>
+	</mailingLists>
+	<scm>
+		<tag>none</tag>
+	</scm>
+	<issueManagement>
+		<system>none</system>
+	</issueManagement>
+	<ciManagement>
+		<system>none</system>
+	</ciManagement>
+	<developers>
+		<developer>
+			<id>tpietzsch</id>
+		</developer>
+	</developers>
+	<contributors>
+		<contributor>
+			<name>none</name>
+		</contributor>
+	</contributors>
+</project>
