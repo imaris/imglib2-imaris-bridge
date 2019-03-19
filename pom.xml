@@ -26,6 +26,15 @@
 			<artifactId>ij</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>script-editor</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scripting-groovy</artifactId>
+		</dependency>
+
 
 		<!-- Test dependencies -->
 		<dependency>
