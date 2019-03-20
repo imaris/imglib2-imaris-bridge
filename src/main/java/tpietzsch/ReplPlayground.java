@@ -12,6 +12,6 @@ public class ReplPlayground
 		final Context context = new Context();
 		final InterpreterWindow window = new InterpreterWindow( context );
 		window.setVisible( true );
-		final ImarisService imaris = context.getService( ImarisService.class );
+//		final ImarisService imaris = context.getService( ImarisService.class );
 	}
 }
