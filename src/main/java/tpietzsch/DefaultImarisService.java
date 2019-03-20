@@ -25,7 +25,7 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 		if ( server.GetNumberOfObjects() < 1 )
 			throw new IllegalStateException();
 		final int id = 0;
-		final ObjectPrx obj = server.GetObject( id );
+		final ObjectPrx obj = server.GetObject( server.GetObjectID( id ) );
 		final IApplicationPrx app = checkedCast( obj );
 		return app;
 	}
