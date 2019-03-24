@@ -4,33 +4,24 @@ import Ice.ObjectPrx;
 import Imaris.Error;
 import Imaris.IApplicationPrx;
 import Imaris.IDataSetPrx;
-import Imaris.tType;
 import ImarisServer.IServerPrx;
-import bdv.util.BdvFunctions;
-import bdv.util.BdvOptions;
-import bdv.util.volatiles.VolatileViews;
-import com.bitplane.xt.BPImarisLib;
-import net.imglib2.cache.img.CachedCellImg;
-import net.imglib2.cache.img.CellLoader;
-import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
-import net.imglib2.img.Img;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
+import com.bitplane.xt.IceClient;
 import net.imglib2.util.BenchmarkHelper;
 import net.imglib2.util.Intervals;
 
 import static Imaris.IApplicationPrxHelper.checkedCast;
-import static net.imglib2.cache.img.ReadOnlyCachedCellImgOptions.options;
 
 public class BenchmarkPlayground
 {
-	private final BPImarisLib lib;
-
 	private final IServerPrx server;
+
+	private final IceClient mIceClient;
 
 	public BenchmarkPlayground()
 	{
-		lib = new BPImarisLib();
-		server = lib.GetServer();
+		String mEndPoints = "default -p 4029";
+		mIceClient = new IceClient( "ImarisServer", mEndPoints, 1000 );
+		server = mIceClient.GetServer();
 	}
 
 	final IApplicationPrx getApplication()
@@ -46,7 +37,7 @@ public class BenchmarkPlayground
 
 	void disconnect()
 	{
-		lib.Disconnect();
+		mIceClient.Terminate();
 	}
 
 	public static void main( String[] args ) throws Error
@@ -66,7 +57,7 @@ public class BenchmarkPlayground
 		for ( int j = 0; j < 10000; ++j )
 		{
 			System.out.println( 10 * Intervals.numElements( dims ) + " bytes" );
-			BenchmarkHelper.benchmarkAndPrint( 10, false, () -> {
+			BenchmarkHelper.benchmarkAndPrint( 10, true, () -> {
 				try
 				{
 					for ( int i = 0; i < 10; ++i )
