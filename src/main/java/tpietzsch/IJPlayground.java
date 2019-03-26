@@ -1,28 +1,15 @@
 package tpietzsch;
 
-import Imaris.Error;
-import Imaris.IApplicationPrx;
-import Imaris.IDataSetPrx;
-import Imaris.tType;
-import bdv.tools.brightness.ConverterSetup;
-import bdv.util.BdvFunctions;
-import bdv.util.BdvOptions;
-import bdv.util.BdvStackSource;
-import bdv.util.volatiles.VolatileViews;
-import java.util.List;
 import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
-import net.imglib2.img.Img;
-import net.imglib2.type.numeric.ARGBType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import org.scijava.Context;
 
-import static bdv.util.AxisOrder.XYZCT;
+import Imaris.Error;
+import Imaris.IApplicationPrx;
 
 public class IJPlayground
 {
 
-	public static void main( String[] args ) throws Error
+	public static void main( final String[] args ) throws Error
 	{
 		final ImageJ ij = new ImageJ();
 		ij.ui().showUI();
@@ -34,7 +21,7 @@ public class IJPlayground
 		System.out.println( "application.GetCurrentFileName() = " + application.GetCurrentFileName() );
 		System.out.println( "application.GetCurrentFileName( null ) = " + application.GetCurrentFileName( null ) );;
 
-		final ImarisDataset ds = new ImarisDataset( application.GetDataSet() );
+		final ImarisDataset< ? > ds = new ImarisDataset<>( application.GetDataSet() );
 		final ImgPlus< ? > imp = ds.getImgPlus();
 		ij.ui().show( imp );
 
@@ -42,7 +29,7 @@ public class IJPlayground
 		{
 			Thread.sleep( 100000 );
 		}
-		catch ( InterruptedException e )
+		catch ( final InterruptedException e )
 		{
 			e.printStackTrace();
 		}

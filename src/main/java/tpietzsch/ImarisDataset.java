@@ -2,17 +2,18 @@ package tpietzsch;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
+import Imaris.cColorTable;
 import Imaris.tType;
 import java.util.ArrayList;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
-import net.imagej.axis.LinearAxis;
 import net.imglib2.Interval;
 import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.cache.img.CellLoader;
 import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
+import net.imglib2.display.ColorTable8;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
@@ -22,9 +23,11 @@ import net.imglib2.type.numeric.real.FloatType;
 
 import static net.imglib2.cache.img.ReadOnlyCachedCellImgOptions.options;
 
-class ImarisDataset
+class ImarisDataset< T extends NativeType< T > >
 {
 	private final IDataSetPrx dataset;
+
+	private final T type;
 
 	private final ArrayList< CalibratedAxis > axes;
 
@@ -36,8 +39,6 @@ class ImarisDataset
 
 	private final double[] calib;
 
-	private final NativeType type;
-
 	public ImarisDataset( final IDataSetPrx dataset ) throws Error
 	{
 		final int xyzCellSize = 32; // TODO make configurable
@@ -48,13 +49,13 @@ class ImarisDataset
 		switch ( dstype )
 		{
 		case eTypeUInt8:
-			type = new UnsignedByteType();
+			type = ( T ) new UnsignedByteType();
 			break;
 		case eTypeUInt16:
-			type = new UnsignedShortType();
+			type = ( T ) new UnsignedShortType();
 			break;
 		case eTypeFloat:
-			type = new FloatType();
+			type = ( T ) new FloatType();
 			break;
 		default:
 			throw new IllegalArgumentException();
@@ -145,7 +146,7 @@ class ImarisDataset
 		int size( final Interval interval );
 	}
 
-	private static MapIntervalDimension mapIntervalDimension( int d )
+	private static MapIntervalDimension mapIntervalDimension( final int d )
 	{
 		if ( d < 0 )
 			return constantMapIntervalDimension;
@@ -191,12 +192,7 @@ class ImarisDataset
 		return i -> datasource.get(	x.min( i ), y.min( i ), z.min( i ), c.min( i ), t.min( i ), x.size( i ), y.size( i ), z.size( i ) );
 	}
 
-	Img< ? > getImage()
-	{
-		return getImageInternal( type );
-	}
-
-	private < T extends NativeType< T > > Img< T > getImageInternal( T type )
+	public Img< T > getImage()
 	{
 		final PixelSource s = pixelSource( dataset::GetDataSubVolumeAs1DArrayBytes );
 		final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory();
@@ -209,51 +205,122 @@ class ImarisDataset
 		return img;
 	}
 
-	ImgPlus< ? > getImgPlus() throws Error
+	public ImgPlus< T > getImgPlus() throws Error
 	{
-		final Img< ? > img = getImage();
-		final ImgPlus< ? > imp = new ImgPlus<>( img );
+		final Img< T > img = getImage();
+		final ImgPlus< T > imp = new ImgPlus<>( img );
 
-		for ( int c = 0; c < 5; ++c )
-			imp.setAxis( axis( c ), c );
+		for ( int i = 0; i < axes.size(); ++i )
+			imp.setAxis( axes.get( i ), i );
 
-//		imp.setColorTable(  );
+		final int sc = dataset.GetSizeC();
+		final int sz = dataset.GetSizeZ();
+		imp.initializeColorTables( sc * sz );
+		for ( int c = 0; c < sc; ++c )
+		{
+			final ColorTable8 cT = createColorTable( c );
+			for ( int z = 0; z < sz; ++z )
+			{
+				imp.setColorTable( cT, c * sz + z );
+			}
+		}
 
 		return imp;
 	}
 
-	LinearAxis axis( int c ) throws Error
+
+
+
+
+
+
+	private ColorTable8 createColorTable( final int channel ) throws Error
 	{
-		final String unit = dataset.GetUnit();
-		switch ( c )
+		final cColorTable vColorTable = dataset.GetChannelColorTable( channel );
+		if ( vColorTable != null && vColorTable.mColorRGB.length > 0 )
+			return createColorTableFrom( vColorTable );
+		else
 		{
-		case 0:
-			return new DefaultLinearAxis( Axes.X, unit, calib[ 0 ] );
-		case 1:
-			return new DefaultLinearAxis( Axes.Y, unit, calib[ 1 ] );
-		case 2:
-			return new DefaultLinearAxis( Axes.Z, unit, calib[ 2 ] );
-		case 3:
-			return new DefaultLinearAxis( Axes.CHANNEL );
-		case 4:
-			return new DefaultLinearAxis( Axes.TIME );
-		default:
-			throw new IllegalArgumentException();
+			final int vColor = dataset.GetChannelColorRGBA( channel );
+			return createColorTableFrom( vColor );
 		}
 	}
+
+	private static ColorTable8 createColorTableFrom( final int aRGBA )
+	{
+		final int vSize = 256;
+
+		final byte[] rLut = new byte[ vSize ];
+		final byte[] gLut = new byte[ vSize ];
+		final byte[] bLut = new byte[ vSize ];
+		final byte[] aLut = new byte[ vSize ];
+
+		final int[] vRGBA = new int[ 4 ];
+		components( aRGBA, vRGBA );
+		for ( int i = 0; i < vSize; ++i )
+		{
+			rLut[ i ] = ( byte ) ( i * vRGBA[ 0 ] / 255 );
+			gLut[ i ] = ( byte ) ( i * vRGBA[ 1 ] / 255 );
+			bLut[ i ] = ( byte ) ( i * vRGBA[ 2 ] / 255 );
+			aLut[ i ] = ( byte ) ( i * vRGBA[ 3 ] / 255 );
+		}
+		return new ColorTable8( rLut, gLut, bLut, aLut );
+	}
+
+	private static ColorTable8 createColorTableFrom( final cColorTable aColor )
+	{
+		final int[] vRGB = aColor.mColorRGB;
+		final int vSize = 256;
+		final int vSourceSize = vRGB.length;
+
+		final byte[] rLut = new byte[ vSize ];
+		final byte[] gLut = new byte[ vSize ];
+		final byte[] bLut = new byte[ vSize ];
+		final byte[] aLut = new byte[ vSize ];
+
+		final int[] vRGBA = new int[ 4 ];
+		for ( int i = 0; i < vSize; ++i )
+		{
+			final int vIndex = ( i * vSourceSize ) / vSize;
+			components( vRGB[ vIndex ], vRGBA );
+			rLut[ i ] = ( byte ) ( vRGBA[ 0 ] );
+			gLut[ i ] = ( byte ) ( vRGBA[ 1 ] );
+			bLut[ i ] = ( byte ) ( vRGBA[ 2 ] );
+			aLut[ i ] = aColor.mAlpha;
+		}
+		return new ColorTable8( rLut, gLut, bLut, aLut );
+	}
+
+	private static void components( final int rgba, final int[] components )
+	{
+		components[ 0 ] = rgba & 0xff;
+		components[ 1 ] = ( rgba >> 8 ) & 0xff;
+		components[ 2 ] = ( rgba >> 16 ) & 0xff;
+		components[ 3 ] = ( rgba >> 24 ) & 0xff;
+	}
+
+
+
+
+
+
+
+
+
+	// for BDV?
 
 	double[] getCalib()
 	{
 		return calib;
 	}
 
-	ARGBType getChannelColor( int channel ) throws Error
+	ARGBType getChannelColor( final int channel ) throws Error
 	{
-		int rgba = dataset.GetChannelColorRGBA( channel );
-		int r = rgba & 0xff;
-		int g = ( rgba >> 8 ) & 0xff;
-		int b = ( rgba >> 16 ) & 0xff;
-		int a = ( rgba >> 24 ) & 0xff;
+		final int rgba = dataset.GetChannelColorRGBA( channel );
+		final int r = rgba & 0xff;
+		final int g = ( rgba >> 8 ) & 0xff;
+		final int b = ( rgba >> 16 ) & 0xff;
+		final int a = ( rgba >> 24 ) & 0xff;
 		System.out.println( "rgba = " + rgba );
 		return new ARGBType( ARGBType.rgba( r, g, b, a ) );
 	}
