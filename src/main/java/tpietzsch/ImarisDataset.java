@@ -17,13 +17,14 @@ import net.imglib2.display.ColorTable8;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 
 import static net.imglib2.cache.img.ReadOnlyCachedCellImgOptions.options;
 
-class ImarisDataset< T extends NativeType< T > >
+class ImarisDataset< T extends NativeType< T > & RealType< T > >
 {
 	private final IDataSetPrx dataset;
 
@@ -125,6 +126,42 @@ class ImarisDataset< T extends NativeType< T > >
 		cellDimensions = cellDimensionsList.stream().mapToInt( Integer::intValue ).toArray();
 	}
 
+	public Img< T > getImage()
+	{
+		final PixelSource s = pixelSource( dataset::GetDataSubVolumeAs1DArrayBytes );
+		final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory();
+		final CellLoader< T > loader = cell -> System.arraycopy( s.getData( cell ), 0, cell.getStorageArray(), 0, ( int ) cell.size() );
+		final CachedCellImg< T, ? > img = factory.create(
+				dimensions,
+				type,
+				loader,
+				options().cellDimensions( cellDimensions ) );
+		return img;
+	}
+
+	public ImgPlus< T > getImgPlus() throws Error
+	{
+		final Img< T > img = getImage();
+		final ImgPlus< T > imp = new ImgPlus<>( img );
+
+		for ( int i = 0; i < axes.size(); ++i )
+			imp.setAxis( axes.get( i ), i );
+
+		final int sc = dataset.GetSizeC();
+		final int sz = dataset.GetSizeZ();
+		imp.initializeColorTables( sc * sz );
+		for ( int c = 0; c < sc; ++c )
+		{
+			final ColorTable8 cT = createColorTable( c );
+			for ( int z = 0; z < sz; ++z )
+			{
+				imp.setColorTable( cT, c * sz + z );
+			}
+		}
+
+		return imp;
+	}
+
 	@FunctionalInterface
 	private interface GetDataSubVolume
 	{
@@ -191,48 +228,6 @@ class ImarisDataset< T extends NativeType< T > >
 		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
 		return i -> datasource.get(	x.min( i ), y.min( i ), z.min( i ), c.min( i ), t.min( i ), x.size( i ), y.size( i ), z.size( i ) );
 	}
-
-	public Img< T > getImage()
-	{
-		final PixelSource s = pixelSource( dataset::GetDataSubVolumeAs1DArrayBytes );
-		final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory();
-		final CellLoader< T > loader = cell -> System.arraycopy( s.getData( cell ), 0, cell.getStorageArray(), 0, ( int ) cell.size() );
-		final CachedCellImg< T, ? > img = factory.create(
-				dimensions,
-				type,
-				loader,
-				options().cellDimensions( cellDimensions ) );
-		return img;
-	}
-
-	public ImgPlus< T > getImgPlus() throws Error
-	{
-		final Img< T > img = getImage();
-		final ImgPlus< T > imp = new ImgPlus<>( img );
-
-		for ( int i = 0; i < axes.size(); ++i )
-			imp.setAxis( axes.get( i ), i );
-
-		final int sc = dataset.GetSizeC();
-		final int sz = dataset.GetSizeZ();
-		imp.initializeColorTables( sc * sz );
-		for ( int c = 0; c < sc; ++c )
-		{
-			final ColorTable8 cT = createColorTable( c );
-			for ( int z = 0; z < sz; ++z )
-			{
-				imp.setColorTable( cT, c * sz + z );
-			}
-		}
-
-		return imp;
-	}
-
-
-
-
-
-
 
 	private ColorTable8 createColorTable( final int channel ) throws Error
 	{

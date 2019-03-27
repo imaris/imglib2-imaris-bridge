@@ -1,10 +1,15 @@
 package tpietzsch;
 
 import Ice.ObjectPrx;
+import Imaris.Error;
 import Imaris.IApplicationPrx;
+import Imaris.IDataSetPrx;
 import ImarisServer.IServerPrx;
-import com.bitplane.xt.BPImarisLib;
+import com.bitplane.xt.IceClient;
+import net.imagej.Dataset;
+import net.imagej.DatasetService;
 import org.scijava.Priority;
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
@@ -14,37 +19,90 @@ import static Imaris.IApplicationPrxHelper.checkedCast;
 @Plugin( type = Service.class, priority = Priority.LOW )
 public class DefaultImarisService extends AbstractService implements ImarisService
 {
-	private BPImarisLib lib;
+	@Parameter
+	private DatasetService datasetService;
 
-	private IServerPrx server;
+	private IceClient mIceClient;
+
+	private IApplicationPrx app;
 
 	@Override
 	public IApplicationPrx app()
 	{
-		checkLibInitialized();
-		if ( server.GetNumberOfObjects() < 1 )
-			throw new IllegalStateException();
-		final int id = 0;
-		final ObjectPrx obj = server.GetObject( server.GetObjectID( id ) );
-		final IApplicationPrx app = checkedCast( obj );
+		if ( app == null )
+		{
+			final IServerPrx server = getServer();
+			if ( server.GetNumberOfObjects() < 1 )
+				throw error();
+			final int id = 0;
+			final ObjectPrx obj = server.GetObject( server.GetObjectID( id ) );
+			app = checkedCast( obj );
+		}
 		return app;
 	}
 
 	@Override
-	public void shutdown()
+	public void disconnect()
 	{
-		lib.Disconnect();
-		lib = null;
+		closeIceClient();
 	}
 
-	private void checkLibInitialized()
+	@Override
+	public Dataset getDataset()
 	{
-		if ( lib == null )
+		try
 		{
-			lib = new BPImarisLib();
-			server = lib.GetServer();
-			if ( server == null )
-				shutdown();
+			final IDataSetPrx datasetPrx = app().GetDataSet();
+			if ( datasetPrx == null )
+				throw new RuntimeException( "No dataset is open in Imaris" );
+			final String name = datasetPrx.GetParameter( "Image", "Name" );
+			final ImarisDataset< ? > ds = new ImarisDataset<>( datasetPrx );
+			final Dataset ijDataset = datasetService.create( ds.getImgPlus() );
+			ijDataset.setName( name );
+			return ijDataset;
 		}
+		catch ( final Error error )
+		{
+			throw error();
+		}
+	}
+
+	private IceClient getIceClient()
+	{
+		if ( mIceClient == null )
+			mIceClient = new IceClient( "ImarisServer", "default -p 4029", 1000 );
+		return mIceClient;
+	}
+
+	private IServerPrx getServer()
+	{
+		final IServerPrx server = getIceClient().GetServer();
+		if ( server == null )
+			throw error();
+		return server;
+	}
+
+	private void closeIceClient()
+	{
+		if ( mIceClient != null )
+		{
+			app = null;
+			mIceClient.Terminate();
+			mIceClient = null;
+		}
+	}
+
+	private RuntimeException error()
+	{
+		return error( null );
+	}
+
+	private RuntimeException error( final Error error )
+	{
+		closeIceClient();
+		if ( error == null )
+			return new RuntimeException( "Could not connect to Imaris" );
+		else
+			return new RuntimeException( "Could not connect to Imaris", error );
 	}
 }
