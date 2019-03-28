@@ -1,11 +1,10 @@
 package tpietzsch;
 
+import com.bitplane.xt.ImarisService;
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
-import net.imagej.ImgPlus;
 
 import Imaris.Error;
-import Imaris.IApplicationPrx;
 
 public class ExampleIJ2
 {

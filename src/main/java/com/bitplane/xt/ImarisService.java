@@ -1,4 +1,4 @@
-package tpietzsch;
+package com.bitplane.xt;
 
 import Imaris.IApplicationPrx;
 import net.imagej.Dataset;

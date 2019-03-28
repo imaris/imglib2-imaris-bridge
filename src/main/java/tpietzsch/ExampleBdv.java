@@ -8,6 +8,7 @@ import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
 import bdv.util.volatiles.SharedQueue;
 import bdv.util.volatiles.VolatileViews;
+import com.bitplane.xt.ImarisService;
 import java.util.ArrayList;
 import java.util.List;
 import net.imagej.Dataset;

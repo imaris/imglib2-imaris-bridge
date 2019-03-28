@@ -1,11 +1,10 @@
-package tpietzsch;
+package com.bitplane.xt;
 
 import Ice.ObjectPrx;
 import Imaris.Error;
 import Imaris.IApplicationPrx;
 import Imaris.IDataSetPrx;
 import ImarisServer.IServerPrx;
-import com.bitplane.xt.IceClient;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import org.scijava.Priority;
