@@ -28,7 +28,7 @@ public class ExampleBdv
 
 		final SharedQueue queue = new SharedQueue( 10 );
 		final BdvStackSource< ? > stackSource = BdvFunctions.show(
-				VolatileViews.wrapAsVolatile( dataset.getImgPlus().getImg(), queue ),
+				VolatileViews.wrapAsVolatile( dataset.getImgPlus(), queue ),
 				dataset.getName(),
 				BdvOptions.options().sourceTransform( getCalibration( dataset ) ).axisOrder( getAxisOrder( dataset ) ) );
 		final List< ConverterSetup > channels = stackSource.getConverterSetups();
