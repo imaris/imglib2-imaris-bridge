@@ -12,13 +12,13 @@
 
 	<groupId>com.bitplane</groupId>
 	<artifactId>imaris-bridge</artifactId>
-	<version>9.3.0-beta-4-SNAPSHOT</version>
+	<version>9.5.1-SNAPSHOT</version>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.bitplane</groupId>
 			<artifactId>imaris-lib</artifactId>
-			<version>9.3.0-beta-4</version>
+			<version>9.5.1</version>
 		</dependency>
 
 		<dependency>
