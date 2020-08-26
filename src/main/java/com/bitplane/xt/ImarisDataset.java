@@ -26,6 +26,8 @@ import static net.imglib2.cache.img.ReadOnlyCachedCellImgOptions.options;
 
 class ImarisDataset< T extends NativeType< T > & RealType< T > >
 {
+	private static final int xyzCellSize = 32; // TODO make configurable
+
 	private final IDataSetPrx dataset;
 
 	private final T type;
@@ -34,16 +36,30 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 
 	private final long[] dimensions;
 
+	/**
+	 * cellDimensions are set to (if present)
+	 * X,Y,Z: xyzCellSize
+	 * C,T: 1
+	 */
 	private final int[] cellDimensions;
 
+	/**
+	 * Maps Imaris dimension indices to imglib2 dimension indices.
+	 * If {@code i} is dimension index from Imaris (0..4 means X,Y,Z,C,T)
+	 * then {@code mapDimensions[i]} is the corresponding dimension in {@link #getImage}.
+	 * For {@link #getImage} dimensions with size=1 are skipped present.
+	 * E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
+	 */
 	private final int[] mapDimensions;
 
+	/**
+	 * TODO
+	 * physical calibration: size of voxel in X,Y,Z
+	 */
 	private final double[] calib;
 
 	public ImarisDataset( final IDataSetPrx dataset ) throws Error
 	{
-		final int xyzCellSize = 32; // TODO make configurable
-
 		this.dataset = dataset;
 
 		final tType dstype = dataset.GetType();
@@ -130,6 +146,7 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	{
 		final PixelSource s = pixelSource( dataset::GetDataSubVolumeAs1DArrayBytes );
 		final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory();
+		// TODO use CacheLoader to avoid copying the data
 		final CellLoader< T > loader = cell -> System.arraycopy( s.getData( cell ), 0, cell.getStorageArray(), 0, ( int ) cell.size() );
 		final CachedCellImg< T, ? > img = factory.create(
 				dimensions,
@@ -166,6 +183,16 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	private interface GetDataSubVolume
 	{
 		/**
+		 * Get sub-volume as flattened primitive array.
+		 *
+		 * @param ox offset in X
+		 * @param oy offset in Y
+		 * @param oz offset in Z
+		 * @param oc channel index
+		 * @param ot timepoint index
+		 * @param sx size in X
+		 * @param sy size in Y
+		 * @param sz size in Z
 		 * @return {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
 		 */
 		Object get( final int ox, final int oy, final int oz, final int oc, final int ot, final int sx, final int sy, final int sz ) throws Error;
@@ -174,6 +201,15 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	@FunctionalInterface
 	private interface PixelSource
 	{
+		/**
+		 * Get sub-volume as flattened primitive array.
+		 *
+		 * @param interval
+		 * 		interval in {@link #getImage image} space.
+		 * 		Will be augmented to 5D if necessary (See {@link #mapDimensions}).
+		 *
+		 * @return {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
+		 */
 		Object getData( final Interval interval ) throws Error;
 	}
 
@@ -219,6 +255,9 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		}
 	};
 
+	/**
+	 * Apply {@link #mapDimensions} to {@code datasource}.
+	 */
 	private PixelSource pixelSource( final GetDataSubVolume datasource )
 	{
 		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );
@@ -294,21 +333,13 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		components[ 3 ] = ( rgba >> 24 ) & 0xff;
 	}
 
-
-
-
-
-
-
-
-
-	// for BDV?
-
+	// TODO: for BDV?
 	double[] getCalib()
 	{
 		return calib;
 	}
 
+	// TODO: remove?, for BDV???
 	ARGBType getChannelColor( final int channel ) throws Error
 	{
 		final int rgba = dataset.GetChannelColorRGBA( channel );
