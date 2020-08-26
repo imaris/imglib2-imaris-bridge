@@ -5,16 +5,23 @@ import Imaris.IDataSetPrx;
 import Imaris.cColorTable;
 import Imaris.tType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
+import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
+import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.cache.img.CellLoader;
 import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
 import net.imglib2.display.ColorTable8;
 import net.imglib2.img.Img;
+import net.imglib2.img.basictypeaccess.volatiles.VolatileByteAccess;
+import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
+import net.imglib2.img.cell.Cell;
+import net.imglib2.img.cell.CellGrid;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
@@ -142,13 +149,32 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		cellDimensions = cellDimensionsList.stream().mapToInt( Integer::intValue ).toArray();
 	}
 
-	public Img< T > getImage()
+	public < A > Img< T > getImage()
 	{
 		final PixelSource s = pixelSource( dataset::GetDataSubVolumeAs1DArrayBytes );
 		final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory();
 		// TODO use CacheLoader to avoid copying the data
-		final CellLoader< T > loader = cell -> System.arraycopy( s.getData( cell ), 0, cell.getStorageArray(), 0, ( int ) cell.size() );
-		final CachedCellImg< T, ? > img = factory.create(
+//		final CellLoader< T > oloader = cell -> System.arraycopy( s.getData( cell ), 0, cell.getStorageArray(), 0, ( int ) cell.size() );
+		final CellGrid grid = new CellGrid( dimensions, cellDimensions );
+		final CacheLoader< Long, Cell< A > > loader = new CacheLoader< Long, Cell< A > >()
+		{
+			@Override
+			public Cell< A > get( final Long key ) throws Exception
+			{
+				final int n = grid.numDimensions();
+				final long[] cellMin = new long[ n ];
+				final int[] cellDims = new int[ n ];
+				grid.getCellDimensions( key, cellMin, cellDims );
+				// TODO: pass directly to PixelSource instead of creaing Interval
+				final long[] cellMax = new long[ n ];
+				Arrays.setAll( cellMax, d -> cellMin[ d ] + cellDims[ d ] - 1 );
+				return new Cell<>(
+						cellDims,
+						cellMin,
+						( A ) new VolatileByteArray( ( byte[] ) ( s.getData( new FinalInterval( cellMin, cellMax ) ) ), true ) );
+			}
+		};
+		final CachedCellImg< T, A > img = factory.createWithCacheLoader(
 				dimensions,
 				type,
 				loader,
