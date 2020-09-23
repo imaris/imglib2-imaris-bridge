@@ -5,21 +5,18 @@ import Imaris.IDataSetPrx;
 import Imaris.cColorTable;
 import Imaris.tType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
-import net.imglib2.FinalInterval;
-import net.imglib2.Interval;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.img.CachedCellImg;
-import net.imglib2.cache.img.CellLoader;
 import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
 import net.imglib2.display.ColorTable8;
 import net.imglib2.img.Img;
-import net.imglib2.img.basictypeaccess.volatiles.VolatileByteAccess;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 import net.imglib2.type.NativeType;
@@ -36,6 +33,8 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	private static final int xyzCellSize = 32; // TODO make configurable
 
 	private final IDataSetPrx dataset;
+
+	private final tType datasetType;
 
 	private final T type;
 
@@ -69,8 +68,8 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	{
 		this.dataset = dataset;
 
-		final tType dstype = dataset.GetType();
-		switch ( dstype )
+		datasetType = dataset.GetType();
+		switch ( datasetType )
 		{
 		case eTypeUInt8:
 			type = ( T ) new UnsignedByteType();
@@ -151,28 +150,18 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 
 	public < A > Img< T > getImage()
 	{
-		final PixelSource s = pixelSource( dataset::GetDataSubVolumeAs1DArrayBytes );
 		final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory();
-		// TODO use CacheLoader to avoid copying the data
-//		final CellLoader< T > oloader = cell -> System.arraycopy( s.getData( cell ), 0, cell.getStorageArray(), 0, ( int ) cell.size() );
 		final CellGrid grid = new CellGrid( dimensions, cellDimensions );
-		final CacheLoader< Long, Cell< A > > loader = new CacheLoader< Long, Cell< A > >()
-		{
-			@Override
-			public Cell< A > get( final Long key ) throws Exception
-			{
-				final int n = grid.numDimensions();
-				final long[] cellMin = new long[ n ];
-				final int[] cellDims = new int[ n ];
-				grid.getCellDimensions( key, cellMin, cellDims );
-				// TODO: pass directly to PixelSource instead of creaing Interval
-				final long[] cellMax = new long[ n ];
-				Arrays.setAll( cellMax, d -> cellMin[ d ] + cellDims[ d ] - 1 );
-				return new Cell<>(
-						cellDims,
-						cellMin,
-						( A ) new VolatileByteArray( ( byte[] ) ( s.getData( new FinalInterval( cellMin, cellMax ) ) ), true ) );
-			}
+		final PixelSource< A > s = volatileArraySource();
+		final CacheLoader< Long, Cell< A > > loader = key -> {
+			final int n = grid.numDimensions();
+			final long[] cellMin = new long[ n ];
+			final int[] cellDims = new int[ n ];
+			grid.getCellDimensions( key, cellMin, cellDims );
+			return new Cell<>(
+					cellDims,
+					cellMin,
+					s.get( cellMin, cellDims ) );
 		};
 		final CachedCellImg< T, A > img = factory.createWithCacheLoader(
 				dimensions,
@@ -224,25 +213,47 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		Object get( final int ox, final int oy, final int oz, final int oc, final int ot, final int sx, final int sy, final int sz ) throws Error;
 	}
 
+	/**
+	 * Get the appropriate {@code GetDataSubVolume} for {@link #datasetType}.
+	 */
+	private GetDataSubVolume dataSource()
+	{
+		switch ( datasetType )
+		{
+		case eTypeUInt8:
+			return dataset::GetDataSubVolumeAs1DArrayBytes;
+		case eTypeUInt16:
+			return dataset::GetDataSubVolumeAs1DArrayShorts;
+		case eTypeFloat:
+			return dataset::GetDataSubVolumeAs1DArrayFloats;
+		default:
+			throw new IllegalArgumentException();
+		}
+	}
+
 	@FunctionalInterface
-	private interface PixelSource
+	private interface PixelSource< A >
 	{
 		/**
 		 * Get sub-volume as flattened primitive array.
 		 *
-		 * @param interval
-		 * 		interval in {@link #getImage image} space.
+		 * @param min
+		 * 		minimum of interval in {@link #getImage image} space.
+		 * 		Will be augmented to 5D if necessary (See {@link #mapDimensions}).
+		 * @param size
+		 * 		size of interval in {@link #getImage image} space.
 		 * 		Will be augmented to 5D if necessary (See {@link #mapDimensions}).
 		 *
 		 * @return {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
 		 */
-		Object getData( final Interval interval ) throws Error;
+		A get( final long[] min, final int[] size ) throws Error;
 	}
 
 	private interface MapIntervalDimension
 	{
-		int min( final Interval interval );
-		int size( final Interval interval );
+		int min( final long[] min );
+
+		int size( final int[] size );
 	}
 
 	private static MapIntervalDimension mapIntervalDimension( final int d )
@@ -253,45 +264,62 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		return new MapIntervalDimension()
 		{
 			@Override
-			public int min( final Interval interval )
+			public int min( final long[] min )
 			{
-				return ( int ) interval.min( d );
+				return ( int ) min[ d ];
 			}
 
 			@Override
-			public int size( final Interval interval )
+			public int size( final int[] size )
 			{
-				return ( int ) interval.dimension( d );
+				return size[ d ];
 			}
 		};
 	}
 
-	private static MapIntervalDimension constantMapIntervalDimension = new MapIntervalDimension()
+	private static final MapIntervalDimension constantMapIntervalDimension = new MapIntervalDimension()
 	{
 		@Override
-		public int min( final Interval interval )
+		public int min( final long[] min )
 		{
 			return 0;
 		}
 
 		@Override
-		public int size( final Interval interval )
+		public int size( final int[] size )
 		{
 			return 1;
 		}
 	};
 
 	/**
-	 * Apply {@link #mapDimensions} to {@code datasource}.
+	 * Apply {@link #mapDimensions} to {@link #dataSource}.
 	 */
-	private PixelSource pixelSource( final GetDataSubVolume datasource )
+	private < A > PixelSource< A > volatileArraySource()
 	{
+		final GetDataSubVolume getDataSubVolume = dataSource();
+
+		// Apply mapDimensions to getDataSubVolume
 		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );
 		final MapIntervalDimension y = mapIntervalDimension( mapDimensions[ 1 ] );
 		final MapIntervalDimension z = mapIntervalDimension( mapDimensions[ 2 ] );
 		final MapIntervalDimension c = mapIntervalDimension( mapDimensions[ 3 ] );
 		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
-		return i -> datasource.get(	x.min( i ), y.min( i ), z.min( i ), c.min( i ), t.min( i ), x.size( i ), y.size( i ), z.size( i ) );
+		final PixelSource< ? > pixels = ( min, size ) -> getDataSubVolume.get(
+				x.min( min ), y.min( min ), z.min( min ), c.min( min ), t.min( min ),
+				x.size( size ), y.size( size ), z.size( size ) );
+
+		switch ( datasetType )
+		{
+		case eTypeUInt8:
+			return ( min, size ) -> ( A ) new VolatileByteArray( ( byte[] ) ( pixels.get( min, size ) ), true );
+		case eTypeUInt16:
+			return ( min, size ) -> ( A ) new VolatileShortArray( ( short[] ) ( pixels.get( min, size ) ), true );
+		case eTypeFloat:
+			return ( min, size ) -> ( A ) new VolatileFloatArray( ( float[] ) ( pixels.get( min, size ) ), true );
+		default:
+			throw new IllegalArgumentException();
+		}
 	}
 
 	private ColorTable8 createColorTable( final int channel ) throws Error
