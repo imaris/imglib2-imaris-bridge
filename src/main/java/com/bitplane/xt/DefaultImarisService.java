@@ -51,18 +51,30 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	{
 		try
 		{
-			final IDataSetPrx datasetPrx = app().GetDataSet();
-			if ( datasetPrx == null )
-				throw new RuntimeException( "No dataset is open in Imaris" );
-			final String name = datasetPrx.GetParameter( "Image", "Name" );
-			final ImarisDataset< ? > ds = new ImarisDataset<>( datasetPrx );
+			final ImarisDataset< ? > ds = getImarisDataset();
 			final Dataset ijDataset = datasetService.create( ds.getImgPlus() );
-			ijDataset.setName( name );
+			ijDataset.setName( ds.getName() );
 			return ijDataset;
 		}
 		catch ( final Error error )
 		{
-			throw error();
+			throw error( error );
+		}
+	}
+
+	@Override
+	public ImarisDataset< ? > getImarisDataset()
+	{
+		try
+		{
+			final IDataSetPrx datasetPrx = app().GetDataSet();
+			if ( datasetPrx == null )
+				throw new RuntimeException( "No dataset is open in Imaris" );
+			return new ImarisDataset<>( datasetPrx );
+		}
+		catch ( final Error error )
+		{
+			throw error( error );
 		}
 	}
 

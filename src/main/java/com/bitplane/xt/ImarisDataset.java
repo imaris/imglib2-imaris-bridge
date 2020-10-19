@@ -28,9 +28,9 @@ import net.imglib2.type.numeric.real.FloatType;
 
 import static net.imglib2.cache.img.ReadOnlyCachedCellImgOptions.options;
 
-class ImarisDataset< T extends NativeType< T > & RealType< T > >
+public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 {
-	private static final int xyzCellSize = 32; // TODO make configurable
+	private static final int xyzCellSize = 64; // TODO make configurable
 
 	private final IDataSetPrx dataset;
 
@@ -190,6 +190,8 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 				imp.setColorTable( cT, c * sz + z );
 			}
 		}
+
+		imp.setName( getName() );
 
 		return imp;
 	}
@@ -358,6 +360,8 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	private static ColorTable8 createColorTableFrom( final cColorTable aColor )
 	{
 		final int[] vRGB = aColor.mColorRGB;
+		final byte alpha = UnsignedByteType.getCodedSignedByte(
+			255 - UnsignedByteType.getUnsignedByte(aColor.mAlpha));
 		final int vSize = 256;
 		final int vSourceSize = vRGB.length;
 
@@ -374,7 +378,7 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 			rLut[ i ] = ( byte ) ( vRGBA[ 0 ] );
 			gLut[ i ] = ( byte ) ( vRGBA[ 1 ] );
 			bLut[ i ] = ( byte ) ( vRGBA[ 2 ] );
-			aLut[ i ] = aColor.mAlpha;
+			aLut[ i ] = alpha;
 		}
 		return new ColorTable8( rLut, gLut, bLut, aLut );
 	}
@@ -387,21 +391,43 @@ class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		components[ 3 ] = ( rgba >> 24 ) & 0xff;
 	}
 
-	// TODO: for BDV?
-	double[] getCalib()
+	/**
+	 * @return physical calibration: size of voxel in X,Y,Z
+	 */
+	public double[] getCalib()
 	{
 		return calib;
 	}
 
-	// TODO: remove?, for BDV???
-	ARGBType getChannelColor( final int channel ) throws Error
+	/**
+	 * Get the base color of a channel.
+	 *
+	 * @param channel index of the channel
+	 * @return channel color
+	 */
+	public ARGBType getChannelColor( final int channel ) throws Error
 	{
 		final int rgba = dataset.GetChannelColorRGBA( channel );
 		final int r = rgba & 0xff;
 		final int g = ( rgba >> 8 ) & 0xff;
 		final int b = ( rgba >> 16 ) & 0xff;
 		final int a = ( rgba >> 24 ) & 0xff;
-		System.out.println( "rgba = " + rgba );
-		return new ARGBType( ARGBType.rgba( r, g, b, a ) );
+		return new ARGBType( ARGBType.rgba( r, g, b, 255 - a ) );
+	}
+
+	/**
+	 * Get the "Image > Filename" parameter of the dataset.
+	 */
+	public String getFilename() throws Error
+	{
+		return dataset.GetParameter( "Image", "Filename" );
+	}
+
+	/**
+	 * Get the "Image > Name" parameter of the dataset.
+	 */
+	public String getName() throws Error
+	{
+		return dataset.GetParameter("Image", "Name");
 	}
 }
