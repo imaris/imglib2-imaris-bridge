@@ -88,41 +88,30 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 
 	private final int n;
 
-	private final Fraction entitiesPerPixel;
+	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
+	//  PixelSource kinds flying around. There must be a better way to do this.
+	private final PixelSource< A > volatileArraySource;
 
-	private final AccessIo< A > accessIo;
+	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
+	//  PixelSource kinds flying around. There must be a better way to do this.
+	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
+	private final PixelSink< A > volatileArraySink;
 
-	private PixelSource< A > volatileArraySource = volatileArraySource();
-
-	private PixelSink< A > volatileArraySink = volatileArraySink();
-
-	// TODO for now, we always load/save to imaris
+	// for now, we always load/save to imaris
 	// private final CacheLoader< Long, Cell< A > > backingLoader;
 
 	public ImarisCellCache(
 			final IDataSetPrx dataset,
-			final CellGrid grid,
-			final AccessIo< A > accessIo,
-			final Fraction entitiesPerPixel ) throws Error
+			final int[] mapDimensions,
+			final CellGrid grid ) throws Error
 	{
 		this.dataset = dataset;
-		this.datasetType = dataset.GetType();
-
+		datasetType = dataset.GetType();
 		this.grid = grid;
-		this.n = grid.numDimensions();
-		this.entitiesPerPixel = entitiesPerPixel;
-		this.accessIo = accessIo;
-
-		// This is also initialized in ImarisDataset in the same way
-		// TODO: refactor
-		mapDimensions = new int[] { 0, 1, -1, -1, -1 };
-		int d = 2;
-		if ( dataset.GetSizeZ() > 1 )
-			mapDimensions[ 2 ] = d++;
-		if ( dataset.GetSizeC() > 1 )
-			mapDimensions[ 3 ] = d++;
-		if ( dataset.GetSizeT() > 1 )
-			mapDimensions[ 4 ] = d;
+		n = grid.numDimensions();
+		this.mapDimensions = mapDimensions;
+		volatileArraySource = volatileArraySource();
+		volatileArraySink = volatileArraySink();
 	}
 
 
@@ -393,24 +382,12 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 		final long index = key;
 		final long[] cellMin = new long[ n ];
 		final int[] cellDims = new int[ n ];
-		// TODO
-		// TODO
-		// TODO reuse
-		final PixelSource< A > s = volatileArraySource();
-		// TODO
-		// TODO
-		// TODO
 		grid.getCellDimensions( index, cellMin, cellDims );
 		return new Cell<>(
 				cellDims,
 				cellMin,
-				s.get( cellMin, cellDims ) );
+				volatileArraySource.get( cellMin, cellDims ) );
 	}
-
-
-
-
-
 
 	@Override
 	public A extract( final Cell< A > value )
@@ -435,16 +412,9 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 		final long[] cellMin = new long[ n ];
 		final int[] cellDims = new int[ n ];
 		grid.getCellDimensions( index, cellMin, cellDims );
-		// TODO
-		// TODO
-		// TODO reuse
-		final PixelSink< A > s = volatileArraySink();
-		// TODO
-		// TODO
-		// TODO
 		try
 		{
-			s.put( valueData, cellMin, cellDims );
+			volatileArraySink.put( valueData, cellMin, cellDims );
 		}
 		catch ( Error error )
 		{
