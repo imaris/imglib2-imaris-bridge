@@ -53,7 +53,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	 * Maps Imaris dimension indices to imglib2 dimension indices.
 	 * If {@code i} is dimension index from Imaris (0..4 means X,Y,Z,C,T)
 	 * then {@code mapDimensions[i]} is the corresponding dimension in {@link #getImage}.
-	 * For {@link #getImage} dimensions with size=1 are skipped present.
+	 * For {@link #getImage} dimensions with size=1 are skipped.
 	 * E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
 	 */
 	private final int[] mapDimensions;
