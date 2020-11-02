@@ -33,10 +33,10 @@
  */
 package com.bitplane.xt;
 
+import Imaris.IDataSetPrx;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.IoSync;
 import net.imglib2.cache.img.CachedCellImg;
-import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.ImgFactory;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
@@ -59,10 +59,15 @@ public class ImarisCachedCellImg< T extends NativeType< T >, A > extends CachedC
 {
 	private final ImarisCachedCellImgFactory< T > factory;
 
+	private final IDataSetPrx dataset;
+
+	private final Cache< Long, Cell< A > > cache;
+
 	private final IoSync< ?, ?, ? > iosync;
 
 	public ImarisCachedCellImg(
 			final ImarisCachedCellImgFactory< T > factory,
+			final IDataSetPrx dataset,
 			final CellGrid grid,
 			final Fraction entitiesPerPixel,
 			final Cache< Long, Cell< A > > cache,
@@ -71,7 +76,15 @@ public class ImarisCachedCellImg< T extends NativeType< T >, A > extends CachedC
 	{
 		super( grid, entitiesPerPixel, cache, accessType );
 		this.factory = factory;
+		this.dataset = dataset;
+		this.cache = cache;
 		this.iosync = iosync;
+	}
+
+	@Override
+	public ImgFactory< T > factory()
+	{
+		return factory;
 	}
 
 	/**
@@ -84,9 +97,17 @@ public class ImarisCachedCellImg< T extends NativeType< T >, A > extends CachedC
 		iosync.shutdown();
 	}
 
-	@Override
-	public ImgFactory< T > factory()
+	/**
+	 * Persist all changes back to Imaris
+	 */
+	public void persist()
 	{
-		return factory;
+		cache.persistAll();
+	}
+
+	// TODO: may be this should return a wrapper instead of IDataSetPrx
+	public IDataSetPrx getDataSet()
+	{
+		return dataset;
 	}
 }

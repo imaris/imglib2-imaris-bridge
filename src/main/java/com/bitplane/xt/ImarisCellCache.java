@@ -36,29 +36,17 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel.MapMode;
-import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
-import net.imagej.axis.Axes;
-import net.imagej.axis.DefaultLinearAxis;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.CacheRemover;
 import net.imglib2.cache.IoSync;
-import net.imglib2.cache.img.AccessIo;
-import net.imglib2.cache.img.DiskCellCache;
 import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
-import net.imglib2.util.Fraction;
-import net.imglib2.util.Intervals;
 
 /**
  * Basic {@link CacheRemover}/{@link CacheLoader} for writing/reading cells
@@ -69,7 +57,7 @@ import net.imglib2.util.Intervals;
  * {@link CacheLoader}. Typically the backing loader will just create empty cells.
  * </p>
  * <p><em>
- * A {@link DiskCellCache} should be connected to a in-memory cache through
+ * A {@link ImarisCellCache} should be connected to a in-memory cache through
  * {@link IoSync} if the cache will be used concurrently by multiple threads!
  * </em></p>
  *
@@ -275,9 +263,11 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 		}
 	}
 
-	// ===================================================================
-	// ===================================================================
-	// ===================================================================
+
+	// -------------------------------------------------------------------
+	//  Writing Imaris blocks as primitive arrays
+	// -------------------------------------------------------------------
+
 
 	@FunctionalInterface
 	private interface SetDataSubVolume< A >
@@ -358,15 +348,8 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 				x.size( size ), y.size( size ), z.size( size ) );
 	}
 
+
 	// ===================================================================
-	// ===================================================================
-	// ===================================================================
-
-
-
-
-
-
 
 
 
