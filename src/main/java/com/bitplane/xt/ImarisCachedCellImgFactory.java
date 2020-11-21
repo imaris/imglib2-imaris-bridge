@@ -8,8 +8,12 @@ import Imaris.tType;
 import java.util.Arrays;
 import net.imglib2.Dimensions;
 import net.imglib2.cache.Cache;
+import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.IoSync;
 import net.imglib2.cache.LoaderRemoverCache;
+import net.imglib2.cache.img.CellLoader;
+import net.imglib2.cache.img.EmptyCellCacheLoader;
+import net.imglib2.cache.img.LoadedCellCacheLoader;
 import net.imglib2.cache.ref.GuardedStrongRefLoaderRemoverCache;
 import net.imglib2.cache.ref.SoftRefLoaderRemoverCache;
 import net.imglib2.exception.ImgLibException;
@@ -88,37 +92,112 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 			throw new IllegalArgumentException( "Only UnsignedByteType, UnsignedShortType, FloatType are supported (not " + type.getClass().getSimpleName() + ")" );
 	}
 
+	// creates new Imaris dataset
+	// initializes cells as empty
 	@Override
 	public ImarisCachedCellImg< T, ? > create( final long... dimensions )
 	{
-		return create( null, dimensions, type(), null );
+		return create( null, dimensions, null, null, type(), null );
 	}
 
+	// creates new Imaris dataset
+	// initializes cells as empty
 	@Override
 	public ImarisCachedCellImg< T, ? > create( final Dimensions dimensions )
 	{
 		return create( Intervals.dimensionsAsLongArray( dimensions ) );
 	}
 
+	// creates new Imaris dataset
+	// initializes cells as empty
 	@Override
 	public ImarisCachedCellImg< T, ? > create( final int[] dimensions )
 	{
 		return create( Util.int2long( dimensions ) );
 	}
 
+	// creates new Imaris dataset
+	// initializes cells as empty
+	// additional options specify cache type, access type, cell dimensions, etc
 	public ImarisCachedCellImg< T, ? > create( final long[] dimensions, final ImarisCachedCellImgOptions additionalOptions )
 	{
-		return create( null, dimensions, type(), additionalOptions );
+		return create( null, dimensions, null, null, type(), additionalOptions );
 	}
 
+	// creates new Imaris dataset
+	// initializes cells as empty
+	// additional options specify cache type, access type, cell dimensions, etc
 	public ImarisCachedCellImg< T, ? > create( final Dimensions dimensions, final ImarisCachedCellImgOptions additionalOptions )
 	{
-		return create( null, Intervals.dimensionsAsLongArray( dimensions ), type(), additionalOptions );
+		return create( null, Intervals.dimensionsAsLongArray( dimensions ), null, null, type(), additionalOptions );
 	}
 
-	public ImarisCachedCellImg< T, ? > create( final int[] dimensions, final ImarisCachedCellImgOptions additionalOptions )
+	// creates new Imaris dataset
+	// initializes cells using the given loader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	public ImarisCachedCellImg< T, ? > create( final long[] dimensions, final CellLoader< T > loader )
 	{
-		return create( null, Util.int2long( dimensions ), type(), additionalOptions );
+		return create( null, dimensions, null, loader, type(), null );
+	}
+
+	// creates new Imaris dataset
+	// initializes cells using the given loader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	public ImarisCachedCellImg< T, ? > create( final Dimensions dimensions, final CellLoader< T > loader )
+	{
+		return create( null, Intervals.dimensionsAsLongArray( dimensions ), null, loader, type(), null );
+	}
+
+	// creates new Imaris dataset
+	// initializes cells using the given loader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	// additional options specify cache type, access type, cell dimensions, etc
+	public ImarisCachedCellImg< T, ? > create( final long[] dimensions, final CellLoader< T > loader, final ImarisCachedCellImgOptions additionalOptions )
+	{
+		return create( null, dimensions, null, loader, type(), additionalOptions );
+	}
+
+	// creates new Imaris dataset
+	// initializes cells using the given loader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	// additional options specify cache type, access type, cell dimensions, etc
+	public ImarisCachedCellImg< T, ? > create( final Dimensions dimensions, final CellLoader< T > loader, final ImarisCachedCellImgOptions additionalOptions )
+	{
+		return create( null, Intervals.dimensionsAsLongArray( dimensions ), null, loader, type(), additionalOptions );
+	}
+
+	// creates new Imaris dataset
+	// initializes cells using the given backingLoader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	public < A > ImarisCachedCellImg< T, A > createWithCacheLoader( final long[] dimensions, final CacheLoader< Long, Cell< A > > backingLoader )
+	{
+		return create( null, dimensions, backingLoader, null, type(), null );
+	}
+
+	// creates new Imaris dataset
+	// initializes cells using the given backingLoader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	public < A > ImarisCachedCellImg< T, A > createWithCacheLoader( final Dimensions dimensions, final CacheLoader< Long, Cell< A > > backingLoader )
+	{
+		return create( null, Intervals.dimensionsAsLongArray( dimensions ), backingLoader, null, type(), null );
+	}
+
+	// creates new Imaris dataset
+	// initializes cells using the given backingLoader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	// additional options specify cache type, access type, cell dimensions, etc
+	public < A > ImarisCachedCellImg< T, A > createWithCacheLoader( final long[] dimensions, final CacheLoader< Long, Cell< A > > backingLoader, final ImarisCachedCellImgOptions additionalOptions )
+	{
+		return create( null, dimensions, backingLoader, null, type(), additionalOptions );
+	}
+
+	// creates new Imaris dataset
+	// initializes cells using the given backingLoader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	// additional options specify cache type, access type, cell dimensions, etc
+	public < A > ImarisCachedCellImg< T, A > createWithCacheLoader( final Dimensions dimensions, final CacheLoader< Long, Cell< A > > backingLoader, final ImarisCachedCellImgOptions additionalOptions )
+	{
+		return create( null, Intervals.dimensionsAsLongArray( dimensions ), backingLoader, null, type(), additionalOptions );
 	}
 
 	/**
@@ -133,7 +212,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	 */
 	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final long... dimensions )
 	{
-		return create( dataset, dimensions, type(), null );
+		return create( dataset, dimensions, null, null, type(), null );
 	}
 
 	/**
@@ -141,41 +220,34 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	 */
 	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final Dimensions dimensions )
 	{
-		return create( dataset, Intervals.dimensionsAsLongArray( dimensions ), type(), null );
+		return create( dataset, Intervals.dimensionsAsLongArray( dimensions ), null, null, type(), null );
 	}
 
 	/**
 	 * @see #create(IDataSetPrx, long...)
 	 */
-	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final int[] dimensions )
-	{
-		return create( dataset, Util.int2long( dimensions ), type(), null );
-	}
-
-	/**
-	 * @see #create(IDataSetPrx, long...)
-	 */
+	// additional options specify cache type, access type, cell dimensions, etc
 	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final long[] dimensions, final ImarisCachedCellImgOptions additionalOptions )
 	{
-		return create( dataset, dimensions, type(), additionalOptions );
+		return create( dataset, dimensions, null, null, type(), additionalOptions );
 	}
 
 	/**
 	 * @see #create(IDataSetPrx, long...)
 	 */
+	// additional options specify cache type, access type, cell dimensions, etc
 	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final Dimensions dimensions, final ImarisCachedCellImgOptions additionalOptions )
 	{
-		return create( dataset, Intervals.dimensionsAsLongArray( dimensions ), type(), additionalOptions );
+		return create( dataset, Intervals.dimensionsAsLongArray( dimensions ), null, null, type(), additionalOptions );
 	}
 
-	/**
-	 * @see #create(IDataSetPrx, long...)
-	 */
-	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final int[] dimensions, final ImarisCachedCellImgOptions additionalOptions )
-	{
-		return create( dataset, Util.int2long( dimensions ), type(), additionalOptions );
-	}
 
+	// TODO: Add missing create methods:
+	//  with IDataSetPrx dataset and CacheLoader
+	//  with IDataSetPrx dataset and CellLoader
+	//  with IDataSetPrx dataset and CacheLoader and additionalOptions
+	//  with IDataSetPrx dataset and CellLoader and additionalOptions
+	//  (each of those for long[] and for Dimensions
 
 
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
@@ -193,10 +265,14 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	 * 		If {@code dataset == null}, a new one is created.
 	 * @param dimensions
 	 * 		dimensions of the image to create.
-	 *		Must match the dataset dimensions, but is allowed to strip dimensions with extent 1.
+	 * 		Must match the dataset dimensions, but is allowed to strip dimensions with extent 1.
+	 * @param cacheLoader
+	 * 		TODO
+	 * @param cellLoader
+	 * 		TODO
 	 * @param type
 	 * 		type of the image to create.
-	 *		assumed to match the Imaris dataset type.
+	 * 		assumed to match the Imaris dataset type.
 	 * @param additionalOptions
 	 * 		additional options that partially override general factory
 	 * 		options, or {@code null}.
@@ -204,6 +280,8 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	private < A > ImarisCachedCellImg< T, A > create(
 			final IDataSetPrx dataset,
 			final long[] dimensions,
+			final CacheLoader< Long, ? extends Cell< ? extends A > > cacheLoader,
+			final CellLoader< T > cellLoader,
 			final T type,
 			final ImarisCachedCellImgOptions additionalOptions )
 	{
@@ -212,7 +290,10 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 			@SuppressWarnings( { "unchecked", "rawtypes" } )
 			final ImarisCachedCellImg< T, A > img = create(
 					dataset != null ? dataset : createDataset( dimensions ),
+					dataset == null,
 					dimensions,
+					cacheLoader,
+					cellLoader,
 					type,
 					( NativeTypeFactory ) type.getNativeTypeFactory(),
 					additionalOptions );
@@ -226,7 +307,10 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 
 	private < A extends ArrayDataAccess< A > > ImarisCachedCellImg< T, ? extends A > create(
 			final IDataSetPrx dataset,
+			final boolean isEmptyDataset,
 			final long[] dimensions,
+			final CacheLoader< Long, ? extends Cell< ? > > cacheLoader,
+			final CellLoader< T > cellLoader,
 			final T type,
 			final NativeTypeFactory< T, A > typeFactory,
 			final ImarisCachedCellImgOptions additionalOptions ) throws Error
@@ -244,10 +328,28 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		final Fraction entitiesPerPixel = type.getEntitiesPerPixel();
 		final CellGrid grid = createCellGrid( dimensions, invMapDimensions, entitiesPerPixel, options );
 
+		@SuppressWarnings( "unchecked" )
+		CacheLoader< Long, Cell< A > > backingLoader = ( CacheLoader< Long, Cell< A > > ) cacheLoader;
+		if ( backingLoader == null )
+		{
+			if ( cellLoader != null )
+			{
+				final CellLoader< T > actualCellLoader = options.initializeCellsAsDirty()
+						? cell -> {
+							cellLoader.load( cell );
+							cell.setDirty();
+						}
+						: cellLoader;
+				backingLoader = LoadedCellCacheLoader.get( grid, actualCellLoader, type, options.accessFlags() );
+			}
+			else if ( isEmptyDataset )
+				backingLoader = EmptyCellCacheLoader.get( grid, type, options.accessFlags() );
+		}
+
 		@SuppressWarnings( { "rawtypes", "unchecked" } )
 		final ImarisCellCache< A > imarisCache = options.dirtyAccesses()
-				? new ImarisDirtyCellCache( dataset, mapDimensions, grid )
-				: new ImarisCellCache( dataset, mapDimensions, grid );
+				? new ImarisDirtyCellCache( dataset, mapDimensions, grid, backingLoader )
+				: new ImarisCellCache( dataset, mapDimensions, grid, backingLoader );
 
 		final IoSync< Long, Cell< A >, A > iosync = new IoSync<>(
 				imarisCache,

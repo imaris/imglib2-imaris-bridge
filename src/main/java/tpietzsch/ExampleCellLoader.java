@@ -1,8 +1,8 @@
 package tpietzsch;
 
 import Imaris.Error;
-import Imaris.IDataSetPrx;
 import bdv.util.BdvFunctions;
+import bdv.util.volatiles.VolatileViews;
 import com.bitplane.xt.ImarisCachedCellImg;
 import com.bitplane.xt.ImarisCachedCellImgFactory;
 import com.bitplane.xt.ImarisCachedCellImgOptions;
@@ -12,10 +12,8 @@ import ij.ImagePlus;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.img.CellLoader;
-import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.cache.img.SingleCellArrayImg;
 import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
@@ -25,10 +23,12 @@ public class ExampleCellLoader
 {
 	public static void main( String[] args ) throws Error
 	{
+		Context context = new Context();
+		final ImarisService imaris = context.getService( ImarisService.class );
+
 		final String path = "/Users/pietzsch/workspace/data/e002_stack_fused-8bit.tif";
 		final ImagePlus imp = IJ.openImage( path );
 		final RandomAccessibleInterval< UnsignedByteType > img = ImageJFunctions.wrapReal( imp );
-
 
 		final CellLoader< UnsignedByteType > loader = new CellLoader< UnsignedByteType >()
 		{
@@ -43,11 +43,16 @@ public class ExampleCellLoader
 			}
 		};
 
-		final RandomAccessibleInterval< UnsignedByteType > output =
-				new DiskCachedCellImgFactory<>( new UnsignedByteType() ).create( img, loader );
+		ImarisCachedCellImgFactory< UnsignedByteType > factory = new ImarisCachedCellImgFactory<>(
+				Util.getTypeFromInterval( img ),
+				imaris,
+				ImarisCachedCellImgOptions.options()
+						.initializeCellsAsDirty( true )
+						.cellDimensions( 64 )
+						.numIoThreads( 20 ) );
 
-		// TODO: now replace this by ImarisCachedCellImg...
+		final ImarisCachedCellImg< UnsignedByteType, ? > imarisImg = factory.create( img, loader );
 
-		BdvFunctions.show( output, "output" );
+		BdvFunctions.show( VolatileViews.wrapAsVolatile( imarisImg ), "imarisImg" );
 	}
 }

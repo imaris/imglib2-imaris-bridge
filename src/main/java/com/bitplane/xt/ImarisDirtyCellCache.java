@@ -4,6 +4,8 @@ import Imaris.Error;
 import Imaris.IDataSetPrx;
 import java.util.concurrent.CompletableFuture;
 import net.imglib2.Dirty;
+import net.imglib2.cache.CacheLoader;
+import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 
 /**
@@ -19,9 +21,10 @@ public class ImarisDirtyCellCache< A extends Dirty > extends ImarisCellCache< A 
 	public ImarisDirtyCellCache(
 			final IDataSetPrx dataset,
 			final int[] mapDimensions,
-			final CellGrid grid ) throws Error
+			final CellGrid grid,
+			final CacheLoader< Long, Cell< A > > backingLoader ) throws Error
 	{
-		super( dataset, mapDimensions, grid );
+		super( dataset, mapDimensions, grid, backingLoader );
 	}
 
 	@Override

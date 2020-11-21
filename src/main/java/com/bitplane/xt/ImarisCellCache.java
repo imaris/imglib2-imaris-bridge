@@ -36,7 +36,9 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.CacheRemover;
@@ -85,21 +87,37 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
 	private final PixelSink< A > volatileArraySink;
 
-	// for now, we always load/save to imaris
-	// private final CacheLoader< Long, Cell< A > > backingLoader;
+	/**
+	 * Used to generate Cells that have not yet been stored to Imaris
+	 * (via {@link #onRemoval})
+	 */
+	private final CacheLoader< Long, Cell< A > > backingLoader;
+
+	/**
+	 * Contains the keys that have been stored to Imaris (via {@link #onRemoval}).
+	 * If a key is present in this set, the corresponding Cell is loaded from Imaris.
+	 * Otherwise, it is obtained from the {@code backingLoader}.
+	 * <p>
+	 * If there is no {@code backingLoader}, this is {@code null}, and all Cells
+	 * are loaded from Imaris.
+	 */
+	private final Set< Long > written;
 
 	public ImarisCellCache(
 			final IDataSetPrx dataset,
 			final int[] mapDimensions,
-			final CellGrid grid ) throws Error
+			final CellGrid grid,
+			final CacheLoader< Long, Cell< A > > backingLoader ) throws Error
 	{
 		this.dataset = dataset;
 		datasetType = dataset.GetType();
 		this.grid = grid;
 		n = grid.numDimensions();
 		this.mapDimensions = mapDimensions;
+		this.backingLoader = backingLoader;
 		volatileArraySource = volatileArraySource();
 		volatileArraySink = volatileArraySink();
+		written = backingLoader == null ? null : ConcurrentHashMap.newKeySet();
 	}
 
 
@@ -363,13 +381,20 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	public Cell< A > get( final Long key ) throws Exception
 	{
 		final long index = key;
-		final long[] cellMin = new long[ n ];
-		final int[] cellDims = new int[ n ];
-		grid.getCellDimensions( index, cellMin, cellDims );
-		return new Cell<>(
-				cellDims,
-				cellMin,
-				volatileArraySource.get( cellMin, cellDims ) );
+		if ( written == null || written.contains( key ) )
+		{
+			final long[] cellMin = new long[ n ];
+			final int[] cellDims = new int[ n ];
+			grid.getCellDimensions( index, cellMin, cellDims );
+			return new Cell<>(
+					cellDims,
+					cellMin,
+					volatileArraySource.get( cellMin, cellDims ) );
+		}
+		else
+		{
+			return backingLoader.get( key );
+		}
 	}
 
 	@Override
@@ -398,6 +423,8 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 		try
 		{
 			volatileArraySink.put( valueData, cellMin, cellDims );
+			if ( written != null )
+				written.add( key );
 		}
 		catch ( Error error )
 		{
@@ -436,4 +463,7 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 		//  and will therefore be loaded from imaris when they are next needed).
 		throw new UnsupportedOperationException( "TODO. not implemented yet" );
 	}
+
+	// TODO there should be a method to say that the image has been modified on the imaris side.
+	//  This would then clear the cache and mark all cells as written, so that they will be loaded from Imaris always.
 }
