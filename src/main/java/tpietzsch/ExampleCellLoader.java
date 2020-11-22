@@ -10,15 +10,26 @@ import com.bitplane.xt.ImarisCachedCellImgOptions;
 import com.bitplane.xt.ImarisService;
 import ij.IJ;
 import ij.ImagePlus;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.Cache;
+import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.cache.img.CellLoader;
 import net.imglib2.cache.img.SingleCellArrayImg;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.parallel.Parallelization;
+import net.imglib2.parallel.TaskExecutor;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Util;
@@ -60,28 +71,95 @@ public class ExampleCellLoader
 
 		BdvFunctions.show( VolatileViews.wrapAsVolatile( imarisImg ), "imarisImg" );
 
-		final Cache< Long, ? extends Cell< ? > > cache = imarisImg.getCache();
-		final long numCells = Intervals.numElements( imarisImg.getCellGrid().getGridDimensions() );
-		for ( long i = 0; i < numCells; i++ )
-		{
-			final Long key = i;
-			final Callable< Void > c = () -> {
-				cache.get( key );
-				cache.persist( key );
-				return null;
-			};
-			try
-			{
-				cache.get( i );
-				cache.persist( i );
-			}
-			catch ( ExecutionException e )
-			{
-				e.printStackTrace();
-			}
-		}
+		Parallelization.runMultiThreaded( () -> populateAndPersist( imarisImg ).get() );
 
 		final IDataSetPrx dataset = imarisImg.getDataSet();
 		imaris.app().SetImage( 0, dataset );
+	}
+
+	public static Future< Void > populateAndPersist( final CachedCellImg< ?, ? > img ) throws InterruptedException
+	{
+		final TaskExecutor exec = Parallelization.getTaskExecutor();
+		return populateAndPersist( img, exec.getExecutorService(), exec.getParallelism() );
+	}
+
+	public static Future< Void > populateAndPersist(
+			final CachedCellImg< ?, ? > img,
+			final ExecutorService executor,
+			final int numThreads ) throws InterruptedException
+	{
+		final long numCells = Intervals.numElements( img.getCellGrid().getGridDimensions() );
+		final Cache< Long, ? extends Cell< ? > > cache = img.getCache();
+		final AtomicLong nextCellIndex = new AtomicLong();
+		final List< Callable< Void > > tasks = new ArrayList<>();
+
+		for ( int threadNum = 0; threadNum < numThreads; ++threadNum )
+		{
+			tasks.add( () -> {
+				for ( long i = nextCellIndex.getAndIncrement(); i < numCells; i = nextCellIndex.getAndIncrement() )
+				{
+					if ( Thread.interrupted() )
+						throw new InterruptedException();
+					cache.get( i );
+					cache.persist( i );
+				}
+				return null;
+			} );
+		}
+		final List< Future< Void > > futures = executor.invokeAll( tasks );
+		return new Future< Void >()
+		{
+			private boolean cancelled;
+
+			@Override
+			public synchronized boolean cancel( final boolean mayInterruptIfRunning )
+			{
+				if ( !cancelled )
+				{
+					cancelled = true;
+					for ( final Future< Void > future : futures )
+						cancelled &= future.cancel( mayInterruptIfRunning );
+				}
+				return cancelled;
+			}
+
+			@Override
+			public synchronized boolean isCancelled()
+			{
+				return cancelled;
+			}
+
+			@Override
+			public synchronized boolean isDone()
+			{
+				boolean isDone = true;
+				for ( final Future< Void > future : futures )
+					isDone &= future.isDone();
+				return true;
+			}
+
+			@Override
+			public Void get() throws InterruptedException, ExecutionException
+			{
+				for ( final Future< Void > future : futures )
+					future.get();
+				return null;
+			}
+
+			@Override
+			public Void get( final long timeout, final TimeUnit unit ) throws InterruptedException, ExecutionException, TimeoutException
+			{
+				final long tstart = System.currentTimeMillis();
+				for ( final Future< Void > future : futures )
+				{
+					final long telapsed = System.currentTimeMillis() - tstart;
+					final long tleft = unit.toMillis( timeout ) - telapsed;
+					if ( tleft <= 0 )
+						throw new TimeoutException();
+					future.get( tleft, TimeUnit.MILLISECONDS );
+				}
+				return null;
+			}
+		};
 	}
 }
