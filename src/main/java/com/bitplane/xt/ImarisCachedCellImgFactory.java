@@ -452,7 +452,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		for ( int i = 0; i < n; i++ )
 		{
 			cellDimensions[ i ] = defaultCellDimensions[ Math.min( i, max ) ];
-			if ( invMapDimensions[ i ] < 0 || invMapDimensions[ i ] > 2)
+			if ( invMapDimensions[ i ] < 0 )
 				cellDimensions[ i ] = 1;
 		}
 

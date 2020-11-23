@@ -114,6 +114,13 @@ public class ImarisCachedCellImgOptions extends AbstractOptions< ImarisCachedCel
 	{
 		// NB overrides default value
 		@Override
+		public int[] cellDimensions()
+		{
+			return getValueOrDefault( "cellDimensions", new int[] { 64, 64, 64, 1, 1 } );
+		}
+
+		// NB overrides default value
+		@Override
 		public boolean dirtyAccesses()
 		{
 			return getValueOrDefault( "dirtyAccesses", true );

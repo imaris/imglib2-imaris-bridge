@@ -39,6 +39,7 @@ import Imaris.tType;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.CacheRemover;
@@ -213,24 +214,6 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 		Object get( int ox, int oy, int oz, int oc, int ot, int sx, int sy, int sz ) throws Error;
 	}
 
-	/**
-	 * Get the appropriate {@code GetDataSubVolume} for {@link #datasetType}.
-	 */
-	private GetDataSubVolume dataSource()
-	{
-		switch ( datasetType )
-		{
-		case eTypeUInt8:
-			return dataset::GetDataSubVolumeAs1DArrayBytes;
-		case eTypeUInt16:
-			return dataset::GetDataSubVolumeAs1DArrayShorts;
-		case eTypeFloat:
-			return dataset::GetDataSubVolumeAs1DArrayFloats;
-		default:
-			throw new IllegalArgumentException();
-		}
-	}
-
 	@FunctionalInterface
 	private interface PixelSource< A >
 	{
@@ -250,24 +233,79 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	}
 
 	/**
-	 * Apply {@link #mapDimensions} to {@link #dataSource}.
+	 * TODO
+	 * @return
 	 */
-	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
-	//  PixelSource kinds flying around. There must be a better way to do this.
-	private PixelSource< A > volatileArraySource()
+	private PixelSource< ? > arraySource()
 	{
-		final GetDataSubVolume getDataSubVolume = dataSource();
+		final GetDataSubVolume slice;
+		final IntFunction< Object > creator;
+		switch ( datasetType )
+		{
+		case eTypeUInt8:
+			slice = dataset::GetDataSubVolumeAs1DArrayBytes;
+			creator = byte[]::new;
+			break;
+		case eTypeUInt16:
+			slice = dataset::GetDataSubVolumeAs1DArrayShorts;
+			creator = short[]::new;
+			break;
+		case eTypeFloat:
+			slice = dataset::GetDataSubVolumeAs1DArrayFloats;
+			creator = float[]::new;
+			break;
+		default:
+			throw new IllegalArgumentException();
+		}
 
-		// Apply mapDimensions to getDataSubVolume
 		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );
 		final MapIntervalDimension y = mapIntervalDimension( mapDimensions[ 1 ] );
 		final MapIntervalDimension z = mapIntervalDimension( mapDimensions[ 2 ] );
 		final MapIntervalDimension c = mapIntervalDimension( mapDimensions[ 3 ] );
 		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
-		final PixelSource< ? > pixels = ( min, size ) -> getDataSubVolume.get(
-				x.min( min ), y.min( min ), z.min( min ), c.min( min ), t.min( min ),
-				x.size( size ), y.size( size ), z.size( size ) );
 
+		return ( min, size ) -> {
+
+			final int ox = x.min( min );
+			final int oy = y.min( min );
+			final int oz = z.min( min );
+			final int oc = c.min( min );
+			final int ot = t.min( min );
+
+			final int sx = x.size( size );
+			final int sy = y.size( size );
+			final int sz = z.size( size );
+			final int sc = c.size( size );
+			final int st = t.size( size );
+
+			if ( sc == 1 && st == 1 )
+				return slice.get( ox, oy, oz, oc, ot, sx, sy, sz);
+			else
+			{
+				final Object data = creator.apply( sx * sy * sz * sc * st );
+				final int slicelength = sx * sy * sz;
+				for ( int dt = 0; dt < st; ++dt )
+				{
+					for ( int dc = 0; dc < sc; ++dc )
+					{
+						final Object slicedata = slice.get( ox, oy, oz, oc + dc, ot + dt, sx, sy, sz );
+						final int destpos = ( dt * sc + dc ) * slicelength;
+						System.arraycopy( slicedata, 0, data, destpos, slicelength );
+					}
+				}
+				return data;
+			}
+		};
+	}
+
+	/**
+	 * TODO
+	 */
+	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
+	//  PixelSource kinds flying around. There must be a better way to do this.
+	private PixelSource< A > volatileArraySource()
+	{
+		final PixelSource< ? > pixels = arraySource();
 		switch ( datasetType )
 		{
 		case eTypeUInt8:
@@ -288,7 +326,7 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 
 
 	@FunctionalInterface
-	private interface SetDataSubVolume< A >
+	private interface SetDataSubVolume
 	{
 		/**
 		 * Set sub-volume as flattened primitive array.
@@ -303,26 +341,7 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 		 * @param sy size in Y
 		 * @param sz size in Z
 		 */
-		void set( A data, int ox, int oy, int oz, int oc, int ot, int sx, int sy, int sz ) throws Error;
-	}
-
-	/**
-	 * Get the appropriate {@code SetDataSubVolume} for {@link #datasetType}.
-	 */
-	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
-	private SetDataSubVolume< ? > dataSink()
-	{
-		switch ( datasetType )
-		{
-		case eTypeUInt8:
-			return ( SetDataSubVolume< byte[] > ) dataset::SetDataSubVolumeAs1DArrayBytes;
-		case eTypeUInt16:
-			return ( SetDataSubVolume< short[] > ) dataset::SetDataSubVolumeAs1DArrayShorts;
-		case eTypeFloat:
-			return ( SetDataSubVolume< float[] > ) dataset::SetDataSubVolumeAs1DArrayFloats;
-		default:
-			throw new IllegalArgumentException();
-		}
+		void set( Object data, int ox, int oy, int oz, int oc, int ot, int sx, int sy, int sz ) throws Error;
 	}
 
 	@FunctionalInterface
@@ -345,27 +364,76 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	}
 
 	/**
-	 * Apply {@link #mapDimensions} to {@link #dataSink}.
+	 * TODO
 	 */
 	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
 	//  PixelSource kinds flying around. There must be a better way to do this.
 	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
 	private PixelSink< A > volatileArraySink()
 	{
-		final SetDataSubVolume setDataSubVolume = dataSink();
+		final SetDataSubVolume slice;
+		final IntFunction< Object > creator;
+		switch ( datasetType )
+		{
+		case eTypeUInt8:
+			slice = ( data, ox, oy, oz, oc, ot, sx, sy, sz ) ->
+					dataset.SetDataSubVolumeAs1DArrayBytes( ( byte[] ) data, ox, oy, oz, oc, ot, sx, sy, sz );
+			creator = byte[]::new;
+			break;
+		case eTypeUInt16:
+			slice = ( data, ox, oy, oz, oc, ot, sx, sy, sz ) ->
+					dataset.SetDataSubVolumeAs1DArrayShorts( ( short[] ) data, ox, oy, oz, oc, ot, sx, sy, sz );
+			creator = short[]::new;
+			break;
+		case eTypeFloat:
+			slice = ( data, ox, oy, oz, oc, ot, sx, sy, sz ) ->
+					dataset.SetDataSubVolumeAs1DArrayFloats( ( float[] ) data, ox, oy, oz, oc, ot, sx, sy, sz );
+			creator = float[]::new;
+			break;
+		default:
+			throw new IllegalArgumentException();
+		}
 
-		// Apply mapDimensions to getDataSubVolume
 		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );
 		final MapIntervalDimension y = mapIntervalDimension( mapDimensions[ 1 ] );
 		final MapIntervalDimension z = mapIntervalDimension( mapDimensions[ 2 ] );
 		final MapIntervalDimension c = mapIntervalDimension( mapDimensions[ 3 ] );
 		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
-		return ( data, min, size ) -> setDataSubVolume.set(
-				( ( ArrayDataAccess ) data ).getCurrentStorageArray(),
-				x.min( min ), y.min( min ), z.min( min ), c.min( min ), t.min( min ),
-				x.size( size ), y.size( size ), z.size( size ) );
-	}
 
+		return ( access, min, size ) ->
+		{
+			final Object data = ( ( ArrayDataAccess ) access ).getCurrentStorageArray();
+
+			final int ox = x.min( min );
+			final int oy = y.min( min );
+			final int oz = z.min( min );
+			final int oc = c.min( min );
+			final int ot = t.min( min );
+
+			final int sx = x.size( size );
+			final int sy = y.size( size );
+			final int sz = z.size( size );
+			final int sc = c.size( size );
+			final int st = t.size( size );
+
+			if ( sc == 1 && st == 1 )
+				slice.set( data, ox, oy, oz, oc, ot, sx, sy, sz );
+			else
+			{
+				final int slicelength = sx * sy * sz;
+				final Object slicedata = creator.apply( slicelength );
+				for ( int dt = 0; dt < st; ++dt )
+				{
+					for ( int dc = 0; dc < sc; ++dc )
+					{
+						final int destpos = ( dt * sc + dc ) * slicelength;
+						System.arraycopy( data, 0, slicedata, destpos, slicelength );
+						slice.set( slicedata, ox, oy, oz, oc + dc, ot + dt, sx, sy, sz );
+					}
+				}
+			}
+		};
+	}
 
 	// ===================================================================
 
