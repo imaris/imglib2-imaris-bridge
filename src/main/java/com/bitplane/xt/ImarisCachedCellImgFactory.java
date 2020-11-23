@@ -51,6 +51,11 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 
 	private final ImarisService imaris;
 
+	// TODO: TEMPORARY, REMOVE (?)
+	public ImarisService getImarisService() {
+		return imaris;
+	}
+
 	/**
 	 * Create a new {@link ImarisCachedCellImgFactory} with default configuration.
 	 */
