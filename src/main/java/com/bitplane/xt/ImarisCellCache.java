@@ -140,7 +140,7 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	 * Maps Imaris dimension indices to imglib2 dimension indices.
 	 * If {@code i} is dimension index from Imaris (0..4 means X,Y,Z,C,T)
 	 * then {@code mapDimensions[i]} is the corresponding dimension in {@code Img}.
-	 * For {@code Img} dimensions with size=1 are skipped present.
+	 * For {@code Img} dimensions with size=1 are skipped.
 	 * E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
 	 */
 	private final int[] mapDimensions;
