@@ -102,6 +102,9 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	 * If there is no {@code backingLoader}, this is {@code null}, and all Cells
 	 * are loaded from Imaris.
 	 */
+	// TODO
+	//  This should be eventually replaced by something with a smaller memory footprint,
+	//  for example a BitSet. But then we need to take care of concurrency ourselves, so...
 	private final Set< Long > written;
 
 	public ImarisCellCache(
