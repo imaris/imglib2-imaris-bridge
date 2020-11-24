@@ -12,13 +12,13 @@
 
 	<groupId>com.bitplane</groupId>
 	<artifactId>imaris-bridge</artifactId>
-	<version>9.5.1-SNAPSHOT</version>
+	<version>9.6.0-SNAPSHOT</version>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.bitplane</groupId>
 			<artifactId>imaris-lib</artifactId>
-			<version>9.5.1</version>
+			<version>9.6.0</version>
 		</dependency>
 
 		<dependency>
@@ -79,7 +79,7 @@
 		</repository>
 	</repositories>
 
-	<name>none</name>
+	<name>imaris-bridge</name>
 	<description>none</description>
 	<url>none</url>
 	<inceptionYear>none</inceptionYear>
