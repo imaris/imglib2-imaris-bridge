@@ -32,6 +32,21 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 
+/**
+ * Wraps Imaris {@code IDataSetPrx} into {@code CachedCellImg}s that are lazy-loaded.
+ * <p>
+ * The data is provided as
+ * <ul>
+ *     <li>an {@code Img} ({@link #getImage}),</li>
+ *     <li>an {@code ImgPlus} with the correct metadata ({@link #getImgPlus}), and</li>
+ *     <li>a list of {@code SourceAndConverter}, one for each channel, for display in BDV ({@link #getSources}).</li>
+ * </ul>
+ * All these are views on the same data, backed by a common cache.
+ * The BDV sources are multi-resolution and have volatile versions.
+ *
+ * @param <T>
+ * 		imglib2 pixel type
+ */
 public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 {
 	private final IDataSetPrx dataset;

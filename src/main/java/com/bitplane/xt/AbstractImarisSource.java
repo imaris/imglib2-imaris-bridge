@@ -8,7 +8,11 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.NumericType;
 
 /**
- * Abstract base class for ImarisSource3D/4D.
+ * Implement the {@link Source} interface for resolution pyramids,
+ * where each resolution level is given by a {@code RandomAccessibleInterval}.
+ * <p>
+ * The {@code RandomAccessibleInterval}s are either 3D (XYZ) or 4D (XYZT), depending on whether there are timepoints.
+ * These cases are handled in derived classes {@link ImarisSource3D} and {@link ImarisSource4D}.
  *
  * @param <T>
  * 		pixel type of the source
