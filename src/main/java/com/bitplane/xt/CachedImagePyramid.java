@@ -91,8 +91,7 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 		this.type = type;
 		volatileType = ( V ) VolatileTypeMatcher.getVolatileTypeForType( type );
 
-		final int numFetcherThreads = 1;
-		queue = new SharedQueue( numFetcherThreads, numResolutions );
+		queue = new SharedQueue( 16, numResolutions );
 		backingCache = new SoftRefLoaderCache<>();
 
 		imgs = new CachedCellImg[ numResolutions ];
