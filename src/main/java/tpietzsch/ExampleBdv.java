@@ -1,9 +1,8 @@
 package tpietzsch;
 
+import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
-import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
-import bdv.viewer.SourceAndConverter;
 import com.bitplane.xt.ImarisDataset;
 import com.bitplane.xt.ImarisService;
 import org.scijava.Context;
@@ -16,12 +15,7 @@ public class ExampleBdv
 		final ImarisService imaris = context.getService( ImarisService.class );
 		final ImarisDataset< ? > dataset = imaris.getImarisDataset();
 
-		final BdvOptions options = BdvOptions.options();
-		for ( SourceAndConverter< ? > source : dataset.getSources() )
-		{
-			final BdvStackSource< ? > show = BdvFunctions.show( source, dataset.numTimepoints(), options );
-			show.getBdvHandle().getCacheControls().addCacheControl( dataset.getSharedQueue() );
-			options.addTo( show );
-		}
+		final BdvStackSource< ? > source = BdvFunctions.show( dataset.getSources(), dataset.numTimepoints(), Bdv.options() );
+		source.getBdvHandle().getCacheControls().addCacheControl( dataset.getSharedQueue() );
 	}
 }
