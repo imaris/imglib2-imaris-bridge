@@ -383,18 +383,18 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		/**
 		 * Get sub-volume as flattened primitive array.
 		 *
-		 * @param r resolution level (0 is full resolution)
 		 * @param ox offset in X
 		 * @param oy offset in Y
 		 * @param oz offset in Z
 		 * @param oc channel index
 		 * @param ot timepoint index
+		 * @param r resolution level (0 is full resolution)
 		 * @param sx size in X
 		 * @param sy size in Y
 		 * @param sz size in Z
 		 * @return {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
 		 */
-		Object get( final int r, final int ox, final int oy, final int oz, final int oc, final int ot, final int sx, final int sy, final int sz ) throws Error;
+		Object get( final int ox, final int oy, final int oz, final int oc, final int ot, final int r, final int sx, final int sy, final int sz ) throws Error;
 	}
 
 	/**
