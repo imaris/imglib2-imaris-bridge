@@ -1,10 +1,8 @@
 package com.bitplane.xt;
 
 import Imaris.Error;
-import Imaris.IApplicationPrx;
 import Imaris.IDataSetPrx;
-import Imaris.IFactoryPrx;
-import Imaris.tType;
+import bdv.util.AxisOrder;
 import java.util.Arrays;
 import net.imglib2.Dimensions;
 import net.imglib2.cache.Cache;
@@ -33,10 +31,6 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Fraction;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Util;
-
-import static Imaris.tType.eTypeFloat;
-import static Imaris.tType.eTypeUInt16;
-import static Imaris.tType.eTypeUInt8;
 
 /**
  * Factory for creating {@link ImarisCachedCellImg}s. See
@@ -83,18 +77,6 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		if ( type instanceof UnsignedByteType || type instanceof UnsignedShortType || type instanceof FloatType )
 			return type;
 		throw new IllegalArgumentException( "Only UnsignedByteType, UnsignedShortType, FloatType are supported (not " + type.getClass().getSimpleName() + ")" );
-	}
-
-	private static tType imarisType( final Object type )
-	{
-		if ( type instanceof UnsignedByteType )
-			return eTypeUInt8;
-		else if ( type instanceof UnsignedShortType )
-			return eTypeUInt16;
-		else if ( type instanceof FloatType )
-			return eTypeFloat;
-		else
-			throw new IllegalArgumentException( "Only UnsignedByteType, UnsignedShortType, FloatType are supported (not " + type.getClass().getSimpleName() + ")" );
 	}
 
 	// creates new Imaris dataset
@@ -170,6 +152,56 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	{
 		return create( null, Intervals.dimensionsAsLongArray( dimensions ), null, loader, type(), additionalOptions );
 	}
+
+	/**
+	 * Create writable image around existing <em>empty</em> Imaris dataset.
+	 * <p>
+	 * {@code dataset} dimensions and {@code dimensions} must match.
+	 * (But {@code dimensions} is allowed to strip dimensions with extent 1.)
+	 * <p>
+	 * It is assumed that {@code dataset} is empty and cells will be populated from the given {@code loader}.
+	 * Existing data in {@code dataset} will thus be potentially overwritten!
+	 */
+	// creates new Imaris dataset
+	// initializes cells using the given loader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final long[] dimensions, final CellLoader< T > loader )
+	{
+		return create( dataset, dimensions, null, loader, type(), null );
+	}
+
+	// creates new Imaris dataset
+	// initializes cells using the given loader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final Dimensions dimensions, final CellLoader< T > loader )
+	{
+		return create( dataset, Intervals.dimensionsAsLongArray( dimensions ), null, loader, type(), null );
+	}
+
+	// creates new Imaris dataset
+	// initializes cells using the given loader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	// additional options specify cache type, access type, cell dimensions, etc
+	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final long[] dimensions, final CellLoader< T > loader, final ImarisCachedCellImgOptions additionalOptions )
+	{
+		return create( dataset, dimensions, null, loader, type(), additionalOptions );
+	}
+
+	// creates new Imaris dataset
+	// initializes cells using the given loader
+	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
+	// additional options specify cache type, access type, cell dimensions, etc
+	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final Dimensions dimensions, final CellLoader< T > loader, final ImarisCachedCellImgOptions additionalOptions )
+	{
+		return create( dataset, Intervals.dimensionsAsLongArray( dimensions ), null, loader, type(), additionalOptions );
+	}
+
+
+
+
+
+
+
 
 	// creates new Imaris dataset
 	// initializes cells using the given backingLoader
@@ -295,7 +327,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 			@SuppressWarnings( { "unchecked", "rawtypes" } )
 			final ImarisCachedCellImg< T, A > img = create(
 					dataset != null ? dataset : createDataset( dimensions ),
-					dataset == null,
+					dataset == null || cellLoader != null || cacheLoader != null,
 					dimensions,
 					cacheLoader,
 					cellLoader,
@@ -470,41 +502,25 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 
 	private IDataSetPrx createDataset( final long... dimensions ) throws Error
 	{
-		// Verify that numDimensions < 5.
-		// Verify that each for each dimension 0 < dim < Integer.MAX_VALUE.
-		Dimensions.verifyAllPositive( dimensions );
-		final int n = dimensions.length;
-		if ( n > 5 )
-			throw new IllegalArgumentException( "image must not have more than 5 dimensions" );
-		for ( int i = 0; i < dimensions.length; i++ )
-			if ( dimensions[ i ] > Integer.MAX_VALUE )
-				throw new IllegalArgumentException( "each individual image dimension must be < 2^31" );
-
-		// Get Imaris dimensions from dimensions: Just add "1" to fill up to 5D
-		final int[] imarisDims = new int[ 5 ];
-		for ( int i = 0; i < imarisDims.length; i++ )
-			imarisDims[ i ] = i < n ? ( int ) dimensions[ i ] : 1;
-
-		final int sx = imarisDims[ 0 ];
-		final int sy = imarisDims[ 1 ];
-		final int sz = imarisDims[ 2 ];
-		final int sc = imarisDims[ 3 ];
-		final int st = imarisDims[ 4 ];
-
-		// Create Imaris dataset
-		final IApplicationPrx app = imaris.app();
-		final IFactoryPrx factory = app.GetFactory();
-		final IDataSetPrx dataset = factory.CreateDataSet();
-
-		dataset.Create( imarisType( type() ), sx, sy, sz, sc, st );
-		dataset.SetExtendMinX( 0 );
-		dataset.SetExtendMaxX( sx );
-		dataset.SetExtendMinY( 0 );
-		dataset.SetExtendMaxY( sy );
-		dataset.SetExtendMinZ( 0 );
-		dataset.SetExtendMaxZ( sz );
-
-		return dataset;
+		final AxisOrder axisOrder;
+		switch ( dimensions.length )
+		{
+		case 2:
+			axisOrder = AxisOrder.XY;
+			break;
+		case 3:
+			axisOrder = AxisOrder.XYZ;
+			break;
+		case 4:
+			axisOrder = AxisOrder.XYZC;
+			break;
+		case 5:
+			axisOrder = AxisOrder.XYZCT;
+			break;
+		default:
+			throw new IllegalArgumentException( "image must not have more than 5 or less than 2 dimensions" );
+		}
+		return ImarisUtils.createDataset( imaris.app(), ImarisUtils.imarisTypeFor( type() ), axisOrder, dimensions );
 	}
 
 	// -- deprecated API --
