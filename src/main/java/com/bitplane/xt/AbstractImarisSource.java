@@ -49,6 +49,9 @@ abstract class AbstractImarisSource< T extends NumericType< T > > implements Sou
 
 	AbstractImarisSource(
 			final VoxelDimensions voxelDimensions,
+			final double minX,
+			final double minY,
+			final double minZ,
 			final T type,
 			final RandomAccessibleInterval< T >[] mipmapSources,
 			final double[][] mipmapScales,
@@ -63,9 +66,9 @@ abstract class AbstractImarisSource< T extends NumericType< T > > implements Sou
 		mipmapTransforms = new AffineTransform3D[ numResolutions ];
 		final AffineTransform3D sourceTransform = new AffineTransform3D();
 		sourceTransform.set(
-				voxelDimensions.dimension( 0 ), 0, 0, 0,
-				0, voxelDimensions.dimension( 1 ), 0, 0,
-				0, 0, voxelDimensions.dimension( 2 ), 0 );
+				voxelDimensions.dimension( 0 ), 0, 0, minX,
+				0, voxelDimensions.dimension( 1 ), 0, minY,
+				0, 0, voxelDimensions.dimension( 2 ), minZ );
 		for ( int s = 0; s < numResolutions; ++s )
 		{
 			final AffineTransform3D mipmapTransform = new AffineTransform3D();

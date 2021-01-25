@@ -27,12 +27,15 @@ class ImarisSource4D< T extends NumericType< T > > extends AbstractImarisSource<
 
 	ImarisSource4D(
 			final VoxelDimensions voxelDimensions,
+			final double minX,
+			final double minY,
+			final double minZ,
 			final T type,
 			final RandomAccessibleInterval< T >[] mipmapSources,
 			final double[][] mipmapScales,
 			final String name )
 	{
-		super( voxelDimensions, type, mipmapSources, mipmapScales, name );
+		super( voxelDimensions, minX, minY, minZ, type, mipmapSources, mipmapScales, name );
 
 		numTimepoints = ( int ) mipmapSources[ 0 ].dimension( 3 );
 		currentMipmapSources = new RandomAccessibleInterval[ numResolutions ];

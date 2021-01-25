@@ -179,17 +179,30 @@ public class ImarisUtils
 			final IDataSetPrx dataset,
 			final VoxelDimensions voxelDimensions ) throws Error
 	{
+		setVoxelDimensions( dataset, voxelDimensions, 0, 0, 0 );
+	}
+
+	/**
+	 * Set the extends of {@code dataset} to correspond to the specified {@code voxelDimensions}.
+	 */
+	public static void setVoxelDimensions(
+			final IDataSetPrx dataset,
+			final VoxelDimensions voxelDimensions,
+			final double minX,
+			final double minY,
+			final double minZ ) throws Error
+	{
 		final int sx = dataset.GetSizeX();
 		final int sy = dataset.GetSizeY();
 		final int sz = dataset.GetSizeZ();
 
 		dataset.SetUnit( voxelDimensions.unit() );
 
-		dataset.SetExtendMinX( 0 );
-		dataset.SetExtendMinY( 0 );
-		dataset.SetExtendMinZ( 0 );
-		dataset.SetExtendMaxX( ( float ) ( sx * voxelDimensions.dimension( 0 ) ) );
-		dataset.SetExtendMaxY( ( float ) ( sy * voxelDimensions.dimension( 1 ) ) );
-		dataset.SetExtendMaxZ( ( float ) ( sz * voxelDimensions.dimension( 2 ) ) );
+		dataset.SetExtendMinX( ( float ) minX );
+		dataset.SetExtendMinY( ( float ) minY );
+		dataset.SetExtendMinZ( ( float ) minZ );
+		dataset.SetExtendMaxX( ( float ) ( minX + sx * voxelDimensions.dimension( 0 ) ) );
+		dataset.SetExtendMaxY( ( float ) ( minY + sy * voxelDimensions.dimension( 1 ) ) );
+		dataset.SetExtendMaxZ( ( float ) ( minZ + sz * voxelDimensions.dimension( 2 ) ) );
 	}
 }

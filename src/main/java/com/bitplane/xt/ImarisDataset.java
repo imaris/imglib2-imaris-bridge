@@ -246,11 +246,11 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 			final String name = String.format( "%s - %s", getName(), dataset.GetChannelName( c ) );
 			final ImagePyramid< T, V > channelPyramid = channelPyramids.get( c );
 			final Source< T > source = hasTimepoints
-					? new ImarisSource4D<>( voxelDimensions, type, channelPyramid.getImgs(), mipmapScales, name )
-					: new ImarisSource3D<>( voxelDimensions, type, channelPyramid.getImgs(), mipmapScales, name );
+					? new ImarisSource4D<>( voxelDimensions, minX, minY, minZ, type, channelPyramid.getImgs(), mipmapScales, name )
+					: new ImarisSource3D<>( voxelDimensions, minX, minY, minZ, type, channelPyramid.getImgs(), mipmapScales, name );
 			final Source< V > volatileSource = hasTimepoints
-					? new ImarisSource4D<>( voxelDimensions, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name )
-					: new ImarisSource3D<>( voxelDimensions, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name );
+					? new ImarisSource4D<>( voxelDimensions, minX, minY, minZ, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name )
+					: new ImarisSource3D<>( voxelDimensions, minX, minY, minZ, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name );
 			final SourceAndConverter< V > vsoc = new SourceAndConverter<>( volatileSource, createConverterToARGB( volatileType, c ) );
 			final SourceAndConverter< T > soc = new SourceAndConverter<>( source, createConverterToARGB( type, c ), vsoc );
 			sources.add( soc );

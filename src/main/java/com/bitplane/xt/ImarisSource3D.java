@@ -20,12 +20,15 @@ class ImarisSource3D< T extends NumericType< T > > extends AbstractImarisSource<
 
 	ImarisSource3D(
 			final VoxelDimensions voxelDimensions,
+			final double minX,
+			final double minY,
+			final double minZ,
 			final T type,
 			final RandomAccessibleInterval< T >[] mipmapSources,
 			final double[][] mipmapScales,
 			final String name )
 	{
-		super( voxelDimensions, type, mipmapSources, mipmapScales, name );
+		super( voxelDimensions, minX, minY, minZ, type, mipmapSources, mipmapScales, name );
 
 		interpolatedMipmapSources = new RealRandomAccessible[ interpolators.size() ][ numResolutions ];
 		final T zero = getType().createVariable();
