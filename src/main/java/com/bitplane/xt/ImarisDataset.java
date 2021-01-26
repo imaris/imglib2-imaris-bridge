@@ -377,6 +377,14 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		return dataset.GetParameter("Image", "Name");
 	}
 
+	/**
+	 * TODO: is this required?
+	 */
+	public IDataSetPrx getDataset()
+	{
+		return dataset;
+	}
+
 	@FunctionalInterface
 	private interface GetDataSubVolume
 	{
