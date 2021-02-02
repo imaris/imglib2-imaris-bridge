@@ -46,7 +46,7 @@ import net.imglib2.util.Fraction;
 
 /**
  * A {@link LazyCellImg} that creates empty Cells lazily when they are accessed
- * and sends (modified) Cells in Imaris when memory runs full.
+ * and sends (modified) Cells to Imaris when memory runs full.
  *
  * @param <T>
  *            the pixel type

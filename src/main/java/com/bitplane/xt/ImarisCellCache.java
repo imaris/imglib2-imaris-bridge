@@ -55,7 +55,6 @@ import net.imglib2.img.cell.CellGrid;
  * Basic {@link CacheRemover}/{@link CacheLoader} for writing/reading cells
  * to an Imaris {@code IDataset}.
  * <p>
- * TODO: How, can we even know this?
  * Blocks which are not in the cache (yet) are obtained from a backing
  * {@link CacheLoader}. Typically the backing loader will just create empty cells.
  * </p>
