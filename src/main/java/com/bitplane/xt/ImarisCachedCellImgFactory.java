@@ -462,7 +462,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		return mapDimension;
 	}
 
-	private static int[] invertMapDimensions( final int[] mapDimensions, final int n )
+	static int[] invertMapDimensions( final int[] mapDimensions, final int n )
 	{
 		final int[] invMapDimensions = new int[ n ];
 		Arrays.fill( invMapDimensions, -1 );
@@ -475,7 +475,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		return invMapDimensions;
 	}
 
-	private CellGrid createCellGrid(
+	static CellGrid createCellGrid(
 			final long[] dimensions,
 			final int[] invMapDimensions,
 			final Fraction entitiesPerPixel,
