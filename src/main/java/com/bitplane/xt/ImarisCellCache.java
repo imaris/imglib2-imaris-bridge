@@ -429,8 +429,8 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 				{
 					for ( int dc = 0; dc < sc; ++dc )
 					{
-						final int destpos = ( dt * sc + dc ) * slicelength;
-						System.arraycopy( data, 0, slicedata, destpos, slicelength );
+						final int srcpos = ( dt * sc + dc ) * slicelength;
+						System.arraycopy( data, srcpos, slicedata, 0, slicelength );
 						slice.set( slicedata, ox, oy, oz, oc + dc, ot + dt, sx, sy, sz );
 					}
 				}
