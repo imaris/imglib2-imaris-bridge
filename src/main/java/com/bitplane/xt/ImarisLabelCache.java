@@ -46,6 +46,11 @@ import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.CacheRemover;
 import net.imglib2.cache.IoSync;
 import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
+import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileByteArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileFloatArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileIntArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileLongArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileShortArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileIntArray;
@@ -124,6 +129,17 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 			final CellGrid grid,
 			final CacheLoader< Long, Cell< A > > backingLoader ) throws Error
 	{
+		this( dataset, primitiveType, mapDimensions, grid, backingLoader, false );
+	}
+
+	protected ImarisLabelCache(
+			final IDataSetPrx dataset,
+			final PrimitiveType primitiveType, // primitive type underlying accesses
+			final int[] mapDimensions,
+			final CellGrid grid,
+			final CacheLoader< Long, Cell< A > > backingLoader,
+			final boolean withDirtyFlag ) throws Error
+	{
 		this.dataset = dataset;
 		datasetType = dataset.GetType();
 		numChannels = dataset.GetSizeC();
@@ -132,7 +148,7 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 		n = grid.numDimensions();
 		this.mapDimensions = mapDimensions;
 		this.backingLoader = backingLoader;
-		volatileArraySource = volatileArraySource();
+		volatileArraySource = volatileArraySource( withDirtyFlag );
 		volatileArraySink = volatileArraySink();
 		written = backingLoader == null ? null : ConcurrentHashMap.newKeySet();
 	}
@@ -354,22 +370,37 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 	 */
 	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
 	//  PixelSource kinds flying around. There must be a better way to do this.
-	private PixelSource< A > volatileArraySource()
+	private PixelSource< A > volatileArraySource( final boolean withDirtyFlag )
 	{
 		final PixelSource< ? > pixels = arraySource();
-		switch ( primitiveType )
-		{
-		case BYTE:
-			return ( min, size ) -> ( A ) new VolatileByteArray( ( byte[] ) ( pixels.get( min, size ) ), true );
-		case SHORT:
-			return ( min, size ) -> ( A ) new VolatileShortArray( ( short[] ) ( pixels.get( min, size ) ), true );
-		case INT:
-			return ( min, size ) -> ( A ) new VolatileIntArray( ( int[] ) ( pixels.get( min, size ) ), true );
-		case LONG:
-			return ( min, size ) -> ( A ) new VolatileLongArray( ( long[] ) ( pixels.get( min, size ) ), true );
-		default:
-			throw new IllegalArgumentException();
-		}
+		if ( withDirtyFlag )
+			switch ( primitiveType )
+			{
+			case BYTE:
+				return ( min, size ) -> ( A ) new DirtyVolatileByteArray( ( byte[] ) ( pixels.get( min, size ) ), true );
+			case SHORT:
+				return ( min, size ) -> ( A ) new DirtyVolatileShortArray( ( short[] ) ( pixels.get( min, size ) ), true );
+			case INT:
+				return ( min, size ) -> ( A ) new DirtyVolatileIntArray( ( int[] ) ( pixels.get( min, size ) ), true );
+			case LONG:
+				return ( min, size ) -> ( A ) new DirtyVolatileLongArray( ( long[] ) ( pixels.get( min, size ) ), true );
+			default:
+				throw new IllegalArgumentException();
+			}
+		else
+			switch ( primitiveType )
+			{
+			case BYTE:
+				return ( min, size ) -> ( A ) new VolatileByteArray( ( byte[] ) ( pixels.get( min, size ) ), true );
+			case SHORT:
+				return ( min, size ) -> ( A ) new VolatileShortArray( ( short[] ) ( pixels.get( min, size ) ), true );
+			case INT:
+				return ( min, size ) -> ( A ) new VolatileIntArray( ( int[] ) ( pixels.get( min, size ) ), true );
+			case LONG:
+				return ( min, size ) -> ( A ) new VolatileLongArray( ( long[] ) ( pixels.get( min, size ) ), true );
+			default:
+				throw new IllegalArgumentException();
+			}
 	}
 
 	private interface GetLabel

@@ -24,7 +24,7 @@ public class ImarisDirtyCellCache< A extends Dirty > extends ImarisCellCache< A 
 			final CellGrid grid,
 			final CacheLoader< Long, Cell< A > > backingLoader ) throws Error
 	{
-		super( dataset, mapDimensions, grid, backingLoader );
+		super( dataset, mapDimensions, grid, backingLoader, true );
 	}
 
 	@Override

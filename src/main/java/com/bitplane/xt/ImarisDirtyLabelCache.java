@@ -26,7 +26,7 @@ public class ImarisDirtyLabelCache< A extends Dirty > extends ImarisLabelCache< 
 			final CellGrid grid,
 			final CacheLoader< Long, Cell< A > > backingLoader ) throws Error
 	{
-		super( dataset, primitiveType, mapDimensions, grid, backingLoader );
+		super( dataset, primitiveType, mapDimensions, grid, backingLoader, true );
 	}
 
 	@Override
