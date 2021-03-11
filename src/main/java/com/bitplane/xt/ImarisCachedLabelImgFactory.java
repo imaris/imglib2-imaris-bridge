@@ -36,6 +36,8 @@ import static com.bitplane.xt.ImarisCachedCellImgFactory.invertMapDimensions;
  * <p>
  * Integer labels on the ImgLib2 side are translated into channels on the Imaris side.
  * Therefore, because the channel dimension is used to decompose the values (values), this factory can create at most 4D images.
+ * <p>
+ * Images can only be created with existing Imaris dataset.
  *
  * @author Tobias Pietzsch
  */
@@ -173,8 +175,8 @@ public class ImarisCachedLabelImgFactory< T extends NativeType< T > > extends Na
 		{
 			@SuppressWarnings( { "unchecked", "rawtypes" } )
 			final ImarisCachedLabelImg< T, A > img = create(
-					dataset != null ? dataset : createDataset( dimensions ),
-					dataset == null || cellLoader != null || cacheLoader != null,
+					dataset,
+					cellLoader != null || cacheLoader != null,
 					dimensions,
 					cacheLoader,
 					cellLoader,
@@ -310,11 +312,6 @@ public class ImarisCachedLabelImgFactory< T extends NativeType< T > > extends Na
 				throw new IllegalArgumentException( "image dimensions do not match dataset dimensions" );
 		}
 		return mapDimension;
-	}
-
-	private IDataSetPrx createDataset( final long... dimensions ) throws Error
-	{
-		throw new UnsupportedOperationException();
 	}
 
 	// -- deprecated API --
