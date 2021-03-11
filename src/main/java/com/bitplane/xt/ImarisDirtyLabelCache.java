@@ -10,7 +10,8 @@ import net.imglib2.img.cell.CellGrid;
 import net.imglib2.type.PrimitiveType;
 
 /**
- * Variant of {@link ImarisCellCache}, which writes cells Imaris {@code IDataset}, but <em>only if they were modified</em>.
+ * Variant of {@link ImarisLabelCache}, which writes cells to Imaris {@code
+ * IDataset}, but <em>only if they were modified</em>.
  *
  * @param <A>
  * 		access type

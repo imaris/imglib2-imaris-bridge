@@ -100,9 +100,6 @@ public class ImarisCachedLabelImgFactory< T extends NativeType< T > > extends Na
 	 * It is assumed that {@code dataset} is empty and cells will be populated from the given {@code loader}.
 	 * Existing data in {@code dataset} will thus be potentially overwritten!
 	 */
-	// creates new Imaris dataset
-	// initializes cells using the given loader
-	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
 	public ImarisCachedLabelImg< T, ? > create( final IDataSetPrx dataset, final long[] dimensions, final CellLoader< T > loader )
 	{
 		return create( dataset, dimensions, null, loader, type(), null );
