@@ -63,6 +63,7 @@ import net.imglib2.util.Fraction;
  * @author Tobias Pietzsch
  */
 public class ImarisCachedProbabilitiesImg< T extends NativeType< T >, A > extends CachedCellImg< T, A >
+		implements ImarisImg
 {
 	private final ImarisCachedProbabilitiesImgFactory< T > factory;
 
@@ -107,14 +108,21 @@ public class ImarisCachedProbabilitiesImg< T extends NativeType< T >, A > extend
 	/**
 	 * Persist all changes back to Imaris
 	 */
+	@Override
 	public void persist()
 	{
 		cache.persistAll();
 	}
 
-	// TODO: may be this should return a wrapper instead of IDataSetPrx
+	@Override
 	public IDataSetPrx getDataSet()
 	{
 		return dataset;
+	}
+
+	@Override
+	public ImarisService imaris()
+	{
+		return factory.getImarisService();
 	}
 }
