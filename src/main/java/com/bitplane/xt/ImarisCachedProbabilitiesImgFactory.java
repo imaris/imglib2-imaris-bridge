@@ -243,8 +243,8 @@ public class ImarisCachedProbabilitiesImgFactory< T extends NativeType< T > > ex
 
 		@SuppressWarnings( { "rawtypes", "unchecked" } )
 		final ImarisProbabilitiesCache< A > imarisCache = options.dirtyAccesses()
-				? new ImarisDirtyProbabilitiesCache( dataset, typeFactory.getPrimitiveType(), mapDimensions, grid, backingLoader )
-				: new ImarisProbabilitiesCache( dataset, typeFactory.getPrimitiveType(), mapDimensions, grid, backingLoader );
+				? new ImarisDirtyProbabilitiesCache( dataset, typeFactory.getPrimitiveType(), mapDimensions, grid, backingLoader, options.persistOnLoad() )
+				: new ImarisProbabilitiesCache( dataset, typeFactory.getPrimitiveType(), mapDimensions, grid, backingLoader, options.persistOnLoad() );
 
 		final IoSync< Long, Cell< A >, A > iosync = new IoSync<>(
 				imarisCache,

@@ -53,7 +53,7 @@ public class ImarisCachedCellImgOptions extends AbstractOptions< ImarisCachedCel
 		AccessOptions< ImarisCachedCellImgOptions >,
 		CellDimensionsOptions< ImarisCachedCellImgOptions >,
 		CacheOptions< ImarisCachedCellImgOptions >,
-		DiskCacheOptions< ImarisCachedCellImgOptions >
+		ImarisCacheOptions< ImarisCachedCellImgOptions >
 {
 	public final Values values = new Values();
 
@@ -110,7 +110,7 @@ public class ImarisCachedCellImgOptions extends AbstractOptions< ImarisCachedCel
 			AccessOptions.Val,
 			CellDimensionsOptions.Val,
 			CacheOptions.Val,
-			DiskCacheOptions.Val
+			ImarisCacheOptions.Val
 	{
 		// NB overrides default value
 		@Override
@@ -137,7 +137,7 @@ public class ImarisCachedCellImgOptions extends AbstractOptions< ImarisCachedCel
 			AccessOptions.Val.super.forEach( action );
 			CellDimensionsOptions.Val.super.forEach( action );
 			CacheOptions.Val.super.forEach( action );
-			DiskCacheOptions.Val.super.forEach( action );
+			ImarisCacheOptions.Val.super.forEach( action );
 		}
 	}
 }

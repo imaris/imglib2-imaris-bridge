@@ -25,9 +25,10 @@ public class ImarisDirtyProbabilitiesCache< A extends Dirty > extends ImarisProb
 			final PrimitiveType primitiveType, // primitive type underlying accesses
 			final int[] mapDimensions,
 			final CellGrid grid,
-			final CacheLoader< Long, Cell< A > > backingLoader ) throws Error
+			final CacheLoader< Long, Cell< A > > backingLoader,
+			final boolean persistOnLoad ) throws Error
 	{
-		super( dataset, primitiveType, mapDimensions, grid, backingLoader, true );
+		super( dataset, primitiveType, mapDimensions, grid, backingLoader, persistOnLoad, true );
 	}
 
 	@Override

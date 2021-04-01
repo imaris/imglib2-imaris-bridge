@@ -234,8 +234,8 @@ public class ImarisCachedLabelImgFactory< T extends NativeType< T > > extends Na
 
 		@SuppressWarnings( { "rawtypes", "unchecked" } )
 		final ImarisLabelCache< A > imarisCache = options.dirtyAccesses()
-				? new ImarisDirtyLabelCache( dataset, typeFactory.getPrimitiveType(), mapDimensions, grid, backingLoader )
-				: new ImarisLabelCache( dataset, typeFactory.getPrimitiveType(), mapDimensions, grid, backingLoader );
+				? new ImarisDirtyLabelCache( dataset, typeFactory.getPrimitiveType(), mapDimensions, grid, backingLoader, options.persistOnLoad() )
+				: new ImarisLabelCache( dataset, typeFactory.getPrimitiveType(), mapDimensions, grid, backingLoader, options.persistOnLoad() );
 
 		final IoSync< Long, Cell< A >, A > iosync = new IoSync<>(
 				imarisCache,

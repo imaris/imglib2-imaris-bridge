@@ -100,6 +100,12 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 	private final CacheLoader< Long, Cell< A > > backingLoader;
 
 	/**
+	 * Whether to immediately persist cells that have been loaded from {@code
+	 * backingLoader} to Imaris.
+	 */
+	private final boolean persistOnLoad;
+
+	/**
 	 * Contains the keys that have been stored to Imaris (via {@link #onRemoval}).
 	 * If a key is present in this set, the corresponding Cell is loaded from Imaris.
 	 * Otherwise, it is obtained from the {@code backingLoader}.
@@ -121,9 +127,10 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 			final PrimitiveType primitiveType, // primitive type underlying accesses
 			final int[] mapDimensions,
 			final CellGrid grid,
-			final CacheLoader< Long, Cell< A > > backingLoader ) throws Error
+			final CacheLoader< Long, Cell< A > > backingLoader,
+			final boolean persistOnLoad ) throws Error
 	{
-		this( dataset, primitiveType, mapDimensions, grid, backingLoader, false );
+		this( dataset, primitiveType, mapDimensions, grid, backingLoader, persistOnLoad, false );
 	}
 
 	protected ImarisProbabilitiesCache(
@@ -132,6 +139,7 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 			final int[] mapDimensions,
 			final CellGrid grid,
 			final CacheLoader< Long, Cell< A > > backingLoader,
+			final boolean persistOnLoad,
 			final boolean withDirtyFlag ) throws Error
 	{
 		this.dataset = dataset;
@@ -142,6 +150,7 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 		n = grid.numDimensions();
 		this.mapDimensions = mapDimensions;
 		this.backingLoader = backingLoader;
+		this.persistOnLoad = persistOnLoad;
 		volatileArraySource = volatileArraySource( withDirtyFlag );
 		volatileArraySink = volatileArraySink();
 		written = backingLoader == null ? null : ConcurrentHashMap.newKeySet();
@@ -746,7 +755,10 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 		}
 		else
 		{
-			return backingLoader.get( key );
+			final Cell< A > cell = backingLoader.get( key );
+			if ( persistOnLoad )
+				onRemovalImp( key, cell.getData() );
+			return cell;
 		}
 	}
 
@@ -768,6 +780,11 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 
 	@Override
 	public void onRemoval( final Long key, final A valueData )
+	{
+		onRemovalImp( key, valueData );
+	}
+
+	private void onRemovalImp( final Long key, final A valueData )
 	{
 		final long index = key;
 		final long[] cellMin = new long[ n ];

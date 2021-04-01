@@ -22,9 +22,10 @@ public class ImarisDirtyCellCache< A extends Dirty > extends ImarisCellCache< A 
 			final IDataSetPrx dataset,
 			final int[] mapDimensions,
 			final CellGrid grid,
-			final CacheLoader< Long, Cell< A > > backingLoader ) throws Error
+			final CacheLoader< Long, Cell< A > > backingLoader,
+			final boolean persistOnLoad ) throws Error
 	{
-		super( dataset, mapDimensions, grid, backingLoader, true );
+		super( dataset, mapDimensions, grid, backingLoader, persistOnLoad, true );
 	}
 
 	@Override
