@@ -4,22 +4,14 @@ import Imaris.IApplicationPrx;
 import net.imagej.Dataset;
 import org.scijava.service.SciJavaService;
 
-public interface ImarisService extends SciJavaService, ImarisInstance
+public interface ImarisInstance
 {
-	@Override
 	IApplicationPrx app();
 
-	@Override
 	void disconnect();
-
-	/**
-	 * Get the current Imaris image as an ImageJ {@code net.imagej.Dataset}.
-	 */
-	Dataset getDataset();
 
 	/**
 	 * Get the current Imaris image as an {@code ImarisDataset}.
 	 */
-	@Override
 	ImarisDataset< ? > getImarisDataset();
 }
