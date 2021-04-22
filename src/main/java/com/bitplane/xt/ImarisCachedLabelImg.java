@@ -116,8 +116,8 @@ public class ImarisCachedLabelImg< T extends NativeType< T >, A > extends Cached
 	}
 
 	@Override
-	public ImarisService imaris()
+	public ImarisInstance imaris()
 	{
-		return factory.getImarisService();
+		return factory.getImarisInstance();
 	}
 }

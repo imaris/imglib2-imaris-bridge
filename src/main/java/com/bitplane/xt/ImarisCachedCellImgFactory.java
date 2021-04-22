@@ -43,17 +43,17 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 {
 	private ImarisCachedCellImgOptions factoryOptions;
 
-	private final ImarisService imaris;
+	private final ImarisInstance imaris;
 
 	// TODO: TEMPORARY, REMOVE (?)
-	public ImarisService getImarisService() {
+	public ImarisInstance getImarisInstance() {
 		return imaris;
 	}
 
 	/**
 	 * Create a new {@link ImarisCachedCellImgFactory} with default configuration.
 	 */
-	public ImarisCachedCellImgFactory( final T type, final ImarisService imaris )
+	public ImarisCachedCellImgFactory( final T type, final ImarisInstance imaris )
 	{
 		this( type, imaris, ImarisCachedCellImgOptions.options() );
 	}
@@ -65,7 +65,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	 * @param optional
 	 *            configuration options.
 	 */
-	public ImarisCachedCellImgFactory( final T type, final ImarisService imaris, final ImarisCachedCellImgOptions optional )
+	public ImarisCachedCellImgFactory( final T type, final ImarisInstance imaris, final ImarisCachedCellImgOptions optional )
 	{
 		super( verifyType( type ) );
 		this.imaris = imaris;
