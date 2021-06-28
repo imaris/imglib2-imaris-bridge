@@ -38,6 +38,7 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 			final ImarisDataset< ? > ds = getImarisDataset();
 			final Dataset ijDataset = datasetService.create( ds.getImgPlus() );
 			ijDataset.setName( ds.getName() );
+			ijDataset.setRGBMerged( false );
 			return ijDataset;
 		}
 		catch ( final Error error )
