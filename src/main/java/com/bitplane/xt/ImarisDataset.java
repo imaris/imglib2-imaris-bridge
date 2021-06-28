@@ -539,12 +539,13 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 
 		final int[] vRGBA = new int[ 4 ];
 		components( aRGBA, vRGBA );
+		final byte alpha = UnsignedByteType.getCodedSignedByte( 255 - vRGBA[ 3 ] );
 		for ( int i = 0; i < vSize; ++i )
 		{
 			rLut[ i ] = ( byte ) ( i * vRGBA[ 0 ] / 255 );
 			gLut[ i ] = ( byte ) ( i * vRGBA[ 1 ] / 255 );
 			bLut[ i ] = ( byte ) ( i * vRGBA[ 2 ] / 255 );
-			aLut[ i ] = ( byte ) ( i * vRGBA[ 3 ] / 255 );
+			aLut[ i ] = alpha;
 		}
 		return new ColorTable8( rLut, gLut, bLut, aLut );
 	}
