@@ -4,7 +4,7 @@ import Imaris.IApplicationPrx;
 import net.imagej.Dataset;
 import org.scijava.service.SciJavaService;
 
-public interface ImarisInstance
+public interface ImarisApplication
 {
 	IApplicationPrx app();
 

@@ -4,7 +4,7 @@ import Imaris.IApplicationPrx;
 import net.imagej.Dataset;
 import org.scijava.service.SciJavaService;
 
-public interface ImarisService extends SciJavaService, ImarisInstance
+public interface ImarisService extends SciJavaService, ImarisApplication
 {
 	@Override
 	IApplicationPrx app();

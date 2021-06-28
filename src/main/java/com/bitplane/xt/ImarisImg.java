@@ -16,5 +16,5 @@ public interface ImarisImg
 	//   Future<Void> populateAndPersist();
 	//   This would be great to have if ImarisImg is the endpoint of a computation that should be fully realized
 
-	ImarisInstance imaris();
+	ImarisApplication imaris();
 }

@@ -54,17 +54,17 @@ public class ImarisCachedProbabilitiesImgFactory< T extends NativeType< T > > ex
 {
 	private ImarisCachedCellImgOptions factoryOptions;
 
-	private final ImarisInstance imaris;
+	private final ImarisApplication imaris;
 
 	// TODO: TEMPORARY, REMOVE (?)
-	public ImarisInstance getImarisInstance() {
+	public ImarisApplication getImarisInstance() {
 		return imaris;
 	}
 
 	/**
 	 * Create a new {@link ImarisCachedProbabilitiesImgFactory} with default configuration.
 	 */
-	public ImarisCachedProbabilitiesImgFactory( final T type, final ImarisInstance imaris )
+	public ImarisCachedProbabilitiesImgFactory( final T type, final ImarisApplication imaris )
 	{
 		this( type, imaris, ImarisCachedCellImgOptions.options() );
 	}
@@ -76,7 +76,7 @@ public class ImarisCachedProbabilitiesImgFactory< T extends NativeType< T > > ex
 	 * @param optional
 	 *            configuration options.
 	 */
-	public ImarisCachedProbabilitiesImgFactory( final T type, final ImarisInstance imaris, final ImarisCachedCellImgOptions optional )
+	public ImarisCachedProbabilitiesImgFactory( final T type, final ImarisApplication imaris, final ImarisCachedCellImgOptions optional )
 	{
 		super( verifyType( type ) );
 		this.imaris = imaris;

@@ -8,7 +8,7 @@ import ImarisServer.IServerPrx;
 
 import static Imaris.IApplicationPrxHelper.checkedCast;
 
-public class DefaultImarisInstance implements ImarisInstance
+public class DefaultImarisApplication implements ImarisApplication
 {
 	private int applicationId;
 
@@ -16,12 +16,12 @@ public class DefaultImarisInstance implements ImarisInstance
 
 	private IApplicationPrx app;
 
-	public DefaultImarisInstance()
+	public DefaultImarisApplication()
 	{
 		this( -1 );
 	}
 
-	public DefaultImarisInstance( final int applicationId )
+	public DefaultImarisApplication( final int applicationId )
 	{
 		this.applicationId = applicationId;
 	}
@@ -38,8 +38,27 @@ public class DefaultImarisInstance implements ImarisInstance
 		if ( app == null )
 		{
 			final IServerPrx server = getServer();
-			if ( server.GetNumberOfObjects() < 1 )
+			final int numObjects = server.GetNumberOfObjects();
+			System.out.println( "numObjects = " + numObjects );
+			if ( numObjects < 1 )
 				throw error();
+			if ( numObjects > 1 )
+			{
+				try
+				{
+					for ( int i = 0; i < numObjects; i++ )
+					{
+						final int applicationId = server.GetObjectID(i);
+						IApplicationPrx app = checkedCast( server.GetObject( applicationId ) );
+						String vDescription = app.GetVersion() + " " + app.GetCurrentFileName();
+						System.out.println( applicationId + "vDescription = " + vDescription );
+					}
+				}
+				catch ( final Error error )
+				{
+					throw error( error );
+				}
+			}
 			if (applicationId == -1 )
 				applicationId = server.GetObjectID( 0 );
 			final ObjectPrx obj = server.GetObject( applicationId );

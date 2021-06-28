@@ -114,7 +114,7 @@ public class ImarisCachedCellImg< T extends NativeType< T >, A > extends CachedC
 	}
 
 	@Override
-	public ImarisInstance imaris()
+	public ImarisApplication imaris()
 	{
 		return factory.getImarisInstance();
 	}

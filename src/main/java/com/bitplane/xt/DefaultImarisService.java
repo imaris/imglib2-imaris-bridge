@@ -16,7 +16,7 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	@Parameter
 	private DatasetService datasetService;
 
-	private DefaultImarisInstance imaris = new DefaultImarisInstance();
+	private DefaultImarisApplication imaris = new DefaultImarisApplication();
 
 	@Override
 	public IApplicationPrx app()
