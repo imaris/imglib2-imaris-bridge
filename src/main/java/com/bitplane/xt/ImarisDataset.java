@@ -208,12 +208,13 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		imp = new ImgPlus<>( img );
 		for ( int i = 0; i < axes.size(); ++i )
 			imp.setAxis( axes.get( i ), i );
-		imp.initializeColorTables( sc * sz );
+		imp.initializeColorTables( sc * sz * st );
 		for ( int c = 0; c < sc; ++c )
 		{
 			final ColorTable8 cT = createColorTable( c );
-			for ( int z = 0; z < sz; ++z )
-				imp.setColorTable( cT, c * sz + z );
+			for ( int t = 0; t < st; ++t )
+				for ( int z = 0; z < sz; ++z )
+					imp.setColorTable( cT, z + sz * ( c + sc * t ) );
 		}
 		imp.setName( getName() );
 
