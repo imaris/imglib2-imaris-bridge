@@ -1,7 +1,5 @@
 package com.bitplane.xt;
 
-import Imaris.IApplicationPrx;
-import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import org.scijava.Priority;
 import org.scijava.plugin.Parameter;
@@ -17,7 +15,7 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 
 	private DefaultImarisApplication imaris;
 
-	private synchronized ImarisApplication imaris()
+	private synchronized DefaultImarisApplication imaris()
 	{
 		if ( imaris == null )
 		{
@@ -28,26 +26,14 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	}
 
 	@Override
-	public IApplicationPrx getIApplicationPrx()
-	{
-		return imaris().getIApplicationPrx();
-	}
-
-	@Override
 	public void disconnect()
 	{
 		imaris().disconnect();
 	}
 
 	@Override
-	public Dataset getDataset()
+	public ImarisApplication app()
 	{
-		return imaris().getDataset();
-	}
-
-	@Override
-	public ImarisDataset< ? > getImarisDataset()
-	{
-		return imaris().getImarisDataset();
+		return imaris();
 	}
 }

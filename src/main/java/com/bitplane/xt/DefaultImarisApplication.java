@@ -33,7 +33,6 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 		this.applicationId = applicationId;
 	}
 
-	@Override
 	public void disconnect()
 	{
 		closeIceClient();

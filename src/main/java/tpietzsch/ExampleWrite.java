@@ -40,7 +40,7 @@ public class ExampleWrite
 
 
 
-		final IApplicationPrx app = imaris.getIApplicationPrx();
+		final IApplicationPrx app = imaris.app().getIApplicationPrx();
 		final IFactoryPrx factory = app.GetFactory();
 		final IDataSetPrx dataset = factory.CreateDataSet();
 

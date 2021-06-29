@@ -34,11 +34,11 @@ public class ExampleImarisCachedLabelImg
 	{
 		ImarisCachedLabelImgFactory< ShortType > factory = new ImarisCachedLabelImgFactory<>(
 				new ShortType(),
-				imaris,
+				imaris.app(),
 				ImarisCachedCellImgOptions.options()
 						.cellDimensions( 64 )
 						.numIoThreads( 20 ) );
-		final ImarisCachedLabelImg< ShortType, ? > imarisImg = factory.create( imaris.getIApplicationPrx().GetDataSet(), dimensions );
+		final ImarisCachedLabelImg< ShortType, ? > imarisImg = factory.create( imaris.app().getIApplicationPrx().GetDataSet(), dimensions );
 
 		BdvFunctions.show( imarisImg, "labels" );
 	}
@@ -47,13 +47,13 @@ public class ExampleImarisCachedLabelImg
 	{
 		ImarisCachedLabelImgFactory< ShortType > factory = new ImarisCachedLabelImgFactory<>(
 				new ShortType(),
-				imaris,
+				imaris.app(),
 				ImarisCachedCellImgOptions.options()
 						.cellDimensions( 64 )
 						.numIoThreads( 20 ) );
 
 		final IDataSetPrx dataset = ImarisUtils.createDataset(
-				imaris.getIApplicationPrx(),
+				imaris.app().getIApplicationPrx(),
 				tType.eTypeUInt8,
 				AxisOrder.XYZCT,
 				dimensions[ 0 ], dimensions[ 1 ], dimensions[ 2 ], numChannels, dimensions[ 3 ] );
@@ -71,6 +71,6 @@ public class ExampleImarisCachedLabelImg
 
 		imarisImg.persist();
 
-		imaris.getIApplicationPrx().SetImage( 0, dataset );
+		imaris.app().getIApplicationPrx().SetImage( 0, dataset );
 	}
 }
