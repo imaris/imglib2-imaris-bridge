@@ -6,7 +6,10 @@ import org.scijava.service.SciJavaService;
 
 public interface ImarisApplication
 {
-	IApplicationPrx app();
+	/**
+	 * Get the underlying {@code IApplication} ICE proxy.
+	 */
+	IApplicationPrx getIApplicationPrx();
 
 	void disconnect();
 

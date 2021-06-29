@@ -19,9 +19,9 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	private DefaultImarisApplication imaris = new DefaultImarisApplication();
 
 	@Override
-	public IApplicationPrx app()
+	public IApplicationPrx getIApplicationPrx()
 	{
-		return imaris.app();
+		return imaris.getIApplicationPrx();
 	}
 
 	@Override

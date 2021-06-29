@@ -33,7 +33,7 @@ public class DefaultImarisApplication implements ImarisApplication
 	}
 
 	@Override
-	public IApplicationPrx app()
+	public IApplicationPrx getIApplicationPrx()
 	{
 		if ( app == null )
 		{
@@ -72,7 +72,7 @@ public class DefaultImarisApplication implements ImarisApplication
 	{
 		try
 		{
-			final IDataSetPrx datasetPrx = app().GetDataSet();
+			final IDataSetPrx datasetPrx = getIApplicationPrx().GetDataSet();
 			if ( datasetPrx == null )
 				throw new RuntimeException( "No dataset is open in Imaris" );
 			return new ImarisDataset<>( datasetPrx );

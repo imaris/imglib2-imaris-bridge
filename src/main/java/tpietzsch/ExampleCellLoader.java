@@ -73,7 +73,7 @@ public class ExampleCellLoader
 		Parallelization.runMultiThreaded( () -> populateAndPersist( imarisImg ).get() );
 
 		final IDataSetPrx dataset = imarisImg.getDataSet();
-		imaris.app().SetImage( 0, dataset );
+		imaris.getIApplicationPrx().SetImage( 0, dataset );
 	}
 
 	public static Future< Void > populateAndPersist( final CachedCellImg< ?, ? > img ) throws InterruptedException

@@ -520,7 +520,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		default:
 			throw new IllegalArgumentException( "image must not have more than 5 or less than 2 dimensions" );
 		}
-		return ImarisUtils.createDataset( imaris.app(), ImarisUtils.imarisTypeFor( type() ), axisOrder, dimensions );
+		return ImarisUtils.createDataset( imaris.getIApplicationPrx(), ImarisUtils.imarisTypeFor( type() ), axisOrder, dimensions );
 	}
 
 	// -- deprecated API --

@@ -4,13 +4,10 @@ import Imaris.Error;
 import Imaris.IApplicationPrx;
 import Imaris.IDataSetPrx;
 import Imaris.IFactoryPrx;
-import bdv.util.BdvFunctions;
 import com.bitplane.xt.ImarisService;
 import ij.IJ;
 import ij.ImagePlus;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.array.ArrayImg;
-import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.loops.LoopBuilder;
@@ -43,7 +40,7 @@ public class ExampleWrite
 
 
 
-		final IApplicationPrx app = imaris.app();
+		final IApplicationPrx app = imaris.getIApplicationPrx();
 		final IFactoryPrx factory = app.GetFactory();
 		final IDataSetPrx dataset = factory.CreateDataSet();
 

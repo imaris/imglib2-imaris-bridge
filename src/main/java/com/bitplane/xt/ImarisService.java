@@ -7,7 +7,7 @@ import org.scijava.service.SciJavaService;
 public interface ImarisService extends SciJavaService, ImarisApplication
 {
 	@Override
-	IApplicationPrx app();
+	IApplicationPrx getIApplicationPrx();
 
 	@Override
 	void disconnect();

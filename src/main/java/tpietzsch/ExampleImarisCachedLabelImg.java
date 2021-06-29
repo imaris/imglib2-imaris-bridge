@@ -11,8 +11,6 @@ import com.bitplane.xt.ImarisCachedLabelImgFactory;
 import com.bitplane.xt.ImarisService;
 import com.bitplane.xt.ImarisUtils;
 import net.imglib2.Cursor;
-import net.imglib2.cache.img.CellLoader;
-import net.imglib2.cache.img.SingleCellArrayImg;
 import net.imglib2.type.numeric.integer.ShortType;
 import org.scijava.Context;
 
@@ -40,7 +38,7 @@ public class ExampleImarisCachedLabelImg
 				ImarisCachedCellImgOptions.options()
 						.cellDimensions( 64 )
 						.numIoThreads( 20 ) );
-		final ImarisCachedLabelImg< ShortType, ? > imarisImg = factory.create( imaris.app().GetDataSet(), dimensions );
+		final ImarisCachedLabelImg< ShortType, ? > imarisImg = factory.create( imaris.getIApplicationPrx().GetDataSet(), dimensions );
 
 		BdvFunctions.show( imarisImg, "labels" );
 	}
@@ -55,7 +53,7 @@ public class ExampleImarisCachedLabelImg
 						.numIoThreads( 20 ) );
 
 		final IDataSetPrx dataset = ImarisUtils.createDataset(
-				imaris.app(),
+				imaris.getIApplicationPrx(),
 				tType.eTypeUInt8,
 				AxisOrder.XYZCT,
 				dimensions[ 0 ], dimensions[ 1 ], dimensions[ 2 ], numChannels, dimensions[ 3 ] );
@@ -73,6 +71,6 @@ public class ExampleImarisCachedLabelImg
 
 		imarisImg.persist();
 
-		imaris.app().SetImage( 0, dataset );
+		imaris.getIApplicationPrx().SetImage( 0, dataset );
 	}
 }
