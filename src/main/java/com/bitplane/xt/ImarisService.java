@@ -15,6 +15,7 @@ public interface ImarisService extends SciJavaService, ImarisApplication
 	/**
 	 * Get the current Imaris image as an ImageJ {@code net.imagej.Dataset}.
 	 */
+	@Override
 	Dataset getDataset();
 
 	/**

@@ -14,6 +14,11 @@ public interface ImarisApplication
 	void disconnect();
 
 	/**
+	 * Get the current Imaris image as an ImageJ {@code net.imagej.Dataset}.
+	 */
+	Dataset getDataset();
+
+	/**
 	 * Get the current Imaris image as an {@code ImarisDataset}.
 	 */
 	ImarisDataset< ? > getImarisDataset();

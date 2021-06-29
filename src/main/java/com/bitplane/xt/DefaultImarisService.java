@@ -1,6 +1,5 @@
 package com.bitplane.xt;
 
-import Imaris.Error;
 import Imaris.IApplicationPrx;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
@@ -16,40 +15,39 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	@Parameter
 	private DatasetService datasetService;
 
-	private DefaultImarisApplication imaris = new DefaultImarisApplication();
+	private DefaultImarisApplication imaris;
+
+	private synchronized ImarisApplication imaris()
+	{
+		if ( imaris == null )
+		{
+			imaris = new DefaultImarisApplication();
+			context().inject( imaris );
+		}
+		return imaris;
+	}
 
 	@Override
 	public IApplicationPrx getIApplicationPrx()
 	{
-		return imaris.getIApplicationPrx();
+		return imaris().getIApplicationPrx();
 	}
 
 	@Override
 	public void disconnect()
 	{
-		imaris.disconnect();
+		imaris().disconnect();
 	}
 
 	@Override
 	public Dataset getDataset()
 	{
-		try
-		{
-			final ImarisDataset< ? > ds = getImarisDataset();
-			final Dataset ijDataset = datasetService.create( ds.getImgPlus() );
-			ijDataset.setName( ds.getName() );
-			ijDataset.setRGBMerged( false );
-			return ijDataset;
-		}
-		catch ( final Error error )
-		{
-			throw imaris.error( error );
-		}
+		return imaris().getDataset();
 	}
 
 	@Override
 	public ImarisDataset< ? > getImarisDataset()
 	{
-		return imaris.getImarisDataset();
+		return imaris().getImarisDataset();
 	}
 }

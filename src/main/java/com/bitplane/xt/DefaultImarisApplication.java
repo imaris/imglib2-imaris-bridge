@@ -5,11 +5,18 @@ import Imaris.Error;
 import Imaris.IApplicationPrx;
 import Imaris.IDataSetPrx;
 import ImarisServer.IServerPrx;
+import net.imagej.Dataset;
+import net.imagej.DatasetService;
+import org.scijava.AbstractContextual;
+import org.scijava.plugin.Parameter;
 
 import static Imaris.IApplicationPrxHelper.checkedCast;
 
-public class DefaultImarisApplication implements ImarisApplication
+public class DefaultImarisApplication extends AbstractContextual implements ImarisApplication
 {
+	@Parameter
+	private DatasetService datasetService;
+
 	private int applicationId;
 
 	private IceClient mIceClient;
@@ -65,6 +72,23 @@ public class DefaultImarisApplication implements ImarisApplication
 			app = checkedCast( obj );
 		}
 		return app;
+	}
+
+	@Override
+	public Dataset getDataset()
+	{
+		try
+		{
+			final ImarisDataset< ? > ds = getImarisDataset();
+			final Dataset ijDataset = datasetService.create( ds.getImgPlus() );
+			ijDataset.setName( ds.getName() );
+			ijDataset.setRGBMerged( false );
+			return ijDataset;
+		}
+		catch ( final Error error )
+		{
+			throw error( error );
+		}
 	}
 
 	@Override
