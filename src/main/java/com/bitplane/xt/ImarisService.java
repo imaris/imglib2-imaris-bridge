@@ -7,4 +7,6 @@ public interface ImarisService extends SciJavaService
 	ImarisApplication app();
 
 	void disconnect();
+
+	ImarisApplication getApplicationByID_RENAME( int applicationId );
 }

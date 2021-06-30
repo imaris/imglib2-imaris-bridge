@@ -32,4 +32,11 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	{
 		return imaris();
 	}
+
+	@Override
+	public ImarisApplication getApplicationByID_RENAME( int applicationId )
+	{
+		server.context = context();
+		return server.getApplication( applicationId );
+	}
 }
