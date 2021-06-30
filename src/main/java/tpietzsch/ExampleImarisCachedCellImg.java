@@ -29,7 +29,7 @@ public class ExampleImarisCachedCellImg
 
 		ImarisCachedCellImgFactory< UnsignedByteType > factory = new ImarisCachedCellImgFactory<>(
 				Util.getTypeFromInterval( img ),
-				imaris.app(),
+				imaris.getApplication(),
 				ImarisCachedCellImgOptions.options()
 						.cellDimensions( 64 )
 						.numIoThreads( 20 ) );
@@ -43,6 +43,6 @@ public class ExampleImarisCachedCellImg
 		imarisImg.persist();
 
 		final IDataSetPrx dataset = imarisImg.getIDataSetPrx();
-		imaris.app().getIApplicationPrx().SetImage( 0, dataset );
+		imaris.getApplication().getIApplicationPrx().SetImage( 0, dataset );
 	}
 }

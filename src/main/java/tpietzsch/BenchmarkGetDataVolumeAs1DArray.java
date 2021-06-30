@@ -11,7 +11,7 @@ public class BenchmarkGetDataVolumeAs1DArray
 {
 	public static void main( String[] args ) throws Error
 	{
-		final IApplicationPrx app = new DefaultImarisService().app().getIApplicationPrx();
+		final IApplicationPrx app = new DefaultImarisService().getApplication().getIApplicationPrx();
 		final IDataSetPrx dataset = app.GetDataSet();
 		final long[] dims = { dataset.GetSizeX(), dataset.GetSizeY(), dataset.GetSizeZ() };
 

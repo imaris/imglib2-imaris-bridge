@@ -25,12 +25,6 @@ class ImarisServerConnection
 
 	public Context context;
 
-	public synchronized void reconnect()
-	{
-		closeIceClient();
-		getServer();
-	}
-
 	public synchronized void disconnect()
 	{
 		closeIceClient();

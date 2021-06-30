@@ -60,7 +60,7 @@ public class ExampleCellLoader
 
 		ImarisCachedCellImgFactory< UnsignedByteType > factory = new ImarisCachedCellImgFactory<>(
 				Util.getTypeFromInterval( img ),
-				imaris.app(),
+				imaris.getApplication(),
 				ImarisCachedCellImgOptions.options()
 						.initializeCellsAsDirty( true )
 						.cellDimensions( 64 )
@@ -73,7 +73,7 @@ public class ExampleCellLoader
 		Parallelization.runMultiThreaded( () -> populateAndPersist( imarisImg ).get() );
 
 		final IDataSetPrx dataset = imarisImg.getIDataSetPrx();
-		imaris.app().getIApplicationPrx().SetImage( 0, dataset );
+		imaris.getApplication().getIApplicationPrx().SetImage( 0, dataset );
 	}
 
 	public static Future< Void > populateAndPersist( final CachedCellImg< ?, ? > img ) throws InterruptedException

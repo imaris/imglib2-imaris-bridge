@@ -1,5 +1,6 @@
 package com.bitplane.xt;
 
+import java.util.List;
 import net.imagej.DatasetService;
 import org.scijava.Priority;
 import org.scijava.plugin.Parameter;
@@ -22,16 +23,23 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	}
 
 	@Override
-	public ImarisApplication app()
+	public List< ImarisApplication > getApplications()
 	{
-		server.context = context();
-		return server.getApplications().get( 0 );
+		server.context = context(); // TODO: pass context some other way
+		return server.getApplications();
 	}
 
 	@Override
-	public ImarisApplication getApplicationByID_RENAME( int applicationId )
+	public ImarisApplication getApplication()
 	{
-		server.context = context();
+		final List< ImarisApplication > apps = getApplications();
+		return apps.isEmpty() ? null : apps.get( 0 );
+	}
+
+	@Override
+	public ImarisApplication getApplicationByID( int applicationId )
+	{
+		server.context = context(); // TODO: pass context some other way
 		return server.getApplication( applicationId );
 	}
 }
