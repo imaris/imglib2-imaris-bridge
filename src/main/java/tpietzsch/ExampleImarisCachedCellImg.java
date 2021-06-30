@@ -42,7 +42,7 @@ public class ExampleImarisCachedCellImg
 				.forEachPixel( ( i, o ) -> o.set( i ) );
 		imarisImg.persist();
 
-		final IDataSetPrx dataset = imarisImg.getDataSet();
+		final IDataSetPrx dataset = imarisImg.getIDataSetPrx();
 		imaris.app().getIApplicationPrx().SetImage( 0, dataset );
 	}
 }

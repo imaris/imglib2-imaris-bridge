@@ -379,9 +379,9 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	}
 
 	/**
-	 * TODO: is this required?
+	 * Get the underlying {@code IDataSet} ICE proxy.
 	 */
-	public IDataSetPrx getDataset()
+	public IDataSetPrx getIDataSetPrx()
 	{
 		return dataset;
 	}

@@ -108,7 +108,7 @@ public class ImarisCachedCellImg< T extends NativeType< T >, A > extends CachedC
 	}
 
 	@Override
-	public IDataSetPrx getDataSet()
+	public IDataSetPrx getIDataSetPrx()
 	{
 		return dataset;
 	}

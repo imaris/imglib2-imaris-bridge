@@ -72,7 +72,7 @@ public class ExampleCellLoader
 
 		Parallelization.runMultiThreaded( () -> populateAndPersist( imarisImg ).get() );
 
-		final IDataSetPrx dataset = imarisImg.getDataSet();
+		final IDataSetPrx dataset = imarisImg.getIDataSetPrx();
 		imaris.app().getIApplicationPrx().SetImage( 0, dataset );
 	}
 

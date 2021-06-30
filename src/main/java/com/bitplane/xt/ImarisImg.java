@@ -4,8 +4,10 @@ import Imaris.IDataSetPrx;
 
 public interface ImarisImg
 {
-	// TODO: may be this should return a wrapper instead of IDataSetPrx
-	IDataSetPrx getDataSet();
+	/**
+	 * Get the underlying {@code IDataSet} ICE proxy.
+	 */
+	IDataSetPrx getIDataSetPrx();
 
 	/**
 	 * Persist all changes back to Imaris

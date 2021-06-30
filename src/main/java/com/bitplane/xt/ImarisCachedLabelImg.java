@@ -110,7 +110,7 @@ public class ImarisCachedLabelImg< T extends NativeType< T >, A > extends Cached
 	}
 
 	@Override
-	public IDataSetPrx getDataSet()
+	public IDataSetPrx getIDataSetPrx()
 	{
 		return dataset;
 	}

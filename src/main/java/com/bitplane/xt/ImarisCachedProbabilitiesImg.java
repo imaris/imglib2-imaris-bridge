@@ -115,7 +115,7 @@ public class ImarisCachedProbabilitiesImg< T extends NativeType< T >, A > extend
 	}
 
 	@Override
-	public IDataSetPrx getDataSet()
+	public IDataSetPrx getIDataSetPrx()
 	{
 		return dataset;
 	}
