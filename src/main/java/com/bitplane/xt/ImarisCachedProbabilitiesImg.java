@@ -121,7 +121,7 @@ public class ImarisCachedProbabilitiesImg< T extends NativeType< T >, A > extend
 	}
 
 	@Override
-	public ImarisApplication imaris()
+	public ImarisApplication getApplication()
 	{
 		return factory.getImarisInstance();
 	}
