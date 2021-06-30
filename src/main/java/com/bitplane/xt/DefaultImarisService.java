@@ -15,12 +15,6 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 
 	private ImarisServerConnection server = new ImarisServerConnection();
 
-	private synchronized ImarisApplication imaris()
-	{
-		server.context = context();
-		return server.getApplications().get( 0 );
-	}
-
 	@Override
 	public void disconnect()
 	{
@@ -30,7 +24,8 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	@Override
 	public ImarisApplication app()
 	{
-		return imaris();
+		server.context = context();
+		return server.getApplications().get( 0 );
 	}
 
 	@Override
