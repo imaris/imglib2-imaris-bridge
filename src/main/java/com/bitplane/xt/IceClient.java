@@ -2,65 +2,58 @@ package com.bitplane.xt;
 
 import Ice.InitializationData;
 import Ice.Properties;
+import Imaris.Error;
 import ImarisServer.IServerPrx;
 import ImarisServer.IServerPrxHelper;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
 
-public class IceClient {
-	Ice.Communicator mCommunicator = null;
-	IServerPrx mServer = null;
-	String mError = "";
+class IceClient
+{
+	private Ice.Communicator mCommunicator = null;
+	private IServerPrx mServer = null;
 
-	public IceClient(String aName, String aEndPoints, int aServerTimeoutMillisec) {
-		mError = "";
-		try {
+	public IceClient( String aName, String aEndPoints, int aServerTimeoutMillisec ) throws Error
+	{
+		try
+		{
 			InitializationData vData = new InitializationData();
 			Properties vProperties = Ice.Util.createProperties();
-			vProperties.setProperty("Ice.Default.EncodingVersion", "1.0");
-			vProperties.setProperty("Ice.MessageSizeMax", "1000000000");
+			vProperties.setProperty( "Ice.Default.EncodingVersion", "1.0" );
+			vProperties.setProperty( "Ice.MessageSizeMax", "1000000000" );
 			String vRetryIntervals = "0";
-			for (int vIndex = 0; vIndex < 5; vIndex++) {
-				vRetryIntervals += " " + (aServerTimeoutMillisec * (vIndex * 2 + 1) / 25);
+			for ( int vIndex = 0; vIndex < 5; vIndex++ )
+			{
+				vRetryIntervals += " " + ( aServerTimeoutMillisec * ( vIndex * 2 + 1 ) / 25 );
 			}
-			vProperties.setProperty("Ice.RetryIntervals", vRetryIntervals);
+			vProperties.setProperty( "Ice.RetryIntervals", vRetryIntervals );
 			vData.properties = vProperties;
-			mCommunicator = Ice.Util.initialize(vData);
-			Ice.ObjectPrx vObject = mCommunicator.stringToProxy(aName + ":" + aEndPoints);
-			mServer = IServerPrxHelper.checkedCast(vObject);
+			mCommunicator = Ice.Util.initialize( vData );
+			Ice.ObjectPrx vObject = mCommunicator.stringToProxy( aName + ":" + aEndPoints );
+			mServer = IServerPrxHelper.checkedCast( vObject );
 		}
-		catch (Ice.LocalException e) {
-			e.printStackTrace(new PrintStream(new OutputStream() {
-				public void write(int arg0) throws IOException {
-					mError += (char) arg0;
-				}
-			}));
-		}
-		catch (Exception e) {
-			mError += e.getMessage();
+		catch ( Exception e )
+		{
+			throw new Error( e );
 		}
 	}
 
-	public void Terminate() {
-		mError = "";
-		if (mCommunicator != null) {
-			try {
+	public void Terminate() throws Error
+	{
+		if ( mCommunicator != null )
+		{
+			try
+			{
 				mCommunicator.shutdown();
 				mCommunicator.destroy();
 			}
-			catch (Exception e) {
-				mError = e.getMessage();
+			catch ( Exception e )
+			{
+				throw new Error( e );
 			}
 		}
 	}
 
-	public IServerPrx GetServer() {
+	public IServerPrx GetServer()
+	{
 		return mServer;
 	}
-
-	public String GetError() {
-		return mError;
-	}
-
 }

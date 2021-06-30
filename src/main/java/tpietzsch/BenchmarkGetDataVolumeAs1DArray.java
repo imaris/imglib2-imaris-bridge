@@ -1,21 +1,17 @@
 package tpietzsch;
 
-import Ice.ObjectPrx;
 import Imaris.Error;
 import Imaris.IApplicationPrx;
 import Imaris.IDataSetPrx;
-import ImarisServer.IServerPrx;
-import com.bitplane.xt.IceClient;
+import com.bitplane.xt.DefaultImarisService;
 import net.imglib2.util.BenchmarkHelper;
 import net.imglib2.util.Intervals;
-
-import static Imaris.IApplicationPrxHelper.checkedCast;
 
 public class BenchmarkGetDataVolumeAs1DArray
 {
 	public static void main( String[] args ) throws Error
 	{
-		final IApplicationPrx app = getApplication();
+		final IApplicationPrx app = new DefaultImarisService().app().getIApplicationPrx();
 		final IDataSetPrx dataset = app.GetDataSet();
 		final long[] dims = { dataset.GetSizeX(), dataset.GetSizeY(), dataset.GetSizeZ() };
 
@@ -49,16 +45,5 @@ public class BenchmarkGetDataVolumeAs1DArray
 				}
 			} );
 		}
-	}
-
-	static IApplicationPrx getApplication()
-	{
-		final IceClient client = new IceClient( "ImarisServer", "default -p 4029", 1000 );
-		final IServerPrx server = client.GetServer();
-		if ( server.GetNumberOfObjects() < 1 )
-			throw new IllegalStateException();
-		final ObjectPrx obj = server.GetObject( server.GetObjectID( 0 ) );
-		final IApplicationPrx app = checkedCast( obj );
-		return app;
 	}
 }

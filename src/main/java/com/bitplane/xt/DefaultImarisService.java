@@ -13,22 +13,18 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	@Parameter
 	private DatasetService datasetService;
 
-	private DefaultImarisApplication imaris;
+	private ImarisServerConnection server = new ImarisServerConnection();
 
-	private synchronized DefaultImarisApplication imaris()
+	private synchronized ImarisApplication imaris()
 	{
-		if ( imaris == null )
-		{
-			imaris = new DefaultImarisApplication();
-			context().inject( imaris );
-		}
-		return imaris;
+		server.context = context();
+		return server.getApplications().get( 0 );
 	}
 
 	@Override
 	public void disconnect()
 	{
-		imaris().disconnect();
+		server.disconnect();
 	}
 
 	@Override

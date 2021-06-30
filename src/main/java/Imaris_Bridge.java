@@ -1,7 +1,6 @@
 import Imaris.IApplicationPrx;
 import Imaris.IApplicationPrxHelper;
 import Imaris.IDataSetPrx;
-import com.bitplane.xt.IceClient;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
