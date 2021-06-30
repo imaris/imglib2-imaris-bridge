@@ -50,7 +50,7 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 		}
 		catch ( final Error error )
 		{
-			throw error( error );
+			throw new RuntimeException( error ); // TODO: revise exception handling
 		}
 	}
 
@@ -66,23 +66,7 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 		}
 		catch ( final Error error )
 		{
-			throw error( error );
+			throw new RuntimeException( error ); // TODO: revise exception handling
 		}
-	}
-
-	private void closeIceClient() // TODO: remove
-	{
-		System.err.println( "TODO: DefaultImarisApplication.closeIceClient should be removed" );
-	}
-
-	public RuntimeException error( final Error error ) // TODO: make private
-	{
-		closeIceClient();
-		// TODO: do not terminate ICE connection when there simply is an Error in ImarisApplication
-		//   what to do instead?
-		if ( error == null )
-			return new RuntimeException( "Could not connect to Imaris" );
-		else
-			return new RuntimeException( "Could not connect to Imaris", error );
 	}
 }
