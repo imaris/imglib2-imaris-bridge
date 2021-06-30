@@ -32,6 +32,12 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 	}
 
 	@Override
+	public int getApplicationID()
+	{
+		return applicationId;
+	}
+
+	@Override
 	public Dataset getDataset()
 	{
 		try

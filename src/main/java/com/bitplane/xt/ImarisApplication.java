@@ -11,6 +11,11 @@ public interface ImarisApplication
 	IApplicationPrx getIApplicationPrx();
 
 	/**
+	 * Get the object ID of the underlying {@code IApplication} ICE proxy.
+	 */
+	int getApplicationID();
+
+	/**
 	 * Get the current Imaris image as an ImageJ {@code net.imagej.Dataset}.
 	 */
 	Dataset getDataset();
