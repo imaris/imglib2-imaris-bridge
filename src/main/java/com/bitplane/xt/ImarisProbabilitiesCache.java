@@ -36,7 +36,7 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
-import com.bitplane.xt.ImarisCellCache.SetDataSubVolume;
+import com.bitplane.xt.util.SetDataSubVolume;
 import com.bitplane.xt.util.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.Set;
@@ -526,7 +526,7 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
 	private PixelSink< A > volatileArraySink()
 	{
-		final SetDataSubVolume slice;
+		final SetDataSubVolume slice = SetDataSubVolume.forDataSet( dataset, datasetType );
 
 		// creates output arrays (to be send to Imaris)
 		// Object is byte[], short[], float[], depending on datasetType
@@ -542,20 +542,14 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 		switch ( datasetType )
 		{
 		case eTypeUInt8:
-			slice = ( data, ox, oy, oz, oc, ot, sx, sy, sz ) ->
-					dataset.SetDataSubVolumeAs1DArrayBytes( ( byte[] ) data, ox, oy, oz, oc, ot, sx, sy, sz );
 			arrayFactory = byte[]::new;
 			setProbabilityFactory = SetProbabilityByte::new;
 			break;
 		case eTypeUInt16:
-			slice = ( data, ox, oy, oz, oc, ot, sx, sy, sz ) ->
-					dataset.SetDataSubVolumeAs1DArrayShorts( ( short[] ) data, ox, oy, oz, oc, ot, sx, sy, sz );
 			arrayFactory = short[]::new;
 			setProbabilityFactory = SetProbabilityShort::new;
 			break;
 		case eTypeFloat:
-			slice = ( data, ox, oy, oz, oc, ot, sx, sy, sz ) ->
-					dataset.SetDataSubVolumeAs1DArrayFloats( ( float[] ) data, ox, oy, oz, oc, ot, sx, sy, sz );
 			arrayFactory = float[]::new;
 			setProbabilityFactory = SetProbabilityFloat::new;
 			break;

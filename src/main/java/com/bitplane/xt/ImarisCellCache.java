@@ -38,6 +38,7 @@ import Imaris.IDataSetPrx;
 import Imaris.tType;
 import com.bitplane.xt.util.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
+import com.bitplane.xt.util.SetDataSubVolume;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -300,26 +301,6 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	//  Writing Imaris blocks as primitive arrays
 	// -------------------------------------------------------------------
 
-
-	@FunctionalInterface
-	public interface SetDataSubVolume
-	{
-		/**
-		 * Set sub-volume as flattened primitive array.
-		 *
-		 * @param data {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
-		 * @param ox offset in X
-		 * @param oy offset in Y
-		 * @param oz offset in Z
-		 * @param oc channel index
-		 * @param ot timepoint index
-		 * @param sx size in X
-		 * @param sy size in Y
-		 * @param sz size in Z
-		 */
-		void set( Object data, int ox, int oy, int oz, int oc, int ot, int sx, int sy, int sz ) throws Error;
-	}
-
 	@FunctionalInterface
 	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
 	private interface PixelSink< A >
@@ -347,23 +328,18 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
 	private PixelSink< A > volatileArraySink()
 	{
-		final SetDataSubVolume slice;
+		final SetDataSubVolume slice = SetDataSubVolume.forDataSet( dataset, datasetType );
+
 		final IntFunction< Object > creator;
 		switch ( datasetType )
 		{
 		case eTypeUInt8:
-			slice = ( data, ox, oy, oz, oc, ot, sx, sy, sz ) ->
-					dataset.SetDataSubVolumeAs1DArrayBytes( ( byte[] ) data, ox, oy, oz, oc, ot, sx, sy, sz );
 			creator = byte[]::new;
 			break;
 		case eTypeUInt16:
-			slice = ( data, ox, oy, oz, oc, ot, sx, sy, sz ) ->
-					dataset.SetDataSubVolumeAs1DArrayShorts( ( short[] ) data, ox, oy, oz, oc, ot, sx, sy, sz );
 			creator = short[]::new;
 			break;
 		case eTypeFloat:
-			slice = ( data, ox, oy, oz, oc, ot, sx, sy, sz ) ->
-					dataset.SetDataSubVolumeAs1DArrayFloats( ( float[] ) data, ox, oy, oz, oc, ot, sx, sy, sz );
 			creator = float[]::new;
 			break;
 		default:
