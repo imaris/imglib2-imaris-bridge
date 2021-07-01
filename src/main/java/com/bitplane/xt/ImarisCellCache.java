@@ -36,6 +36,7 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
+import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,6 +54,8 @@ import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
+
+import static com.bitplane.xt.util.MapIntervalDimension.mapIntervalDimension;
 
 /**
  * Basic {@link CacheRemover}/{@link CacheLoader} for writing/reading cells
@@ -169,50 +172,6 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	 * E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
 	 */
 	private final int[] mapDimensions;
-
-	private interface MapIntervalDimension
-	{
-		int min( final long[] min );
-
-		int size( final int[] size );
-	}
-
-	private static MapIntervalDimension mapIntervalDimension( final int d )
-	{
-		if ( d < 0 )
-			return constantMapIntervalDimension;
-
-		return new MapIntervalDimension()
-		{
-			@Override
-			public int min( final long[] min )
-			{
-				return ( int ) min[ d ];
-			}
-
-			@Override
-			public int size( final int[] size )
-			{
-				return size[ d ];
-			}
-		};
-	}
-
-	private static final MapIntervalDimension constantMapIntervalDimension = new MapIntervalDimension()
-	{
-		@Override
-		public int min( final long[] min )
-		{
-			return 0;
-		}
-
-		@Override
-		public int size( final int[] size )
-		{
-			return 1;
-		}
-	};
-
 
 	// -------------------------------------------------------------------
 	//  Reading Imaris blocks as primitive arrays

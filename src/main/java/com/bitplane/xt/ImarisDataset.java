@@ -8,6 +8,7 @@ import bdv.util.AxisOrder;
 import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
+import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.ArrayList;
 import java.util.List;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
@@ -31,6 +32,8 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
+
+import static com.bitplane.xt.util.MapIntervalDimension.mapIntervalDimension;
 
 /**
  * Wraps Imaris {@code IDataSetPrx} into {@code CachedCellImg}s that are lazy-loaded.
@@ -443,49 +446,6 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		 */
 		A get( final int level, final long[] min, final int[] size ) throws Error;
 	}
-
-	private interface MapIntervalDimension
-	{
-		int min( final long[] min );
-
-		int size( final int[] size );
-	}
-
-	private static MapIntervalDimension mapIntervalDimension( final int d )
-	{
-		if ( d < 0 )
-			return constantMapIntervalDimension;
-
-		return new MapIntervalDimension()
-		{
-			@Override
-			public int min( final long[] min )
-			{
-				return ( int ) min[ d ];
-			}
-
-			@Override
-			public int size( final int[] size )
-			{
-				return size[ d ];
-			}
-		};
-	}
-
-	private static final MapIntervalDimension constantMapIntervalDimension = new MapIntervalDimension()
-	{
-		@Override
-		public int min( final long[] min )
-		{
-			return 0;
-		}
-
-		@Override
-		public int size( final int[] size )
-		{
-			return 1;
-		}
-	};
 
 	/**
 	 * Apply {@link #mapDimensions} to {@link #dataSource}.
