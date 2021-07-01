@@ -36,6 +36,7 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
+import com.bitplane.xt.ImarisDataset.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -188,25 +189,6 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 
 
 	@FunctionalInterface
-	private interface GetDataSubVolume
-	{
-		/**
-		 * Get sub-volume as flattened primitive array.
-		 *
-		 * @param ox offset in X
-		 * @param oy offset in Y
-		 * @param oz offset in Z
-		 * @param oc channel index
-		 * @param ot timepoint index
-		 * @param sx size in X
-		 * @param sy size in Y
-		 * @param sz size in Z
-		 * @return {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
-		 */
-		Object get( int ox, int oy, int oz, int oc, int ot, int sx, int sy, int sz ) throws Error;
-	}
-
-	@FunctionalInterface
 	private interface PixelSource< A >
 	{
 		/**
@@ -269,15 +251,15 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 		switch ( datasetType )
 		{
 		case eTypeUInt8:
-			slice = dataset::GetDataSubVolumeAs1DArrayBytes;
+			slice = dataset::GetPyramidDataBytes;
 			getLabelFactory = GetChannelLabelByte::new;
 			break;
 		case eTypeUInt16:
-			slice = dataset::GetDataSubVolumeAs1DArrayShorts;
+			slice = dataset::GetPyramidDataShorts;
 			getLabelFactory = GetChannelLabelShort::new;
 			break;
 		case eTypeFloat:
-			slice = dataset::GetDataSubVolumeAs1DArrayFloats;
+			slice = dataset::GetPyramidDataFloats;
 			getLabelFactory = GetChannelLabelFloat::new;
 			break;
 		default:
@@ -311,7 +293,7 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 			if ( st == 1 )
 			{
 				for ( int dc = 0; dc < sc; ++dc )
-					slicedata[ dc ] = slice.get( ox, oy, oz, oc + dc, ot, sx, sy, sz );
+					slicedata[ dc ] = slice.get( ox, oy, oz, oc + dc, ot, 0, sx, sy, sz );
 				final GetLabel input = getLabelFactory.apply( slicedata );
 				for ( int i = 0; i < slicelength; ++i )
 					output.set( i, input.get( i ) );
@@ -321,7 +303,7 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 				for ( int dt = 0; dt < st; ++dt )
 				{
 					for ( int dc = 0; dc < sc; ++dc )
-						slicedata[ dc ] = slice.get( ox, oy, oz, oc + dc, ot + dt, sx, sy, sz );
+						slicedata[ dc ] = slice.get( ox, oy, oz, oc + dc, ot + dt, 0, sx, sy, sz );
 					final GetLabel input = getLabelFactory.apply( slicedata );
 					final int destpos = dt * slicelength;
 					for ( int i = 0; i < slicelength; ++i )

@@ -390,7 +390,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	}
 
 	@FunctionalInterface
-	private interface GetDataSubVolume
+	public interface GetDataSubVolume
 	{
 		/**
 		 * Get sub-volume as flattened primitive array.

@@ -36,6 +36,7 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
+import com.bitplane.xt.ImarisDataset.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -184,25 +185,6 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 
 
 	@FunctionalInterface
-	private interface GetDataSubVolume
-	{
-		/**
-		 * Get sub-volume as flattened primitive array.
-		 *
-		 * @param ox offset in X
-		 * @param oy offset in Y
-		 * @param oz offset in Z
-		 * @param oc channel index
-		 * @param ot timepoint index
-		 * @param sx size in X
-		 * @param sy size in Y
-		 * @param sz size in Z
-		 * @return {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
-		 */
-		Object get( int ox, int oy, int oz, int oc, int ot, int sx, int sy, int sz ) throws Error;
-	}
-
-	@FunctionalInterface
 	private interface PixelSource< A >
 	{
 		/**
@@ -257,15 +239,15 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 		switch ( datasetType )
 		{
 		case eTypeUInt8:
-			slice = dataset::GetDataSubVolumeAs1DArrayBytes;
+			slice = dataset::GetPyramidDataBytes;
 			getProbabilityFactory = GetProbabilityByte::new;
 			break;
 		case eTypeUInt16:
-			slice = dataset::GetDataSubVolumeAs1DArrayShorts;
+			slice = dataset::GetPyramidDataShorts;
 			getProbabilityFactory = GetProbabilityShort::new;
 			break;
 		case eTypeFloat:
-			slice = dataset::GetDataSubVolumeAs1DArrayFloats;
+			slice = dataset::GetPyramidDataFloats;
 			getProbabilityFactory = GetProbabilityFloat::new;
 			break;
 		default:
@@ -321,7 +303,7 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 				// get all sc - 1 slices from imaris (no slice for background)
 				for ( int dc = 0; dc < sc - 1; ++dc )
 				{
-					final Object slicedata = slice.get( ox, oy, oz, oc + dc, ot + dt, sx, sy, sz );
+					final Object slicedata = slice.get( ox, oy, oz, oc + dc, ot + dt, 0, sx, sy, sz );
 					slices[ dc ] = getProbabilityFactory.apply( slicedata );
 				}
 
