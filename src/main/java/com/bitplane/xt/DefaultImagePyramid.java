@@ -4,7 +4,8 @@ import bdv.util.AxisOrder;
 import net.imglib2.RandomAccessibleInterval;
 
 /**
- * Default implementation of {@link ImagePyramid} with empty image arrays (that need to be filled by the creator).
+ * Default implementation of {@link ImagePyramid} with empty image arrays (that
+ * need to be filled by the creator).
  */
 class DefaultImagePyramid< T, V > implements ImagePyramid< T, V >
 {

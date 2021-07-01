@@ -29,7 +29,8 @@ import net.imglib2.type.numeric.RealType;
 import static net.imglib2.cache.volatiles.LoadingStrategy.BUDGETED;
 
 /**
- * Implementation of {@link ImagePyramid} with images that are backed by a joint cache which loads blocks from Imaris.
+ * Implementation of {@link ImagePyramid} with images that are backed by a joint
+ * cache which loads blocks from Imaris.
  */
 class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends Volatile< T > & NativeType< V > & RealType< V >, A >
 	implements ImagePyramid< T, V >
