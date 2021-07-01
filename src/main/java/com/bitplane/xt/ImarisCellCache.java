@@ -304,7 +304,7 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 
 
 	@FunctionalInterface
-	private interface SetDataSubVolume
+	public interface SetDataSubVolume
 	{
 		/**
 		 * Set sub-volume as flattened primitive array.

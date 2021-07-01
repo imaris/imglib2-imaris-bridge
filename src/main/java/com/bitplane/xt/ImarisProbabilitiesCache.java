@@ -36,6 +36,7 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
+import com.bitplane.xt.ImarisCellCache.SetDataSubVolume;
 import com.bitplane.xt.ImarisDataset.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.Set;
@@ -500,25 +501,6 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 	//  Writing Imaris blocks as primitive arrays
 	// -------------------------------------------------------------------
 
-
-	@FunctionalInterface
-	private interface SetDataSubVolume
-	{
-		/**
-		 * Set sub-volume as flattened primitive array.
-		 *
-		 * @param data {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
-		 * @param ox offset in X
-		 * @param oy offset in Y
-		 * @param oz offset in Z
-		 * @param oc channel index
-		 * @param ot timepoint index
-		 * @param sx size in X
-		 * @param sy size in Y
-		 * @param sz size in Z
-		 */
-		void set( Object data, int ox, int oy, int oz, int oc, int ot, int sx, int sy, int sz ) throws Error;
-	}
 
 	@FunctionalInterface
 	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
