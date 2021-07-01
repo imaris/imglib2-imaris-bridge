@@ -37,7 +37,7 @@ import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
 import com.bitplane.xt.ImarisCellCache.SetDataSubVolume;
-import com.bitplane.xt.ImarisDataset.GetDataSubVolume;
+import com.bitplane.xt.util.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -209,7 +209,7 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 	 */
 	private PixelSource< ? > arraySource()
 	{
-		final GetDataSubVolume slice;
+		final GetDataSubVolume slice = GetDataSubVolume.forDataSet( dataset, datasetType );
 
 		// creates output arrays (to be used by imglib)
 		// Object is float[] or double[] depending on primitiveType
@@ -240,15 +240,12 @@ public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< 
 		switch ( datasetType )
 		{
 		case eTypeUInt8:
-			slice = dataset::GetPyramidDataBytes;
 			getProbabilityFactory = GetProbabilityByte::new;
 			break;
 		case eTypeUInt16:
-			slice = dataset::GetPyramidDataShorts;
 			getProbabilityFactory = GetProbabilityShort::new;
 			break;
 		case eTypeFloat:
-			slice = dataset::GetPyramidDataFloats;
 			getProbabilityFactory = GetProbabilityFloat::new;
 			break;
 		default:

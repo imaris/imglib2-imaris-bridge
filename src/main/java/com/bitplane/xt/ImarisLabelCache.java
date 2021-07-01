@@ -37,7 +37,7 @@ import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
 import com.bitplane.xt.ImarisCellCache.SetDataSubVolume;
-import com.bitplane.xt.ImarisDataset.GetDataSubVolume;
+import com.bitplane.xt.util.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -213,7 +213,7 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 	 */
 	private PixelSource< ? > arraySource()
 	{
-		final GetDataSubVolume slice;
+		final GetDataSubVolume slice = GetDataSubVolume.forDataSet( dataset, datasetType );
 
 		// creates output arrays (to be used by imglib)
 		// Object is byte[], short[], int[], long[], depending on primitiveType
@@ -252,15 +252,12 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 		switch ( datasetType )
 		{
 		case eTypeUInt8:
-			slice = dataset::GetPyramidDataBytes;
 			getLabelFactory = GetChannelLabelByte::new;
 			break;
 		case eTypeUInt16:
-			slice = dataset::GetPyramidDataShorts;
 			getLabelFactory = GetChannelLabelShort::new;
 			break;
 		case eTypeFloat:
-			slice = dataset::GetPyramidDataFloats;
 			getLabelFactory = GetChannelLabelFloat::new;
 			break;
 		default:

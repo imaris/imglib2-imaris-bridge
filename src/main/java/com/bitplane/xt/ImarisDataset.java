@@ -8,6 +8,7 @@ import bdv.util.AxisOrder;
 import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
+import com.bitplane.xt.util.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.ArrayList;
 import java.util.List;
@@ -390,44 +391,6 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	}
 
 	@FunctionalInterface
-	public interface GetDataSubVolume
-	{
-		/**
-		 * Get sub-volume as flattened primitive array.
-		 *
-		 * @param ox offset in X
-		 * @param oy offset in Y
-		 * @param oz offset in Z
-		 * @param oc channel index
-		 * @param ot timepoint index
-		 * @param r resolution level (0 is full resolution)
-		 * @param sx size in X
-		 * @param sy size in Y
-		 * @param sz size in Z
-		 * @return {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
-		 */
-		Object get( final int ox, final int oy, final int oz, final int oc, final int ot, final int r, final int sx, final int sy, final int sz ) throws Error;
-	}
-
-	/**
-	 * Get the appropriate {@code GetDataSubVolume} for {@link #datasetType}.
-	 */
-	private GetDataSubVolume dataSource()
-	{
-		switch ( datasetType )
-		{
-		case eTypeUInt8:
-			return dataset::GetPyramidDataBytes;
-		case eTypeUInt16:
-			return dataset::GetPyramidDataShorts;
-		case eTypeFloat:
-			return dataset::GetPyramidDataFloats;
-		default:
-			throw new IllegalArgumentException();
-		}
-	}
-
-	@FunctionalInterface
 	interface PixelSource< A >
 	{
 		/**
@@ -448,11 +411,13 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	}
 
 	/**
-	 * Apply {@link #mapDimensions} to {@link #dataSource}.
+	 * Apply {@link #mapDimensions} to primitive array data source.
+	 *
+	 * TODO: revise javadoc
 	 */
 	private < A > PixelSource< A > volatileArraySource()
 	{
-		final GetDataSubVolume getDataSubVolume = dataSource();
+		final GetDataSubVolume getDataSubVolume = GetDataSubVolume.forDataSet( dataset, datasetType );
 
 		// Apply mapDimensions to getDataSubVolume
 		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );

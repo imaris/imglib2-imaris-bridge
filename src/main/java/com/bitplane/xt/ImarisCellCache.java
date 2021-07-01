@@ -36,7 +36,7 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
-import com.bitplane.xt.ImarisDataset.GetDataSubVolume;
+import com.bitplane.xt.util.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -203,20 +203,18 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	 */
 	private PixelSource< ? > arraySource()
 	{
-		final GetDataSubVolume slice;
+		final GetDataSubVolume slice = GetDataSubVolume.forDataSet( dataset, datasetType );
+
 		final IntFunction< Object > creator;
 		switch ( datasetType )
 		{
 		case eTypeUInt8:
-			slice = dataset::GetPyramidDataBytes;
 			creator = byte[]::new;
 			break;
 		case eTypeUInt16:
-			slice = dataset::GetPyramidDataShorts;
 			creator = short[]::new;
 			break;
 		case eTypeFloat:
-			slice = dataset::GetPyramidDataFloats;
 			creator = float[]::new;
 			break;
 		default:
