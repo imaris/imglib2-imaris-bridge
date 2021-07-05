@@ -46,7 +46,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	private final ImarisApplication imaris;
 
 	// TODO: TEMPORARY, REMOVE (?)
-	public ImarisApplication getImarisInstance() {
+	public ImarisApplication getApplication() {
 		return imaris;
 	}
 

@@ -48,7 +48,7 @@ public class ImarisCachedLabelImgFactory< T extends NativeType< T > > extends Na
 	private final ImarisApplication imaris;
 
 	// TODO: TEMPORARY, REMOVE (?)
-	public ImarisApplication getImarisInstance() {
+	public ImarisApplication getApplication() {
 		return imaris;
 	}
 

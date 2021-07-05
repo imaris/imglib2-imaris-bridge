@@ -57,7 +57,7 @@ public class ImarisCachedProbabilitiesImgFactory< T extends NativeType< T > > ex
 	private final ImarisApplication imaris;
 
 	// TODO: TEMPORARY, REMOVE (?)
-	public ImarisApplication getImarisInstance() {
+	public ImarisApplication getApplication() {
 		return imaris;
 	}
 
