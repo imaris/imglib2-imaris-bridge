@@ -2,12 +2,12 @@ package com.bitplane.xt;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
-import Imaris.cColorTable;
 import Imaris.tType;
 import bdv.util.AxisOrder;
 import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
+import com.bitplane.xt.util.ColorTableUtils;
 import com.bitplane.xt.util.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.ArrayList;
@@ -19,16 +19,13 @@ import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imglib2.Volatile;
-import net.imglib2.converter.Converter;
 import net.imglib2.display.ColorTable8;
-import net.imglib2.display.RealARGBColorConverter;
 import net.imglib2.img.Img;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
-import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
@@ -215,7 +212,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		imp.initializeColorTables( sc * sz * st );
 		for ( int c = 0; c < sc; ++c )
 		{
-			final ColorTable8 cT = createColorTable( c );
+			final ColorTable8 cT = ColorTableUtils.createChannelColorTable( dataset, c );
 			for ( int t = 0; t < st; ++t )
 				for ( int z = 0; z < sz; ++z )
 					imp.setColorTable( cT, z + sz * ( c + sc * t ) );
@@ -256,8 +253,8 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 			final Source< V > volatileSource = hasTimepoints
 					? new ImarisSource4D<>( voxelDimensions, minX, minY, minZ, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name )
 					: new ImarisSource3D<>( voxelDimensions, minX, minY, minZ, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name );
-			final SourceAndConverter< V > vsoc = new SourceAndConverter<>( volatileSource, createConverterToARGB( volatileType, c ) );
-			final SourceAndConverter< T > soc = new SourceAndConverter<>( source, createConverterToARGB( type, c ), vsoc );
+			final SourceAndConverter< V > vsoc = new SourceAndConverter<>( volatileSource, ColorTableUtils.createChannelConverterToARGB( volatileType, dataset, c ) );
+			final SourceAndConverter< T > soc = new SourceAndConverter<>( source, ColorTableUtils.createChannelConverterToARGB( type, dataset, c ), vsoc );
 			sources.add( soc );
 		}
 	}
@@ -358,12 +355,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	 */
 	public ARGBType getChannelColor( final int channel ) throws Error
 	{
-		final int rgba = dataset.GetChannelColorRGBA( channel );
-		final int r = rgba & 0xff;
-		final int g = ( rgba >> 8 ) & 0xff;
-		final int b = ( rgba >> 16 ) & 0xff;
-		final int a = ( rgba >> 24 ) & 0xff;
-		return new ARGBType( ARGBType.rgba( r, g, b, 255 - a ) );
+		return ColorTableUtils.getChannelColor( dataset, channel );
 	}
 
 	/**
@@ -440,89 +432,5 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		default:
 			throw new IllegalArgumentException();
 		}
-	}
-
-	private ColorTable8 createColorTable( final int channel ) throws Error
-	{
-		final cColorTable vColorTable = dataset.GetChannelColorTable( channel );
-		if ( vColorTable != null && vColorTable.mColorRGB.length > 0 )
-			return createColorTableFrom( vColorTable );
-		else
-		{
-			final int vColor = dataset.GetChannelColorRGBA( channel );
-			return createColorTableFrom( vColor );
-		}
-	}
-
-	private static ColorTable8 createColorTableFrom( final int aRGBA )
-	{
-		final int vSize = 256;
-
-		final byte[] rLut = new byte[ vSize ];
-		final byte[] gLut = new byte[ vSize ];
-		final byte[] bLut = new byte[ vSize ];
-		final byte[] aLut = new byte[ vSize ];
-
-		final int[] vRGBA = new int[ 4 ];
-		components( aRGBA, vRGBA );
-		final byte alpha = UnsignedByteType.getCodedSignedByte( 255 - vRGBA[ 3 ] );
-		for ( int i = 0; i < vSize; ++i )
-		{
-			rLut[ i ] = ( byte ) ( i * vRGBA[ 0 ] / 255 );
-			gLut[ i ] = ( byte ) ( i * vRGBA[ 1 ] / 255 );
-			bLut[ i ] = ( byte ) ( i * vRGBA[ 2 ] / 255 );
-			aLut[ i ] = alpha;
-		}
-		return new ColorTable8( rLut, gLut, bLut, aLut );
-	}
-
-	private static ColorTable8 createColorTableFrom( final cColorTable aColor )
-	{
-		final int[] vRGB = aColor.mColorRGB;
-		final byte alpha = UnsignedByteType.getCodedSignedByte(
-			255 - UnsignedByteType.getUnsignedByte(aColor.mAlpha));
-		final int vSize = 256;
-		final int vSourceSize = vRGB.length;
-
-		final byte[] rLut = new byte[ vSize ];
-		final byte[] gLut = new byte[ vSize ];
-		final byte[] bLut = new byte[ vSize ];
-		final byte[] aLut = new byte[ vSize ];
-
-		final int[] vRGBA = new int[ 4 ];
-		for ( int i = 0; i < vSize; ++i )
-		{
-			final int vIndex = ( i * vSourceSize ) / vSize;
-			components( vRGB[ vIndex ], vRGBA );
-			rLut[ i ] = ( byte ) ( vRGBA[ 0 ] );
-			gLut[ i ] = ( byte ) ( vRGBA[ 1 ] );
-			bLut[ i ] = ( byte ) ( vRGBA[ 2 ] );
-			aLut[ i ] = alpha;
-		}
-		return new ColorTable8( rLut, gLut, bLut, aLut );
-	}
-
-	/**
-	 * Split 8-bit rgba packed into an {@code int} value into components R, G, B, A.
-	 * Store in the provided {@code components} array.
-	 */
-	private static void components( final int rgba, final int[] components )
-	{
-		components[ 0 ] = rgba & 0xff;
-		components[ 1 ] = ( rgba >> 8 ) & 0xff;
-		components[ 2 ] = ( rgba >> 16 ) & 0xff;
-		components[ 3 ] = ( rgba >> 24 ) & 0xff;
-	}
-
-	/**
-	 * Construct a converters for the specified {@code channel} with display range and color set up according to Imaris.
-	 */
-	private < T extends NumericType< T > & RealType< T > > Converter< T, ARGBType > createConverterToARGB( final T type, final int channel ) throws Error
-	{
-		final double typeMin = dataset.GetChannelRangeMin( channel );
-		final double typeMax = dataset.GetChannelRangeMax( channel );
-		final RealARGBColorConverter< T > converter = RealARGBColorConverter.create( type, typeMin, typeMax );
-		converter.setColor( getChannelColor( channel ) );
-		return converter;
 	}
 }
