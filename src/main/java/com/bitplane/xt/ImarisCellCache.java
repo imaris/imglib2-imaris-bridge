@@ -36,8 +36,8 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
-import com.bitplane.xt.util.GetDataSubVolume;
 import com.bitplane.xt.util.MapIntervalDimension;
+import com.bitplane.xt.util.PixelSource;
 import com.bitplane.xt.util.SetDataSubVolume;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -48,12 +48,6 @@ import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.CacheRemover;
 import net.imglib2.cache.IoSync;
 import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
-import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileByteArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileFloatArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileShortArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 
@@ -145,7 +139,7 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 		this.mapDimensions = mapDimensions;
 		this.backingLoader = backingLoader;
 		this.persistOnLoad = persistOnLoad;
-		volatileArraySource = volatileArraySource( withDirtyFlag );
+		volatileArraySource = PixelSource.volatileArraySource( dataset, datasetType, mapDimensions, withDirtyFlag );
 		volatileArraySink = volatileArraySink();
 		written = backingLoader == null ? null : ConcurrentHashMap.newKeySet();
 	}
@@ -174,128 +168,6 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	 * E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
 	 */
 	private final int[] mapDimensions;
-
-	// -------------------------------------------------------------------
-	//  Reading Imaris blocks as primitive arrays
-	// -------------------------------------------------------------------
-
-
-	@FunctionalInterface
-	private interface PixelSource< A >
-	{
-		/**
-		 * Get sub-volume as flattened primitive array.
-		 *
-		 * @param min
-		 * 		minimum of interval in {@code Img} space.
-		 * 		Will be augmented to 5D if necessary (See {@link #mapDimensions}).
-		 * @param size
-		 * 		size of interval in {@code Img} space.
-		 * 		Will be augmented to 5D if necessary (See {@link #mapDimensions}).
-		 *
-		 * @return {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
-		 */
-		A get( long[] min, int[] size ) throws Error;
-	}
-
-	/**
-	 * TODO
-	 * @return
-	 */
-	private PixelSource< ? > arraySource()
-	{
-		final GetDataSubVolume slice = GetDataSubVolume.forDataSet( dataset, datasetType );
-
-		final IntFunction< Object > creator;
-		switch ( datasetType )
-		{
-		case eTypeUInt8:
-			creator = byte[]::new;
-			break;
-		case eTypeUInt16:
-			creator = short[]::new;
-			break;
-		case eTypeFloat:
-			creator = float[]::new;
-			break;
-		default:
-			throw new IllegalArgumentException();
-		}
-
-		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );
-		final MapIntervalDimension y = mapIntervalDimension( mapDimensions[ 1 ] );
-		final MapIntervalDimension z = mapIntervalDimension( mapDimensions[ 2 ] );
-		final MapIntervalDimension c = mapIntervalDimension( mapDimensions[ 3 ] );
-		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
-
-		return ( min, size ) -> {
-
-			final int ox = x.min( min );
-			final int oy = y.min( min );
-			final int oz = z.min( min );
-			final int oc = c.min( min );
-			final int ot = t.min( min );
-
-			final int sx = x.size( size );
-			final int sy = y.size( size );
-			final int sz = z.size( size );
-			final int sc = c.size( size );
-			final int st = t.size( size );
-
-			if ( sc == 1 && st == 1 )
-				return slice.get( ox, oy, oz, oc, ot, 0, sx, sy, sz);
-			else
-			{
-				final Object data = creator.apply( sx * sy * sz * sc * st );
-				final int slicelength = sx * sy * sz;
-				for ( int dt = 0; dt < st; ++dt )
-				{
-					for ( int dc = 0; dc < sc; ++dc )
-					{
-						final Object slicedata = slice.get( ox, oy, oz, oc + dc, ot + dt, 0, sx, sy, sz );
-						final int destpos = ( dt * sc + dc ) * slicelength;
-						System.arraycopy( slicedata, 0, data, destpos, slicelength );
-					}
-				}
-				return data;
-			}
-		};
-	}
-
-	/**
-	 * TODO
-	 */
-	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
-	//  PixelSource kinds flying around. There must be a better way to do this.
-	private PixelSource< A > volatileArraySource( final boolean withDirtyFlag )
-	{
-		final PixelSource< ? > pixels = arraySource();
-		if ( withDirtyFlag )
-			switch ( datasetType )
-			{
-			case eTypeUInt8:
-				return ( min, size ) -> ( A ) new DirtyVolatileByteArray( ( byte[] ) ( pixels.get( min, size ) ), true );
-			case eTypeUInt16:
-				return ( min, size ) -> ( A ) new DirtyVolatileShortArray( ( short[] ) ( pixels.get( min, size ) ), true );
-			case eTypeFloat:
-				return ( min, size ) -> ( A ) new DirtyVolatileFloatArray( ( float[] ) ( pixels.get( min, size ) ), true );
-			default:
-				throw new IllegalArgumentException();
-			}
-		else
-			switch ( datasetType )
-			{
-			case eTypeUInt8:
-				return ( min, size ) -> ( A ) new VolatileByteArray( ( byte[] ) ( pixels.get( min, size ) ), true );
-			case eTypeUInt16:
-				return ( min, size ) -> ( A ) new VolatileShortArray( ( short[] ) ( pixels.get( min, size ) ), true );
-			case eTypeFloat:
-				return ( min, size ) -> ( A ) new VolatileFloatArray( ( float[] ) ( pixels.get( min, size ) ), true );
-			default:
-				throw new IllegalArgumentException();
-			}
-	}
-
 
 	// -------------------------------------------------------------------
 	//  Writing Imaris blocks as primitive arrays
@@ -409,7 +281,7 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 			return new Cell<>(
 					cellDims,
 					cellMin,
-					volatileArraySource.get( cellMin, cellDims ) );
+					volatileArraySource.get( 0, cellMin, cellDims ) );
 		}
 		else
 		{

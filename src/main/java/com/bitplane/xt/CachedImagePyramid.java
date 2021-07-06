@@ -5,6 +5,7 @@ import bdv.img.cache.VolatileCachedCellImg;
 import bdv.util.AxisOrder;
 import bdv.util.volatiles.SharedQueue;
 import bdv.util.volatiles.VolatileTypeMatcher;
+import com.bitplane.xt.util.PixelSource;
 import java.util.ArrayList;
 import java.util.List;
 import net.imglib2.RandomAccessibleInterval;
@@ -79,7 +80,7 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			final AxisOrder axisOrder,
 			final long[][] dimensions,
 			final int[][] cellDimensions,
-			final ImarisDataset.PixelSource< A > volatileArraySource )
+			final PixelSource< A > volatileArraySource )
 	{
 		this.axisOrder = axisOrder;
 		numResolutions = dimensions.length;

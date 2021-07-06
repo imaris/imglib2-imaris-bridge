@@ -8,8 +8,7 @@ import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import com.bitplane.xt.util.ColorTableUtils;
-import com.bitplane.xt.util.GetDataSubVolume;
-import com.bitplane.xt.util.MapIntervalDimension;
+import com.bitplane.xt.util.PixelSource;
 import java.util.ArrayList;
 import java.util.List;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
@@ -21,17 +20,12 @@ import net.imagej.axis.DefaultLinearAxis;
 import net.imglib2.Volatile;
 import net.imglib2.display.ColorTable8;
 import net.imglib2.img.Img;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
-
-import static com.bitplane.xt.util.MapIntervalDimension.mapIntervalDimension;
 
 /**
  * Wraps Imaris {@code IDataSetPrx} into {@code CachedCellImg}s that are lazy-loaded.
@@ -198,7 +192,8 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		// --------------------------------------------------------------------
 		// Create cached images.
 
-		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>( type, axisOrder, dimensions, cellDimensions, volatileArraySource() );
+		final PixelSource< A > arraySource = PixelSource.volatileArraySource( dataset, datasetType, mapDimensions, false );
+		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>( type, axisOrder, dimensions, cellDimensions, arraySource );
 		this.imagePyramid = imagePyramid;
 
 
@@ -380,57 +375,5 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	public IDataSetPrx getIDataSetPrx()
 	{
 		return dataset;
-	}
-
-	@FunctionalInterface
-	interface PixelSource< A >
-	{
-		/**
-		 * Get sub-volume as flattened primitive array.
-		 *
-		 * @param level
-		 * 		resolution level (0 is full resolution).
-		 * @param min
-		 * 		minimum of interval in {@link #getImage image} space.
-		 * 		Will be augmented to 5D if necessary (See {@link #mapDimensions}).
-		 * @param size
-		 * 		size of interval in {@link #getImage image} space.
-		 * 		Will be augmented to 5D if necessary (See {@link #mapDimensions}).
-		 *
-		 * @return {@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
-		 */
-		A get( final int level, final long[] min, final int[] size ) throws Error;
-	}
-
-	/**
-	 * Apply {@link #mapDimensions} to primitive array data source.
-	 *
-	 * TODO: revise javadoc
-	 */
-	private < A > PixelSource< A > volatileArraySource()
-	{
-		final GetDataSubVolume getDataSubVolume = GetDataSubVolume.forDataSet( dataset, datasetType );
-
-		// Apply mapDimensions to getDataSubVolume
-		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );
-		final MapIntervalDimension y = mapIntervalDimension( mapDimensions[ 1 ] );
-		final MapIntervalDimension z = mapIntervalDimension( mapDimensions[ 2 ] );
-		final MapIntervalDimension c = mapIntervalDimension( mapDimensions[ 3 ] );
-		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
-		final PixelSource< ? > pixels = ( r, min, size ) -> getDataSubVolume.get(
-				x.min( min ), y.min( min ), z.min( min ), c.min( min ), t.min( min ), r,
-				x.size( size ), y.size( size ), z.size( size ) );
-
-		switch ( datasetType )
-		{
-		case eTypeUInt8:
-			return ( r, min, size ) -> ( A ) new VolatileByteArray( ( byte[] ) ( pixels.get( r, min, size ) ), true );
-		case eTypeUInt16:
-			return ( r, min, size ) -> ( A ) new VolatileShortArray( ( short[] ) ( pixels.get( r, min, size ) ), true );
-		case eTypeFloat:
-			return ( r, min, size ) -> ( A ) new VolatileFloatArray( ( float[] ) ( pixels.get( r, min, size ) ), true );
-		default:
-			throw new IllegalArgumentException();
-		}
 	}
 }
