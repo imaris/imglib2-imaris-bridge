@@ -1,4 +1,4 @@
-package com.bitplane.xt;
+package com.bitplane.xt.labkit;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
@@ -10,17 +10,17 @@ import net.imglib2.img.cell.CellGrid;
 import net.imglib2.type.PrimitiveType;
 
 /**
- * Variant of {@link ImarisLabelCache}, which writes cells to Imaris {@code
- * IDataset}, but <em>only if they were modified</em>.
+ * Variant of {@link ImarisProbabilitiesCache}, which writes cells to Imaris
+ * {@code IDataset}, but <em>only if they were modified</em>.
  *
  * @param <A>
  * 		access type
  *
  * @author Tobias Pietzsch
  */
-public class ImarisDirtyLabelCache< A extends Dirty > extends ImarisLabelCache< A >
+public class ImarisDirtyProbabilitiesCache< A extends Dirty > extends ImarisProbabilitiesCache< A >
 {
-	public ImarisDirtyLabelCache(
+	public ImarisDirtyProbabilitiesCache(
 			final IDataSetPrx dataset,
 			final PrimitiveType primitiveType, // primitive type underlying accesses
 			final int[] mapDimensions,

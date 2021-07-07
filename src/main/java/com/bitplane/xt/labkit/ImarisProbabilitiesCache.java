@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt;
+package com.bitplane.xt.labkit;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
@@ -49,14 +49,10 @@ import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.CacheRemover;
 import net.imglib2.cache.IoSync;
 import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
-import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileByteArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileIntArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileLongArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileShortArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileIntArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileLongArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileDoubleArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.DirtyVolatileFloatArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.VolatileDoubleArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 import net.imglib2.type.PrimitiveType;
@@ -65,23 +61,28 @@ import static com.bitplane.xt.util.MapIntervalDimension.mapIntervalDimension;
 
 /**
  * A {@link CacheRemover}/{@link CacheLoader} for writing/reading cells
- * to an Imaris {@code IDataset}. It translates integer labels on the ImgLib2 side to
- * channels on the Imaris side.
+ * to an Imaris {@code IDataset}.
+ * <p>
+ * At each pixel the image is assumed to represent a probability distribution
+ * over channels. For storing to Imaris {@code IDataSetPrx} backing cache, the
+ * first channel ("background") is removed (only the other channels are stored).
+ * If the dataset has UINT8 or UINT16 type, the [0, 1] range is scaled to the
+ * [0, 2^8-1] or [0, 2^16-1], respectively. For loading data back from the cache
+ * this operation is reversed.
  * <p>
  * Blocks which are not in the cache (yet) are obtained from a backing
  * {@link CacheLoader}. Typically the backing loader will just create empty cells.
- * </p>
- * <p><em>
- * A {@link ImarisLabelCache} should be connected to a in-memory cache through
- * {@link IoSync} if the cache will be used concurrently by multiple threads!
- * </em></p>
+ * <p>
+ * <em>A {@link ImarisProbabilitiesCache} should be connected to a in-memory
+ * cache through {@link IoSync} if the cache will be used concurrently by
+ * multiple threads!</em>
  *
  * @param <A>
  *            access type
  *
  * @author Tobias Pietzsch
  */
-public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >, CacheLoader< Long, Cell< A > >
+public class ImarisProbabilitiesCache< A > implements CacheRemover< Long, Cell< A >, A >, CacheLoader< Long, Cell< A > >
 {
 	private final IDataSetPrx dataset;
 
@@ -93,13 +94,8 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 
 	private final int n;
 
-	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
-	//  PixelSource kinds flying around. There must be a better way to do this.
 	private final PixelSource< A > volatileArraySource;
 
-	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
-	//  PixelSource kinds flying around. There must be a better way to do this.
-	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
 	private final PixelSink< A > volatileArraySink;
 
 	/**
@@ -131,7 +127,7 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 	// TODO: into how many channels to split
 	private final int numChannels;
 
-	public ImarisLabelCache(
+	public ImarisProbabilitiesCache(
 			final IDataSetPrx dataset,
 			final PrimitiveType primitiveType, // primitive type underlying accesses
 			final int[] mapDimensions,
@@ -142,7 +138,7 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 		this( dataset, primitiveType, mapDimensions, grid, backingLoader, persistOnLoad, false );
 	}
 
-	protected ImarisLabelCache(
+	protected ImarisProbabilitiesCache(
 			final IDataSetPrx dataset,
 			final PrimitiveType primitiveType, // primitive type underlying accesses
 			final int[] mapDimensions,
@@ -216,34 +212,26 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 		final GetDataSubVolume slice = GetDataSubVolume.forDataSet( dataset, datasetType );
 
 		// creates output arrays (to be used by imglib)
-		// Object is byte[], short[], int[], long[], depending on primitiveType
+		// Object is float[] or double[] depending on primitiveType
 		final IntFunction< Object > arrayFactory;
 
-		// creates a GetLabel to read from input arrays (one per channel, from imaris)
+		// creates a GetProbability to read from input array (from imaris)
 		// Object is byte[], short[], float[] depending on datasetType
-		final Function< Object[], GetLabel > getLabelFactory;
+		final Function< Object, GetProbability > getProbabilityFactory;
 
 		// creates a SetLabel to write to output array (created by arrayFactory)
-		final Function< Object, SetLabel > setLabelFactory;
+		final Function< Object, SetProbability > setProbabilityFactory;
 
 
 		switch ( primitiveType )
 		{
-		case BYTE:
-			arrayFactory = byte[]::new;
-			setLabelFactory = SetCompositeLabelByte::new;
+		case FLOAT:
+			arrayFactory = float[]::new;
+			setProbabilityFactory = SetProbabilityFloat::new;
 			break;
-		case SHORT:
-			arrayFactory = short[]::new;
-			setLabelFactory = SetCompositeLabelShort::new;
-			break;
-		case INT:
-			arrayFactory = int[]::new;
-			setLabelFactory = SetCompositeLabelInt::new;
-			break;
-		case LONG:
-			arrayFactory = long[]::new;
-			setLabelFactory = SetCompositeLabelLong::new;
+		case DOUBLE:
+			arrayFactory = double[]::new;
+			setProbabilityFactory = SetProbabilityDouble::new;
 			break;
 		default:
 			throw new IllegalArgumentException();
@@ -252,13 +240,13 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 		switch ( datasetType )
 		{
 		case eTypeUInt8:
-			getLabelFactory = GetChannelLabelByte::new;
+			getProbabilityFactory = GetProbabilityByte::new;
 			break;
 		case eTypeUInt16:
-			getLabelFactory = GetChannelLabelShort::new;
+			getProbabilityFactory = GetProbabilityShort::new;
 			break;
 		case eTypeFloat:
-			getLabelFactory = GetChannelLabelFloat::new;
+			getProbabilityFactory = GetProbabilityFloat::new;
 			break;
 		default:
 			throw new IllegalArgumentException();
@@ -267,45 +255,67 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );
 		final MapIntervalDimension y = mapIntervalDimension( mapDimensions[ 1 ] );
 		final MapIntervalDimension z = mapIntervalDimension( mapDimensions[ 2 ] );
+//		final MapIntervalDimension c = mapIntervalDimension( mapDimensions[ 3 ] );
 		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
+
+		final int oc = 0;
+		final int sc = numChannels + 1;
+		// NB: we assume always oc == 0 and sc == img.dim(C). TODO: check this?
 
 		return ( min, size ) -> {
 
 			final int ox = x.min( min );
 			final int oy = y.min( min );
 			final int oz = z.min( min );
-			final int oc = 0;
 			final int ot = t.min( min );
 
 			final int sx = x.size( size );
 			final int sy = y.size( size );
 			final int sz = z.size( size );
-			final int sc = numChannels;
 			final int st = t.size( size );
 
 			final int slicelength = sx * sy * sz;
-			final Object data = arrayFactory.apply( sx * sy * sz * st );
-			final SetLabel output = setLabelFactory.apply( data );
-			final Object[] slicedata = new Object[ sc ];
+			final Object data = arrayFactory.apply( sx * sy * sz * sc * st );
+			final SetProbability output = setProbabilityFactory.apply( data );
 
-			if ( st == 1 )
+			final int tstep;
+			final int cstep;
+			if ( mapDimensions[ 3 ] < mapDimensions[ 4 ] )
 			{
-				for ( int dc = 0; dc < sc; ++dc )
-					slicedata[ dc ] = slice.get( ox, oy, oz, oc + dc, ot, 0, sx, sy, sz );
-				final GetLabel input = getLabelFactory.apply( slicedata );
-				for ( int i = 0; i < slicelength; ++i )
-					output.set( i, input.get( i ) );
+				// XYZCT etc
+				tstep = slicelength * sc;
+				cstep = slicelength;
 			}
 			else
 			{
-				for ( int dt = 0; dt < st; ++dt )
+				// XYZTC etc (T and C flipped)
+				tstep = slicelength;
+				cstep = slicelength * st;
+			}
+
+			final GetProbability[] slices = new GetProbability[ sc - 1 ]; // (-1 because no slice for background)
+			for ( int dt = 0; dt < st; ++dt )
+			{
+				final int toffset = dt * tstep;
+
+				// get all sc - 1 slices from imaris (no slice for background)
+				for ( int dc = 0; dc < sc - 1; ++dc )
 				{
-					for ( int dc = 0; dc < sc; ++dc )
-						slicedata[ dc ] = slice.get( ox, oy, oz, oc + dc, ot + dt, 0, sx, sy, sz );
-					final GetLabel input = getLabelFactory.apply( slicedata );
-					final int destpos = dt * slicelength;
-					for ( int i = 0; i < slicelength; ++i )
-						output.set( i + destpos, input.get( i ) );
+					final Object slicedata = slice.get( ox, oy, oz, oc + dc, ot + dt, 0, sx, sy, sz );
+					slices[ dc ] = getProbabilityFactory.apply( slicedata );
+				}
+
+				// iterate over XYZ and write sc channels at T=t
+				for ( int xyz = 0; xyz < slicelength; ++xyz )
+				{
+					float bg = 1f;
+					for ( int dc = 0; dc < sc - 1; ++dc )
+					{
+						final float p = slices[ dc ].get( xyz );
+						output.set( toffset + xyz + ( dc + 1 ) * cstep, p );
+						bg -= p;
+					}
+					output.set( toffset + xyz, bg );
 				}
 			}
 			return data;
@@ -323,316 +333,171 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 		if ( withDirtyFlag )
 			switch ( primitiveType )
 			{
-			case BYTE:
-				return ( min, size ) -> ( A ) new DirtyVolatileByteArray( ( byte[] ) ( pixels.get( min, size ) ), true );
-			case SHORT:
-				return ( min, size ) -> ( A ) new DirtyVolatileShortArray( ( short[] ) ( pixels.get( min, size ) ), true );
-			case INT:
-				return ( min, size ) -> ( A ) new DirtyVolatileIntArray( ( int[] ) ( pixels.get( min, size ) ), true );
-			case LONG:
-				return ( min, size ) -> ( A ) new DirtyVolatileLongArray( ( long[] ) ( pixels.get( min, size ) ), true );
+			case FLOAT:
+				return ( min, size ) -> ( A ) new DirtyVolatileFloatArray( ( float[] ) ( pixels.get( min, size ) ), true );
+			case DOUBLE:
+				return ( min, size ) -> ( A ) new DirtyVolatileDoubleArray( ( double[] ) ( pixels.get( min, size ) ), true );
 			default:
 				throw new IllegalArgumentException();
 			}
 		else
 			switch ( primitiveType )
 			{
-			case BYTE:
-				return ( min, size ) -> ( A ) new VolatileByteArray( ( byte[] ) ( pixels.get( min, size ) ), true );
-			case SHORT:
-				return ( min, size ) -> ( A ) new VolatileShortArray( ( short[] ) ( pixels.get( min, size ) ), true );
-			case INT:
-				return ( min, size ) -> ( A ) new VolatileIntArray( ( int[] ) ( pixels.get( min, size ) ), true );
-			case LONG:
-				return ( min, size ) -> ( A ) new VolatileLongArray( ( long[] ) ( pixels.get( min, size ) ), true );
+			case FLOAT:
+				return ( min, size ) -> ( A ) new VolatileFloatArray( ( float[] ) ( pixels.get( min, size ) ), true );
+			case DOUBLE:
+				return ( min, size ) -> ( A ) new VolatileDoubleArray( ( double[] ) ( pixels.get( min, size ) ), true );
 			default:
 				throw new IllegalArgumentException();
 			}
 	}
 
-	private interface GetLabel
+	private interface GetProbability
 	{
-		int get( final int index );
+		float get( final int index );
 	}
 
-	private interface SetLabel
+	private interface SetProbability
 	{
-		void set( final int index, final int label );
+		void set( final int index, final float value );
 	}
 
-	static class SetCompositeLabelByte implements SetLabel
+	static class SetProbabilityByte implements SetProbability
 	{
 		private final byte[] output;
 
-		SetCompositeLabelByte( final Object output )
+		SetProbabilityByte( final Object output )
 		{
 			this.output = ( byte[] ) output;
 		}
 
 		@Override
-		public void set( final int index, final int label )
+		public void set( final int index, final float value )
 		{
-			output[ index ] = ( byte ) label;
+			final int unsigned = Math.min( 255, Math.max( 0, ( int ) ( value * 255f ) ) );
+			output[ index ] = ( byte ) ( unsigned & 0xff );
 		}
+
 	}
 
-	static class SetCompositeLabelShort implements SetLabel
+	static class SetProbabilityShort implements SetProbability
 	{
 		private final short[] output;
 
-		SetCompositeLabelShort( final Object output )
+		SetProbabilityShort( final Object output )
 		{
 			this.output = ( short[] ) output;
 		}
 
 		@Override
-		public void set( final int index, final int label )
+		public void set( final int index, final float value )
 		{
-			output[ index ] = ( short ) label;
+			final int unsigned = Math.min( 65535, Math.max( 0, ( int ) ( value * 65535f ) ) );
+			output[ index ] = ( short ) ( unsigned & 0xffff );
 		}
 	}
 
-	static class SetCompositeLabelInt implements SetLabel
+	static class SetProbabilityFloat implements SetProbability
 	{
-		private final int[] output;
+		private final float[] output;
 
-		SetCompositeLabelInt( final Object output )
+		SetProbabilityFloat( final Object output )
 		{
-			this.output = ( int[] ) output;
+			this.output = ( float[] ) output;
 		}
 
 		@Override
-		public void set( final int index, final int label )
+		public void set( final int index, final float value )
 		{
-			output[ index ] = ( int ) label;
+			output[ index ] = value;
 		}
 	}
 
-	static class SetCompositeLabelLong implements SetLabel
+	static class SetProbabilityDouble implements SetProbability
 	{
-		private final long[] output;
+		private final double[] output;
 
-		SetCompositeLabelLong( final Object output )
+		SetProbabilityDouble( final Object output )
 		{
-			this.output = ( long[] ) output;
+			this.output = ( double[] ) output;
 		}
 
 		@Override
-		public void set( final int index, final int label )
+		public void set( final int index, final float value )
 		{
-			output[ index ] = ( long ) label;
+			output[ index ] = value;
 		}
 	}
 
-	static class GetChannelLabelByte implements GetLabel
-	{
-		private final byte[][] channels;
-
-		private final int numChannels;
-
-		GetChannelLabelByte( final Object[] input )
-		{
-			numChannels = input.length;
-			channels = new byte[ numChannels ][];
-			for ( int c = 0; c < numChannels; ++c )
-				channels[ c ] = ( byte[] ) input[ c ];
-		}
-
-		@Override
-		public int get( final int index )
-		{
-			for ( int c = 0; c < numChannels; ++c )
-				if ( channels[ c ][ index ] != 0 )
-					return c + 1;
-			return 0;
-		}
-	}
-
-	static class GetChannelLabelShort implements GetLabel
-	{
-		private final short[][] channels;
-
-		private final int numChannels;
-
-		GetChannelLabelShort( final Object[] input )
-		{
-			numChannels = input.length;
-			channels = new short[ numChannels ][];
-			for ( int c = 0; c < numChannels; ++c )
-				channels[ c ] = ( short[] ) input[ c ];
-		}
-
-		@Override
-		public int get( final int index )
-		{
-			for ( int c = 0; c < numChannels; ++c )
-				if ( channels[ c ][ index ] != 0 )
-					return c + 1;
-			return 0;
-		}
-	}
-
-	static class GetChannelLabelFloat implements GetLabel
-	{
-		private final float[][] channels;
-
-		private final int numChannels;
-
-		GetChannelLabelFloat( final Object[] input )
-		{
-			numChannels = input.length;
-			channels = new float[ numChannels ][];
-			for ( int c = 0; c < numChannels; ++c )
-				channels[ c ] = ( float[] ) input[ c ];
-		}
-
-		@Override
-		public int get( final int index )
-		{
-			for ( int c = 0; c < numChannels; ++c )
-				if ( channels[ c ][ index ] != 0 )
-					return c + 1;
-			return 0;
-		}
-	}
-
-	// -------------------------------------------------------------------
-	//  Writing Imaris blocks as primitive arrays
-	// -------------------------------------------------------------------
-
-
-	static class GetCompositeLabelByte implements GetLabel
+	static class GetProbabilityByte implements GetProbability
 	{
 		private final byte[] input;
 
-		GetCompositeLabelByte( final Object input )
+		GetProbabilityByte( final Object input )
 		{
 			this.input = ( byte[] ) input;
 		}
 
 		@Override
-		public int get( final int index )
+		public float get( final int index )
 		{
-			return input[ index ];
+			return ( 1f / 255f ) * ( input[ index ] & 0xff );
 		}
 	}
 
-	static class GetCompositeLabelShort implements GetLabel
+	static class GetProbabilityShort implements GetProbability
 	{
 		private final short[] input;
 
-		GetCompositeLabelShort( final Object input )
+		GetProbabilityShort( final Object input )
 		{
 			this.input = ( short[] ) input;
 		}
 
 		@Override
-		public int get( final int index )
+		public float get( final int index )
+		{
+			return ( 1f / 65535f ) * ( input[ index ] & 0xffff );
+		}
+	}
+
+	static class GetProbabilityFloat implements GetProbability
+	{
+		private final float[] input;
+
+		GetProbabilityFloat( final Object input )
+		{
+			this.input = ( float[] ) input;
+		}
+
+		@Override
+		public float get( final int index )
 		{
 			return input[ index ];
 		}
 	}
 
-	static class GetCompositeLabelInt implements GetLabel
+	static class GetProbabilityDouble implements GetProbability
 	{
-		private final int[] input;
+		private final double[] input;
 
-		GetCompositeLabelInt( final Object input )
+		GetProbabilityDouble( final Object input )
 		{
-			this.input = ( int[] ) input;
+			this.input = ( double[] ) input;
 		}
 
 		@Override
-		public int get( final int index )
+		public float get( final int index )
 		{
-			return input[ index ];
+			return ( float ) input[ index ];
 		}
 	}
 
-	static class GetCompositeLabelLong implements GetLabel
-	{
-		private final long[] input;
 
-		GetCompositeLabelLong( final Object input )
-		{
-			this.input = ( long[] ) input;
-		}
+	// -------------------------------------------------------------------
+	//  Writing Imaris blocks as primitive arrays
+	// -------------------------------------------------------------------
 
-		@Override
-		public int get( final int index )
-		{
-			return ( int ) input[ index ];
-		}
-	}
-
-	static class SetChannelLabelByte implements SetLabel
-	{
-		private final byte[][] channels;
-
-		private final int numChannels;
-
-		SetChannelLabelByte( final Object[] output )
-		{
-			numChannels = output.length;
-			channels = new byte[ numChannels ][];
-			for ( int c = 0; c < numChannels; ++c )
-				channels[ c ] = ( byte[] ) output[ c ];
-		}
-
-		@Override
-		public void set( final int index, final int label )
-		{
-			final int v = label - 1;
-			for ( int c = 0; c < numChannels; ++c )
-				channels[ c ][ index ] = v == c ? ( byte ) 1 : ( byte ) 0;
-		}
-	}
-
-	static class SetChannelLabelShort implements SetLabel
-	{
-		private final short[][] channels;
-
-		private final int numChannels;
-
-		SetChannelLabelShort( final Object[] output )
-		{
-			numChannels = output.length;
-			channels = new short[ numChannels ][];
-			for ( int c = 0; c < numChannels; ++c )
-				channels[ c ] = ( short[] ) output[ c ];
-		}
-
-		@Override
-		public void set( final int index, final int label )
-		{
-			final int v = label - 1;
-			for ( int c = 0; c < numChannels; ++c )
-				channels[ c ][ index ] = v == c ? ( short ) 1 : ( short ) 0;
-		}
-	}
-
-	static class SetChannelLabelFloat implements SetLabel
-	{
-		private final float[][] channels;
-
-		private final int numChannels;
-
-		SetChannelLabelFloat( final Object[] output )
-		{
-			numChannels = output.length;
-			channels = new float[ numChannels ][];
-			for ( int c = 0; c < numChannels; ++c )
-				channels[ c ] = ( float[] ) output[ c ];
-		}
-
-		@Override
-		public void set( final int index, final int label )
-		{
-			final int v = label - 1;
-			for ( int c = 0; c < numChannels; ++c )
-				channels[ c ][ index ] = v == c ? 1f : 0f;
-		}
-	}
 
 	@FunctionalInterface
 	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
@@ -667,43 +532,37 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 		// Object is byte[], short[], float[], depending on datasetType
 		final IntFunction< Object > arrayFactory;
 
-		// creates a GetLabel to read from ArrayDataAccess.getCurrentStorageArray() of primitiveType
-		// Object is byte[], short[], int[], long[] (we only support IntegerType)
-		final Function< Object, GetLabel > getLabelFactory;
+		// creates a GetProbability to read from ArrayDataAccess.getCurrentStorageArray() of primitiveType
+		// Object is float[], double[] depending on primitiveType
+		final Function< Object, GetProbability > getProbabilityFactory;
 
-		// creates a SetLabel to write to output array (created by arrayFactory)
-		final Function< Object[], SetLabel > setLabelFactory;
+		// creates a SetProbability to write to output array (created by arrayFactory)
+		final Function< Object, SetProbability > setProbabilityFactory;
 
 		switch ( datasetType )
 		{
 		case eTypeUInt8:
 			arrayFactory = byte[]::new;
-			setLabelFactory = SetChannelLabelByte::new;
+			setProbabilityFactory = SetProbabilityByte::new;
 			break;
 		case eTypeUInt16:
 			arrayFactory = short[]::new;
-			setLabelFactory = SetChannelLabelShort::new;
+			setProbabilityFactory = SetProbabilityShort::new;
 			break;
 		case eTypeFloat:
 			arrayFactory = float[]::new;
-			setLabelFactory = SetChannelLabelFloat::new;
+			setProbabilityFactory = SetProbabilityFloat::new;
 			break;
 		default:
 			throw new IllegalArgumentException();
 		}
 		switch ( primitiveType )
 		{
-		case BYTE:
-			getLabelFactory = GetCompositeLabelByte::new;
+		case FLOAT:
+			getProbabilityFactory = GetProbabilityFloat::new;
 			break;
-		case SHORT:
-			getLabelFactory = GetCompositeLabelShort::new;
-			break;
-		case INT:
-			getLabelFactory = GetCompositeLabelInt::new;
-			break;
-		case LONG:
-			getLabelFactory = GetCompositeLabelLong::new;
+		case DOUBLE:
+			getProbabilityFactory = GetProbabilityDouble::new;
 			break;
 		default:
 			throw new IllegalArgumentException();
@@ -715,46 +574,72 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
 
 		final int oc = 0;
-		final int sc = numChannels;
+		final int sc = numChannels + 1;
+		// NB: we assume always oc == 0 and sc == img.dim(C). TODO: check this?
 
 		return ( access, min, size ) ->
 		{
-			final Object data = ( ( ArrayDataAccess ) access ).getCurrentStorageArray();
-			final GetLabel input = getLabelFactory.apply( data );
-
-			final int ox = x.min( min );
-			final int oy = y.min( min );
-			final int oz = z.min( min );
-			final int ot = t.min( min );
-
-			final int sx = x.size( size );
-			final int sy = y.size( size );
-			final int sz = z.size( size );
-			final int st = t.size( size );
-
-			final int slicelength = sx * sy * sz;
-			final Object[] slicedata = new Object[ sc ];
-			for ( int dc = 0; dc < sc; ++dc )
-				slicedata[ dc ] = arrayFactory.apply( slicelength );
-			final SetLabel output = setLabelFactory.apply( slicedata );
-
-			if ( st == 1 )
+			try
 			{
-				for ( int i = 0; i < slicelength; ++i )
-					output.set( i, input.get( i ) );
-				for ( int dc = 0; dc < sc; ++dc )
-					slice.set( slicedata[ dc ], ox, oy, oz, oc + dc, ot, sx, sy, sz );
-			}
-			else
-			{
+				final Object data = ( ( ArrayDataAccess ) access ).getCurrentStorageArray();
+				final GetProbability input = getProbabilityFactory.apply( data );
+
+				final int ox = x.min( min );
+				final int oy = y.min( min );
+				final int oz = z.min( min );
+				final int ot = t.min( min );
+
+				final int sx = x.size( size );
+				final int sy = y.size( size );
+				final int sz = z.size( size );
+				final int st = t.size( size );
+
+				final int slicelength = sx * sy * sz;
+				final Object[] slicedata = new Object[ sc - 1 ]; // (-1 because no slice for background)
+				final SetProbability[] slices = new SetProbability[ sc - 1 ];
+				for ( int dc = 0; dc < sc - 1; ++dc )
+				{
+					slicedata[ dc ] = arrayFactory.apply( slicelength );
+					slices[ dc ] = setProbabilityFactory.apply( slicedata[ dc ] );
+				}
+
+				final int tstep;
+				final int cstep;
+				if ( mapDimensions[ 3 ] < mapDimensions[ 4 ] )
+				{
+					// XYZCT etc
+					tstep = slicelength * sc;
+					cstep = slicelength;
+				}
+				else
+				{
+					// XYZTC etc (T and C flipped)
+					tstep = slicelength;
+					cstep = slicelength * st;
+				}
+
 				for ( int dt = 0; dt < st; ++dt )
 				{
-					final int srcpos = dt * slicelength;
-					for ( int i = 0; i < slicelength; ++i )
-						output.set( i, input.get( i + srcpos ) );
-					for ( int dc = 0; dc < sc; ++dc )
+					final int toffset = dt * tstep;
+
+					// fill all slices[] with source data (ignore background channel)
+					// iterate over XYZ and write sc-1 channels at T=t
+					for ( int xyz = 0; xyz < slicelength; ++xyz )
+					{
+						for ( int dc = 0; dc < sc - 1; ++dc )
+						{
+							final float p = input.get( toffset + xyz + ( dc + 1 ) * cstep );
+							slices[ dc ].set( xyz, p );
+						}
+					}
+
+					// send all slices[] to Imaris
+					for ( int dc = 0; dc < sc - 1; ++dc )
 						slice.set( slicedata[ dc ], ox, oy, oz, oc + dc, ot + dt, sx, sy, sz );
 				}
+			} catch ( Exception e )
+			{
+				e.printStackTrace();
 			}
 		};
 	}

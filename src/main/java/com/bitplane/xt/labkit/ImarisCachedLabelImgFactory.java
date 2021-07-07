@@ -1,7 +1,9 @@
-package com.bitplane.xt;
+package com.bitplane.xt.labkit;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
+import com.bitplane.xt.ImarisApplication;
+import com.bitplane.xt.ImarisCachedCellImgOptions;
 import net.imglib2.Dimensions;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;

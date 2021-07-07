@@ -90,7 +90,8 @@ public class ImarisCachedCellImgOptions extends AbstractOptions< ImarisCachedCel
 	}
 
 	@Override
-	protected ImarisCachedCellImgOptions append( final ImarisCachedCellImgOptions additionalOptions )
+	// TODO: Temporarily made public so that factories from labkit package can access it. Should these be more decoupled?
+	public ImarisCachedCellImgOptions append( final ImarisCachedCellImgOptions additionalOptions )
 	{
 		return super.append( additionalOptions );
 	}
