@@ -3,6 +3,7 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import bdv.util.AxisOrder;
+import com.bitplane.xt.util.MapDimensions;
 import java.util.Arrays;
 import net.imglib2.Dimensions;
 import net.imglib2.cache.Cache;
@@ -358,8 +359,8 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 				dataset.GetSizeZ(),
 				dataset.GetSizeC(),
 				dataset.GetSizeT() };
-		final int[] mapDimensions = createMapDimensions( imarisDims, dimensions );
-		final int[] invMapDimensions = invertMapDimensions( mapDimensions, dimensions.length ) ;
+		final int[] mapDimensions = MapDimensions.createMapDimensions( imarisDims, dimensions );
+		final int[] invMapDimensions = MapDimensions.invertMapDimensions( mapDimensions ) ;
 
 		final ImarisCachedCellImgOptions.Values options = factoryOptions.append( additionalOptions ).values;
 		final Fraction entitiesPerPixel = type.getEntitiesPerPixel();
@@ -420,62 +421,6 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 				accessType );
 		img.setLinkedType( typeFactory.createLinkedType( img ) );
 		return img;
-	}
-
-	/**
-	 * Tries to derive a {@code mapDimensions} array matching the specified Imaris and imglib2 dimension arrays.
-	 * <p>
-	 * {@code mapDimensions} maps Imaris dimension indices to imglib2 dimension indices.
-	 * If {@code i} is dimension index from Imaris (0..4 means X,Y,Z,C,T)
-	 * then {@code mapDimensions[i]} is the corresponding dimension in {@code img}.
-	 * For {@code img} dimensions with size=1 may be skipped.
-	 * E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
-	 *
-	 * @param imarisDims
-	 * 		dimensions of the Imaris dataset ({@code int[5]}, with X,Y,Z,C,T)
-	 * @param imgDims
-	 * 		dimensions of the imglib2 image
-	 *
-	 * @return {@code mapDimensions} array
-	 */
-	private static int[] createMapDimensions( final int[] imarisDims, final long[] imgDims )
-	{
-		assert imarisDims.length == 5;
-
-		final int[] mapDimension = new int[ 5 ];
-		int j = 0;
-		for ( int i = 0; i < imarisDims.length; ++i )
-		{
-			final int si = imarisDims[ i ];
-			final long sj = j < imgDims.length ? imgDims[ j ] : -1;
-
-			if ( si == sj )
-			{
-				mapDimension[ i ] = j;
-				++j;
-			}
-			else if ( si == 1 ) // (and sj != 1)
-				mapDimension[ i ] = -1;
-			else
-				throw new IllegalArgumentException( "image dimensions do not match dataset dimensions" );
-		}
-		return mapDimension;
-	}
-
-
-	// TODO: move to util?
-	//   (temporarily made public)
-	public static int[] invertMapDimensions( final int[] mapDimensions, final int n )
-	{
-		final int[] invMapDimensions = new int[ n ];
-		Arrays.fill( invMapDimensions, -1 );
-		for ( int i = 0; i < mapDimensions.length; i++ )
-		{
-			final int si = mapDimensions[ i ];
-			if ( si >= 0 )
-				invMapDimensions[ si ] = i;
-		}
-		return invMapDimensions;
 	}
 
 	// TODO: move to util?

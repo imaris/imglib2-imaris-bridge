@@ -4,6 +4,7 @@ import Imaris.Error;
 import Imaris.IDataSetPrx;
 import com.bitplane.xt.ImarisApplication;
 import com.bitplane.xt.ImarisCachedCellImgOptions;
+import com.bitplane.xt.util.MapDimensions;
 import net.imglib2.Dimensions;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;
@@ -30,7 +31,6 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Fraction;
 
 import static com.bitplane.xt.ImarisCachedCellImgFactory.createCellGrid;
-import static com.bitplane.xt.ImarisCachedCellImgFactory.invertMapDimensions;
 
 /**
  * Factory for creating {@link ImarisCachedProbabilitiesImg}s. See
@@ -219,7 +219,7 @@ public class ImarisCachedProbabilitiesImgFactory< T extends NativeType< T > > ex
 				dataset.GetSizeC(),
 				dataset.GetSizeT() };
 		final int[] mapDimensions = createMapDimensions( imarisDims, dimensions );
-		final int[] invMapDimensions = invertMapDimensions( mapDimensions, dimensions.length ) ;
+		final int[] invMapDimensions = MapDimensions.invertMapDimensions( mapDimensions ) ;
 
 		final ImarisCachedCellImgOptions.Values options = factoryOptions.append( additionalOptions ).values;
 		final Fraction entitiesPerPixel = type.getEntitiesPerPixel();
@@ -283,20 +283,9 @@ public class ImarisCachedProbabilitiesImgFactory< T extends NativeType< T > > ex
 	}
 
 	/**
-	 * Tries to derive a {@code mapDimensions} array matching the specified Imaris and imglib2 dimension arrays.
-	 * <p>
-	 * {@code mapDimensions} maps Imaris dimension indices to imglib2 dimension indices.
-	 * If {@code i} is dimension index from Imaris (0..4 means X,Y,Z,C,T)
-	 * then {@code mapDimensions[i]} is the corresponding dimension in {@code img}.
-	 * For {@code img} dimensions with size=1 may be skipped.
-	 * E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
-	 *
-	 * @param imarisDims
-	 * 		dimensions of the Imaris dataset ({@code int[5]}, with X,Y,Z,C,T)
-	 * @param imgDims
-	 * 		dimensions of the imglib2 image
-	 *
-	 * @return {@code mapDimensions} array
+	 * Modified version of {@link MapDimensions#createMapDimensions}.
+	 * We assume that the channel dimensions is the last of {@code imgDims}.
+	 * All other dimensions are matched in order (XYZT) and by size.
 	 */
 	private static int[] createMapDimensions( final int[] imarisDims, final long[] imgDims )
 	{

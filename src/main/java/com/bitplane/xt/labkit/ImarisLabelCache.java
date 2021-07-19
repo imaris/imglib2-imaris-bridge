@@ -36,9 +36,9 @@ package com.bitplane.xt.labkit;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
+import com.bitplane.xt.util.MapDimensions.SelectIntervalDimension;
 import com.bitplane.xt.util.SetDataSubVolume;
 import com.bitplane.xt.util.GetDataSubVolume;
-import com.bitplane.xt.util.MapIntervalDimension;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,7 +61,7 @@ import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 import net.imglib2.type.PrimitiveType;
 
-import static com.bitplane.xt.util.MapIntervalDimension.mapIntervalDimension;
+import static com.bitplane.xt.util.MapDimensions.selectIntervalDimension;
 
 /**
  * A {@link CacheRemover}/{@link CacheLoader} for writing/reading cells
@@ -264,10 +264,10 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 			throw new IllegalArgumentException();
 		}
 
-		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );
-		final MapIntervalDimension y = mapIntervalDimension( mapDimensions[ 1 ] );
-		final MapIntervalDimension z = mapIntervalDimension( mapDimensions[ 2 ] );
-		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
+		final SelectIntervalDimension x = selectIntervalDimension( mapDimensions[ 0 ] );
+		final SelectIntervalDimension y = selectIntervalDimension( mapDimensions[ 1 ] );
+		final SelectIntervalDimension z = selectIntervalDimension( mapDimensions[ 2 ] );
+		final SelectIntervalDimension t = selectIntervalDimension( mapDimensions[ 4 ] );
 
 		return ( min, size ) -> {
 
@@ -709,10 +709,10 @@ public class ImarisLabelCache< A > implements CacheRemover< Long, Cell< A >, A >
 			throw new IllegalArgumentException();
 		}
 
-		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );
-		final MapIntervalDimension y = mapIntervalDimension( mapDimensions[ 1 ] );
-		final MapIntervalDimension z = mapIntervalDimension( mapDimensions[ 2 ] );
-		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
+		final SelectIntervalDimension x = selectIntervalDimension( mapDimensions[ 0 ] );
+		final SelectIntervalDimension y = selectIntervalDimension( mapDimensions[ 1 ] );
+		final SelectIntervalDimension z = selectIntervalDimension( mapDimensions[ 2 ] );
+		final SelectIntervalDimension t = selectIntervalDimension( mapDimensions[ 4 ] );
 
 		final int oc = 0;
 		final int sc = numChannels;

@@ -36,7 +36,7 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
-import com.bitplane.xt.util.MapIntervalDimension;
+import com.bitplane.xt.util.MapDimensions.SelectIntervalDimension;
 import com.bitplane.xt.util.PixelSource;
 import com.bitplane.xt.util.SetDataSubVolume;
 import java.util.Set;
@@ -51,7 +51,7 @@ import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 
-import static com.bitplane.xt.util.MapIntervalDimension.mapIntervalDimension;
+import static com.bitplane.xt.util.MapDimensions.selectIntervalDimension;
 
 /**
  * Basic {@link CacheRemover}/{@link CacheLoader} for writing/reading cells
@@ -218,11 +218,11 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 			throw new IllegalArgumentException();
 		}
 
-		final MapIntervalDimension x = mapIntervalDimension( mapDimensions[ 0 ] );
-		final MapIntervalDimension y = mapIntervalDimension( mapDimensions[ 1 ] );
-		final MapIntervalDimension z = mapIntervalDimension( mapDimensions[ 2 ] );
-		final MapIntervalDimension c = mapIntervalDimension( mapDimensions[ 3 ] );
-		final MapIntervalDimension t = mapIntervalDimension( mapDimensions[ 4 ] );
+		final SelectIntervalDimension x = selectIntervalDimension( mapDimensions[ 0 ] );
+		final SelectIntervalDimension y = selectIntervalDimension( mapDimensions[ 1 ] );
+		final SelectIntervalDimension z = selectIntervalDimension( mapDimensions[ 2 ] );
+		final SelectIntervalDimension c = selectIntervalDimension( mapDimensions[ 3 ] );
+		final SelectIntervalDimension t = selectIntervalDimension( mapDimensions[ 4 ] );
 
 		return ( access, min, size ) ->
 		{
