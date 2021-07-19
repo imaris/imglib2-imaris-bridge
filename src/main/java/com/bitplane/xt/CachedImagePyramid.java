@@ -7,14 +7,17 @@ import bdv.util.volatiles.SharedQueue;
 import bdv.util.volatiles.VolatileTypeMatcher;
 import com.bitplane.xt.util.PixelSource;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.Volatile;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;
-import net.imglib2.cache.LoaderCache;
+import net.imglib2.cache.CacheRemover;
+import net.imglib2.cache.LoaderRemoverCache;
 import net.imglib2.cache.img.CachedCellImg;
-import net.imglib2.cache.ref.SoftRefLoaderCache;
+import net.imglib2.cache.ref.SoftRefLoaderRemoverCache;
 import net.imglib2.cache.ref.WeakRefVolatileCache;
 import net.imglib2.cache.util.KeyBimap;
 import net.imglib2.cache.volatiles.CacheHints;
@@ -65,7 +68,7 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 
 	// TODO make constructor argument ?
 	// shared cache for cells of all resolution levels
-	private final LoaderCache< Key, Cell > backingCache;
+	private final LoaderRemoverCache< Key, Cell< A >, A > backingCache;
 
 	private final CachedCellImg< T, A >[] imgs;
 
@@ -82,6 +85,8 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			final int[][] cellDimensions,
 			final PixelSource< A > volatileArraySource )
 	{
+		System.out.println( "CachedImagePyramid.CachedImagePyramid" );
+		System.out.println( "type = " + type + ", axisOrder = " + axisOrder + ", dimensions = " + Arrays.deepToString( dimensions ) + ", cellDimensions = " + Arrays.deepToString( cellDimensions ) + ", volatileArraySource = " + volatileArraySource );
 		this.axisOrder = axisOrder;
 		numResolutions = dimensions.length;
 		this.dimensions = dimensions;
@@ -94,7 +99,7 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 		volatileType = ( V ) VolatileTypeMatcher.getVolatileTypeForType( type );
 
 		queue = new SharedQueue( 16, numResolutions );
-		backingCache = new SoftRefLoaderCache<>();
+		backingCache = new SoftRefLoaderRemoverCache<>();
 
 		imgs = new CachedCellImg[ numResolutions ];
 		vimgs = new VolatileCachedCellImg[ numResolutions ];
@@ -125,7 +130,44 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			final KeyBimap< Long, Key > bimap = KeyBimap.build(
 					index -> new Key( level, index ),
 					key -> key.level == level ? key.index : null );
-			final Cache< Long, Cell > cache = backingCache.mapKeys( bimap ).withLoader( ( CacheLoader ) loader );
+			// ------------------------------------------------------------------------------
+			// TODO
+			// TODO
+			// TODO
+			final CacheRemover< Long, Cell< A >, A > DUMMY_REMOVER = new CacheRemover< Long, Cell< A >, A >()
+			{
+				@Override
+				public void onRemoval( final Long key, final A valueData )
+				{
+				}
+
+				@Override
+				public CompletableFuture< Void > persist( final Long key, final A valueData )
+				{
+					return null;
+				}
+
+				@Override
+				public A extract( final Cell< A > value )
+				{
+					return value.getData();
+				}
+
+				@Override
+				public Cell< A > reconstruct( final Long key, final A valueData )
+				{
+					final long index = key;
+					final long[] cellMin = new long[ numDimensions ];
+					final int[] cellDims = new int[ numDimensions ];
+					grid.getCellDimensions( index, cellMin, cellDims );
+					return new Cell<>( cellDims, cellMin, valueData );
+				}
+			};
+			// TODO
+			// TODO
+			// TODO
+			// ------------------------------------------------------------------------------
+			final Cache< Long, Cell > cache = backingCache.mapKeys( bimap ).withLoader( ( CacheLoader ) loader ).withRemover( DUMMY_REMOVER );
 
 			final int priority = numResolutions - resolution - 1;
 			final CacheHints hints = new CacheHints( BUDGETED, priority, false );
