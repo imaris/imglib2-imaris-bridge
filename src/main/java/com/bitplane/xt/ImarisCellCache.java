@@ -150,12 +150,6 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 
 
 
-	// ===================================================================
-	// The following code is mostly copied from ImarisDataset.
-	// TODO: refactor
-	// ===================================================================
-
-
 	// -------------------------------------------------------------------
 	//  Mapping dimensions between Imaris (always 5D) and ImgLib (2D..5D)
 	// -------------------------------------------------------------------

@@ -1,5 +1,8 @@
 package com.bitplane.xt;
 
+import Imaris.Error;
+import Imaris.IDataSetPrx;
+import Imaris.tType;
 import bdv.img.cache.CreateInvalidVolatileCell;
 import bdv.img.cache.VolatileCachedCellImg;
 import bdv.util.AxisOrder;
@@ -7,7 +10,6 @@ import bdv.util.volatiles.SharedQueue;
 import bdv.util.volatiles.VolatileTypeMatcher;
 import com.bitplane.xt.util.PixelSource;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import net.imglib2.RandomAccessibleInterval;
@@ -15,6 +17,7 @@ import net.imglib2.Volatile;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.CacheRemover;
+import net.imglib2.cache.IoSync;
 import net.imglib2.cache.LoaderRemoverCache;
 import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.cache.ref.SoftRefLoaderRemoverCache;
@@ -83,10 +86,10 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			final AxisOrder axisOrder,
 			final long[][] dimensions,
 			final int[][] cellDimensions,
-			final PixelSource< A > volatileArraySource )
+			final IDataSetPrx dataset,
+			final tType datasetType,
+			final int[] mapDimensions ) throws Error
 	{
-		System.out.println( "CachedImagePyramid.CachedImagePyramid" );
-		System.out.println( "type = " + type + ", axisOrder = " + axisOrder + ", dimensions = " + Arrays.deepToString( dimensions ) + ", cellDimensions = " + Arrays.deepToString( cellDimensions ) + ", volatileArraySource = " + volatileArraySource );
 		this.axisOrder = axisOrder;
 		numResolutions = dimensions.length;
 		this.dimensions = dimensions;
@@ -104,7 +107,7 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 		imgs = new CachedCellImg[ numResolutions ];
 		vimgs = new VolatileCachedCellImg[ numResolutions ];
 
-		final NativeTypeFactory< T, A > typeFactory = ( NativeTypeFactory< T, A > ) type.getNativeTypeFactory();
+		final PixelSource< A > volatileArraySource = PixelSource.volatileArraySource( dataset, datasetType, mapDimensions, false );
 
 		// in: numResolutions, queue, backingCache, s, dimensions, cellDimensions
 		//     numResolutions == dimensions.length
@@ -118,60 +121,77 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			final CellGrid grid = new CellGrid( dimensions[ resolution ], cellDimensions[ resolution ] );
 
 			final int level = resolution;
-			final CacheLoader< Long, Cell< A > > loader = key -> {
-				final long[] cellMin = new long[ numDimensions ];
-				final int[] cellDims = new int[ numDimensions ];
-				grid.getCellDimensions( key, cellMin, cellDims );
-				return new Cell<>(
-						cellDims,
-						cellMin,
-						volatileArraySource.get( level, cellMin, cellDims ) );
-			};
 			final KeyBimap< Long, Key > bimap = KeyBimap.build(
 					index -> new Key( level, index ),
 					key -> key.level == level ? key.index : null );
-			// ------------------------------------------------------------------------------
-			// TODO
-			// TODO
-			// TODO
-			final CacheRemover< Long, Cell< A >, A > DUMMY_REMOVER = new CacheRemover< Long, Cell< A >, A >()
+			final Cache< Long, Cell< A > > cache;
+			if ( level == 0 )
 			{
-				@Override
-				public void onRemoval( final Long key, final A valueData )
-				{
-				}
-
-				@Override
-				public CompletableFuture< Void > persist( final Long key, final A valueData )
-				{
-					return null;
-				}
-
-				@Override
-				public A extract( final Cell< A > value )
-				{
-					return value.getData();
-				}
-
-				@Override
-				public Cell< A > reconstruct( final Long key, final A valueData )
-				{
-					final long index = key;
+				final CacheLoader< Long, Cell< A > > backingLoader = null;
+				// TODO: ImarisCellCache / ImarisDirtyCellCache
+				final ImarisCellCache< A > lr = new ImarisCellCache<>( dataset, mapDimensions, grid, backingLoader, false );
+				// TODO: wrap in IoSync
+				final IoSync< Long, Cell< A >, A > iosync = new IoSync<>(
+						lr, 1, 10 ); // TODO
+//						options.numIoThreads(), // TODO
+//						options.maxIoQueueSize() ); // TODO
+				cache = backingCache.mapKeys( bimap ).withLoader( iosync ).withRemover( iosync );
+			}
+			else
+			{
+				final CacheLoader< Long, Cell< A > > loader = key -> {
 					final long[] cellMin = new long[ numDimensions ];
 					final int[] cellDims = new int[ numDimensions ];
-					grid.getCellDimensions( index, cellMin, cellDims );
-					return new Cell<>( cellDims, cellMin, valueData );
-				}
-			};
-			// TODO
-			// TODO
-			// TODO
-			// ------------------------------------------------------------------------------
-			final Cache< Long, Cell > cache = backingCache.mapKeys( bimap ).withLoader( ( CacheLoader ) loader ).withRemover( DUMMY_REMOVER );
+					grid.getCellDimensions( key, cellMin, cellDims );
+					return new Cell<>(
+							cellDims,
+							cellMin,
+							volatileArraySource.get( level, cellMin, cellDims ) );
+				};
+				// ------------------------------------------------------------------------------
+				// TODO
+				// TODO
+				// TODO
+				final CacheRemover< Long, Cell< A >, A > DUMMY_REMOVER = new CacheRemover< Long, Cell< A >, A >()
+				{
+					@Override
+					public void onRemoval( final Long key, final A valueData )
+					{
+					}
+
+					@Override
+					public CompletableFuture< Void > persist( final Long key, final A valueData )
+					{
+						return null;
+					}
+
+					@Override
+					public A extract( final Cell< A > value )
+					{
+						return value.getData();
+					}
+
+					@Override
+					public Cell< A > reconstruct( final Long key, final A valueData )
+					{
+						final long index = key;
+						final long[] cellMin = new long[ numDimensions ];
+						final int[] cellDims = new int[ numDimensions ];
+						grid.getCellDimensions( index, cellMin, cellDims );
+						return new Cell<>( cellDims, cellMin, valueData );
+					}
+				};
+				// TODO
+				// TODO
+				// TODO
+				// ------------------------------------------------------------------------------
+				cache = backingCache.mapKeys( bimap ).withLoader( ( CacheLoader ) loader ).withRemover( DUMMY_REMOVER );
+			}
 
 			final int priority = numResolutions - resolution - 1;
 			final CacheHints hints = new CacheHints( BUDGETED, priority, false );
 
+			final NativeTypeFactory< T, A > typeFactory = ( NativeTypeFactory< T, A > ) type.getNativeTypeFactory();
 			final A accessType = ArrayDataAccessFactory.get( typeFactory, AccessFlags.setOf( AccessFlags.VOLATILE ) );
 			final CachedCellImg< T, A > img = new CachedCellImg( grid, type, cache, accessType );
 			img.setLinkedType( typeFactory.createLinkedType( img ) );

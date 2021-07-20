@@ -192,8 +192,9 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		// --------------------------------------------------------------------
 		// Create cached images.
 
-		final PixelSource< A > arraySource = PixelSource.volatileArraySource( dataset, datasetType, mapDimensions, false );
-		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>( type, axisOrder, dimensions, cellDimensions, arraySource );
+//		final PixelSource< A > arraySource = PixelSource.volatileArraySource( dataset, datasetType, mapDimensions, false );
+//		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>( type, axisOrder, dimensions, cellDimensions, arraySource );
+		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>( type, axisOrder, dimensions, cellDimensions, dataset, datasetType, mapDimensions );
 		this.imagePyramid = imagePyramid;
 
 
