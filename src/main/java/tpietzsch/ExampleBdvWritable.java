@@ -43,6 +43,10 @@ public class ExampleBdvWritable
 			max[ d ] = dims[ d ] / 2 + dims[ d ] / 8;
 		}
 		Views.interval( img, min, max ).forEach( t -> t.set( 200 ) );
+
+		System.out.println("persisting");
+		dataset.persist();
+
 		System.out.println("done");
 	}
 }

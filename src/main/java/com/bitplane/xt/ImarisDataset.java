@@ -377,4 +377,15 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	{
 		return dataset;
 	}
+
+	/**
+	 * TODO
+	 *
+	 * Persist changes back to Imaris.
+	 * Note that only the full resolution (level 0) image is writable!
+	 */
+	public void persist()
+	{
+		this.imagePyramid.persist();
+	}
 }

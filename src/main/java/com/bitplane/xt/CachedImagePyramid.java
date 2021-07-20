@@ -300,6 +300,15 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 		return volatileType;
 	}
 
+	/**
+	 * Persist changes back to Imaris.
+	 * Note that only the full resolution (level 0) image is writable!
+	 */
+	public void persist()
+	{
+		imgs[ 0 ].getCache().persistAll();
+	}
+
 	public SharedQueue getSharedQueue()
 	{
 		return queue;
