@@ -8,7 +8,6 @@ import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import com.bitplane.xt.util.ColorTableUtils;
-import com.bitplane.xt.util.PixelSource;
 import java.util.ArrayList;
 import java.util.List;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
@@ -20,6 +19,7 @@ import net.imagej.axis.DefaultLinearAxis;
 import net.imglib2.Volatile;
 import net.imglib2.display.ColorTable8;
 import net.imglib2.img.Img;
+import net.imglib2.img.basictypeaccess.volatiles.VolatileArrayDataAccess;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
@@ -79,7 +79,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	 */
 	private final List< SourceAndConverter< T > > sources;
 
-	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A >
+	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset( final IDataSetPrx dataset ) throws Error
 	{
 		this.dataset = dataset;
@@ -387,5 +387,13 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	public void persist()
 	{
 		this.imagePyramid.persist();
+	}
+
+	/**
+	 * TODO
+	 */
+	public void invalidatePyramid() // TODO: rename!?
+	{
+		this.imagePyramid.invalidate();
 	}
 }

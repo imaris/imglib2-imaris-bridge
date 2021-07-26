@@ -336,26 +336,26 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	@Override
 	public void invalidate( final Long key )
 	{
-		// TODO For now, we always load/save to imaris, i.e., there is no "clean version", so invalidate() doesn't make sense.
-		throw new UnsupportedOperationException( "TODO. not implemented yet" );
+		// For now, we always load/save to imaris, i.e., there is no "clean
+		// version", so invalidate() doesn't do anything.
 	}
 
 	@Override
 	public void invalidateIf( final long parallelismThreshold, final Predicate< Long > condition )
 	{
-		// TODO For now, we always load/save to imaris, i.e., there is no "clean version", so invalidate() doesn't make sense.
-		throw new UnsupportedOperationException( "TODO. not implemented yet" );
+		// For now, we always load/save to imaris, i.e., there is no "clean
+		// version", so invalidate() doesn't do anything.
 	}
 
 	@Override
 	public void invalidateAll( final long parallelismThreshold )
 	{
-		// TODO For now, we always load/save to imaris, i.e., there is no "clean version", so invalidate() doesn't make sense.
+		// For now, we always load/save to imaris, i.e., there is no "clean
+		// version", so invalidate() doesn't do anything.
 		//
 		//  Later, this should possibly clear the Imaris dataset (is there a function for this?).
 		//  It should clear the map of written blocks (blocks that were written to imaris once,
 		//  and will therefore be loaded from imaris when they are next needed).
-		throw new UnsupportedOperationException( "TODO. not implemented yet" );
 	}
 
 	// TODO there should be a method to say that the image has been modified on the imaris side.

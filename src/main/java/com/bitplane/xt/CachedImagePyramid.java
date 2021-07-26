@@ -24,9 +24,10 @@ import net.imglib2.cache.ref.SoftRefLoaderRemoverCache;
 import net.imglib2.cache.ref.WeakRefVolatileCache;
 import net.imglib2.cache.util.KeyBimap;
 import net.imglib2.cache.volatiles.CacheHints;
-import net.imglib2.cache.volatiles.UncheckedVolatileCache;
+import net.imglib2.cache.volatiles.VolatileCache;
 import net.imglib2.img.basictypeaccess.AccessFlags;
 import net.imglib2.img.basictypeaccess.ArrayDataAccessFactory;
+import net.imglib2.img.basictypeaccess.volatiles.VolatileArrayDataAccess;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 import net.imglib2.type.NativeType;
@@ -39,7 +40,7 @@ import static net.imglib2.cache.volatiles.LoadingStrategy.BUDGETED;
  * Implementation of {@link ImagePyramid} with images that are backed by a joint
  * cache which loads blocks from Imaris.
  */
-class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends Volatile< T > & NativeType< V > & RealType< V >, A >
+class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	implements ImagePyramid< T, V >
 {
 	/**
@@ -196,9 +197,9 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			final CachedCellImg< T, A > img = new CachedCellImg( grid, type, cache, accessType );
 			img.setLinkedType( typeFactory.createLinkedType( img ) );
 
-			final CreateInvalidVolatileCell createInvalid = CreateInvalidVolatileCell.get( grid, volatileType, false );
-			final UncheckedVolatileCache< Long, Cell > vcache = new WeakRefVolatileCache<>( cache, queue, createInvalid ).unchecked();
-			final VolatileCachedCellImg< V, A > vimg = new VolatileCachedCellImg<>( grid, volatileType, hints, vcache::get );
+			final CreateInvalidVolatileCell< A > createInvalid = CreateInvalidVolatileCell.get( grid, volatileType, false );
+			final VolatileCache< Long, Cell< A > > vcache = new WeakRefVolatileCache<>( cache, queue, createInvalid );
+			final VolatileCachedCellImg< V, A > vimg = new VolatileCachedCellImg<>( grid, volatileType, hints, vcache );
 
 			imgs[ resolution ] = img;
 			vimgs[ resolution ] = vimg;
@@ -307,6 +308,17 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 	public void persist()
 	{
 		imgs[ 0 ].getCache().persistAll();
+	}
+
+	/**
+	 * TODO
+	 */
+	public void invalidate() // TODO: rename!?
+	{
+		// TODO: from level 0 or 1?
+		//       or should we have both?
+		for ( int i = 0; i < vimgs.length; i++ )
+			vimgs[ i ].getCache().invalidateAll();
 	}
 
 	public SharedQueue getSharedQueue()
