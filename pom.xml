@@ -68,9 +68,11 @@
 		<license.licenseName>commercial</license.licenseName>
 		<license.copyrightOwners>bitplane</license.copyrightOwners>
 
-		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
+		<bigdataviewer-core.version>10.2.1-SNAPSHOT</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
 		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
+
+		<enforcer.skip>true</enforcer.skip>
 	</properties>
 
 	<repositories>
