@@ -14,7 +14,7 @@ import org.scijava.Context;
 
 public class ExampleBdvWritable
 {
-	public static void main( String[] args )
+	public static void main( String[] args ) throws InterruptedException
 	{
 		final Context context = new Context();
 		final ImarisService imaris = context.getService( ImarisService.class );
@@ -31,6 +31,7 @@ public class ExampleBdvWritable
 
 		final BdvStackSource< ? > source = BdvFunctions.show( dataset.getSources(), dataset.numTimepoints(), Bdv.options() );
 		source.getBdvHandle().getCacheControls().addCacheControl( dataset.getSharedQueue() );
+		Thread.sleep( 3000 );
 
 		System.out.println( "type = " + dataset.getType().getClass() );
 		final Img< UnsignedByteType > img = ( Img< UnsignedByteType > ) dataset.getImage();
@@ -46,6 +47,10 @@ public class ExampleBdvWritable
 
 		System.out.println("persisting");
 		dataset.persist();
+
+		System.out.println("invalidatePyramid");
+		dataset.invalidatePyramid();
+		source.getBdvHandle().getViewerPanel().requestRepaint();
 
 		System.out.println("done");
 	}
