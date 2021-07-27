@@ -333,30 +333,16 @@ public class ImarisLoaderRemover< A > implements CacheRemover< Long, Cell< A >, 
 		return CompletableFuture.completedFuture( null );
 	}
 
-	@Override
-	public void invalidate( final Long key )
-	{
-		// For now, we always load/save to imaris, i.e., there is no "clean
-		// version", so invalidate() doesn't do anything.
-	}
-
-	@Override
-	public void invalidateIf( final long parallelismThreshold, final Predicate< Long > condition )
-	{
-		// For now, we always load/save to imaris, i.e., there is no "clean
-		// version", so invalidate() doesn't do anything.
-	}
-
-	@Override
-	public void invalidateAll( final long parallelismThreshold )
-	{
-		// For now, we always load/save to imaris, i.e., there is no "clean
-		// version", so invalidate() doesn't do anything.
-		//
-		//  Later, this should possibly clear the Imaris dataset (is there a function for this?).
-		//  It should clear the map of written blocks (blocks that were written to imaris once,
-		//  and will therefore be loaded from imaris when they are next needed).
-	}
+	// For now, we always load/save to imaris, i.e., there is no "clean
+	// version", so invalidate() doesn't do anything.
+	//
+	// Later, this should possibly clear the Imaris dataset (is there a function for this?).
+	// It should clear the map of written blocks (blocks that were written to imaris once,
+	// and will therefore be loaded from imaris when they are next needed).
+	//
+	// @Override public void invalidate( final Long key ) {}
+	// @Override public void invalidateIf( final long parallelismThreshold, final Predicate< Long > condition ) {}
+	// @Override public void invalidateAll( final long parallelismThreshold ) {}
 
 	// TODO there should be a method to say that the image has been modified on the imaris side.
 	//  This would then clear the cache and mark all cells as written, so that they will be loaded from Imaris always.
