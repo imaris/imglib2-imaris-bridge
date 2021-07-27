@@ -11,12 +11,10 @@ import bdv.util.volatiles.VolatileTypeMatcher;
 import com.bitplane.xt.util.PixelSource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.Volatile;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;
-import net.imglib2.cache.CacheRemover;
 import net.imglib2.cache.IoSync;
 import net.imglib2.cache.LoaderRemoverCache;
 import net.imglib2.cache.img.CachedCellImg;
@@ -91,6 +89,11 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			final tType datasetType,
 			final int[] mapDimensions ) throws Error
 	{
+		final int numIoThreads = 1; // TODO Make this a constructor argument
+		final int maxIoQueueSize = 10; // TODO Make this a constructor argument
+		final boolean writable = false; // TODO Make this a constructor argument
+
+
 		this.axisOrder = axisOrder;
 		numResolutions = dimensions.length;
 		this.dimensions = dimensions;
@@ -126,67 +129,18 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 					index -> new Key( level, index ),
 					key -> key.level == level ? key.index : null );
 			final Cache< Long, Cell< A > > cache;
-			if ( level == 0 )
+			if ( level == 0 && writable )
 			{
 				final CacheLoader< Long, Cell< A > > backingLoader = null;
 				// TODO: ImarisCellCache / ImarisDirtyCellCache
-				final ImarisLoaderRemover< A > lr = new ImarisLoaderRemover<>( dataset, mapDimensions, grid, backingLoader, false );
-				// TODO: wrap in IoSync
-				final IoSync< Long, Cell< A >, A > iosync = new IoSync<>(
-						lr, 1, 10 ); // TODO
-//						options.numIoThreads(), // TODO
-//						options.maxIoQueueSize() ); // TODO
+				final ImarisLoaderRemover< A > loader = new ImarisLoaderRemover<>( dataset, mapDimensions, grid, backingLoader, false );
+				final IoSync< Long, Cell< A >, A > iosync = new IoSync<>( loader, numIoThreads, maxIoQueueSize );
 				cache = backingCache.mapKeys( bimap ).withLoader( iosync ).withRemover( iosync );
 			}
 			else
 			{
-				final CacheLoader< Long, Cell< A > > loader = key -> {
-					final long[] cellMin = new long[ numDimensions ];
-					final int[] cellDims = new int[ numDimensions ];
-					grid.getCellDimensions( key, cellMin, cellDims );
-					return new Cell<>(
-							cellDims,
-							cellMin,
-							volatileArraySource.get( level, cellMin, cellDims ) );
-				};
-				// ------------------------------------------------------------------------------
-				// TODO
-				// TODO
-				// TODO
-				final CacheRemover< Long, Cell< A >, A > DUMMY_REMOVER = new CacheRemover< Long, Cell< A >, A >()
-				{
-					@Override
-					public void onRemoval( final Long key, final A valueData )
-					{
-					}
-
-					@Override
-					public CompletableFuture< Void > persist( final Long key, final A valueData )
-					{
-						return null;
-					}
-
-					@Override
-					public A extract( final Cell< A > value )
-					{
-						return value.getData();
-					}
-
-					@Override
-					public Cell< A > reconstruct( final Long key, final A valueData )
-					{
-						final long index = key;
-						final long[] cellMin = new long[ numDimensions ];
-						final int[] cellDims = new int[ numDimensions ];
-						grid.getCellDimensions( index, cellMin, cellDims );
-						return new Cell<>( cellDims, cellMin, valueData );
-					}
-				};
-				// TODO
-				// TODO
-				// TODO
-				// ------------------------------------------------------------------------------
-				cache = backingCache.mapKeys( bimap ).withLoader( ( CacheLoader ) loader ).withRemover( DUMMY_REMOVER );
+				final ImarisLoader< A > loader = new ImarisLoader<>( dataset, mapDimensions, grid );
+				cache = backingCache.mapKeys( bimap ).withLoader( loader ).withRemover( loader );
 			}
 
 			final int priority = numResolutions - resolution - 1;
