@@ -36,22 +36,16 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
-import com.bitplane.xt.util.MapDimensions.SelectIntervalDimension;
+import com.bitplane.xt.util.PixelSink;
 import com.bitplane.xt.util.PixelSource;
-import com.bitplane.xt.util.SetDataSubVolume;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.IntFunction;
-import java.util.function.Predicate;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.CacheRemover;
 import net.imglib2.cache.IoSync;
-import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
-
-import static com.bitplane.xt.util.MapDimensions.selectIntervalDimension;
 
 /**
  * Basic {@link CacheRemover}/{@link CacheLoader} for writing/reading cells
@@ -80,13 +74,8 @@ public class ImarisLoaderRemover< A > implements CacheRemover< Long, Cell< A >, 
 
 	private final int n;
 
-	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
-	//  PixelSource kinds flying around. There must be a better way to do this.
 	private final PixelSource< A > volatileArraySource;
 
-	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
-	//  PixelSource kinds flying around. There must be a better way to do this.
-	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
 	private final PixelSink< A > volatileArraySink;
 
 	/**
@@ -114,6 +103,22 @@ public class ImarisLoaderRemover< A > implements CacheRemover< Long, Cell< A >, 
 	//  for example a BitSet. But then we need to take care of concurrency ourselves, so...
 	private final Set< Long > written;
 
+	/**
+	 * TODO
+	 *
+	 * @param dataset
+	 * @param mapDimensions
+	 * 		maps Imaris dimension indices to imglib2 dimension indices.
+	 * 		If {@code i} is dimension index from Imaris (0..4 means X,Y,Z,C,T)
+	 * 		then {@code mapDimensions[i]} is the corresponding dimension in {@code Img}.
+	 * 		For {@code Img} dimensions with size=1 are skipped.
+	 * 		E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
+	 * @param grid
+	 * @param backingLoader
+	 * @param persistOnLoad
+	 *
+	 * @throws Error
+	 */
 	public ImarisLoaderRemover(
 			final IDataSetPrx dataset,
 			final int[] mapDimensions,
@@ -136,132 +141,16 @@ public class ImarisLoaderRemover< A > implements CacheRemover< Long, Cell< A >, 
 		datasetType = dataset.GetType();
 		this.grid = grid;
 		n = grid.numDimensions();
-		this.mapDimensions = mapDimensions;
 		this.backingLoader = backingLoader;
 		this.persistOnLoad = persistOnLoad;
 		volatileArraySource = PixelSource.volatileArraySource( dataset, datasetType, mapDimensions, withDirtyFlag );
-		volatileArraySink = volatileArraySink();
+		volatileArraySink = PixelSink.volatileArraySink( dataset, datasetType, mapDimensions );
 		written = backingLoader == null ? null : ConcurrentHashMap.newKeySet();
 	}
-
-
-
-
-
-
-
-	// -------------------------------------------------------------------
-	//  Mapping dimensions between Imaris (always 5D) and ImgLib (2D..5D)
-	// -------------------------------------------------------------------
-
-	/**
-	 * Maps Imaris dimension indices to imglib2 dimension indices.
-	 * If {@code i} is dimension index from Imaris (0..4 means X,Y,Z,C,T)
-	 * then {@code mapDimensions[i]} is the corresponding dimension in {@code Img}.
-	 * For {@code Img} dimensions with size=1 are skipped.
-	 * E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
-	 */
-	private final int[] mapDimensions;
 
 	// -------------------------------------------------------------------
 	//  Writing Imaris blocks as primitive arrays
 	// -------------------------------------------------------------------
-
-	@FunctionalInterface
-	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
-	private interface PixelSink< A >
-	{
-		/**
-		 * Set sub-volume as flattened primitive array.
-		 *
-		 * @param data
-		 *  	{@code byte[]}, {@code short[]}, {@code float[]}, depending on dataset type.
-		 * @param min
-		 * 		minimum of interval in {@code Img} space.
-		 * 		Will be augmented to 5D if necessary (See {@link #mapDimensions}).
-		 * @param size
-		 * 		size of interval in {@code Img} space.
-		 * 		Will be augmented to 5D if necessary (See {@link #mapDimensions}).
-		 */
-		void put( A data, long[] min, int[] size ) throws Error;
-	}
-
-	/**
-	 * TODO
-	 */
-	// TODO: Rename, "volatileArray" part seems not so relevant, it's just to distinguish the various
-	//  PixelSource kinds flying around. There must be a better way to do this.
-	// TODO: Rename. "Sink" is not the best name probably, despite pairing up with "Source" nicely?
-	private PixelSink< A > volatileArraySink()
-	{
-		final SetDataSubVolume slice = SetDataSubVolume.forDataSet( dataset, datasetType );
-
-		final IntFunction< Object > creator;
-		switch ( datasetType )
-		{
-		case eTypeUInt8:
-			creator = byte[]::new;
-			break;
-		case eTypeUInt16:
-			creator = short[]::new;
-			break;
-		case eTypeFloat:
-			creator = float[]::new;
-			break;
-		default:
-			throw new IllegalArgumentException();
-		}
-
-		final SelectIntervalDimension x = selectIntervalDimension( mapDimensions[ 0 ] );
-		final SelectIntervalDimension y = selectIntervalDimension( mapDimensions[ 1 ] );
-		final SelectIntervalDimension z = selectIntervalDimension( mapDimensions[ 2 ] );
-		final SelectIntervalDimension c = selectIntervalDimension( mapDimensions[ 3 ] );
-		final SelectIntervalDimension t = selectIntervalDimension( mapDimensions[ 4 ] );
-
-		return ( access, min, size ) ->
-		{
-			final Object data = ( ( ArrayDataAccess ) access ).getCurrentStorageArray();
-
-			final int ox = x.min( min );
-			final int oy = y.min( min );
-			final int oz = z.min( min );
-			final int oc = c.min( min );
-			final int ot = t.min( min );
-
-			final int sx = x.size( size );
-			final int sy = y.size( size );
-			final int sz = z.size( size );
-			final int sc = c.size( size );
-			final int st = t.size( size );
-
-			if ( sc == 1 && st == 1 )
-				slice.set( data, ox, oy, oz, oc, ot, sx, sy, sz );
-			else
-			{
-				final int slicelength = sx * sy * sz;
-				final Object slicedata = creator.apply( slicelength );
-				for ( int dt = 0; dt < st; ++dt )
-				{
-					for ( int dc = 0; dc < sc; ++dc )
-					{
-						final int srcpos = ( dt * sc + dc ) * slicelength;
-						System.arraycopy( data, srcpos, slicedata, 0, slicelength );
-						slice.set( slicedata, ox, oy, oz, oc + dc, ot + dt, sx, sy, sz );
-					}
-				}
-			}
-		};
-	}
-
-	// ===================================================================
-
-
-
-
-
-
-
-
 
 	@Override
 	public Cell< A > get( final Long key ) throws Exception
