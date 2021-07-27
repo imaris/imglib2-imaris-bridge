@@ -36,34 +36,20 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
-import com.bitplane.xt.util.MapDimensions.SelectIntervalDimension;
 import com.bitplane.xt.util.PixelSource;
-import com.bitplane.xt.util.SetDataSubVolume;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.IntFunction;
-import java.util.function.Predicate;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.CacheRemover;
-import net.imglib2.cache.IoSync;
-import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 
-import static com.bitplane.xt.util.MapDimensions.selectIntervalDimension;
-
 /**
- * Basic {@link CacheRemover}/{@link CacheLoader} for writing/reading cells
- * to an Imaris {@code IDataset}.
+ * A {@link CacheLoader}/{@link CacheRemover} for reading cells
+ * from an Imaris {@code IDataset}.
  * <p>
- * Blocks which are not in the cache (yet) are obtained from a backing
- * {@link CacheLoader}. Typically the backing loader will just create empty cells.
+ * This implementation is intended for read-only images, so the
+ * {@link CacheRemover} interface is implemented to do nothing.
  * </p>
- * <p><em>
- * A {@link ImarisLoader} should be connected to a in-memory cache through
- * {@link IoSync} if the cache will be used concurrently by multiple threads!
- * </em></p>
  *
  * @param <A>
  *            access type
@@ -72,16 +58,26 @@ import static com.bitplane.xt.util.MapDimensions.selectIntervalDimension;
  */
 public class ImarisLoader< A > implements CacheRemover< Long, Cell< A >, A >, CacheLoader< Long, Cell< A > >
 {
-	private final IDataSetPrx dataset;
+	protected final CellGrid grid;
 
-	private final tType datasetType;
-
-	private final CellGrid grid;
-
-	private final int n;
+	protected final int n;
 
 	private final PixelSource< A > volatileArraySource;
 
+	/**
+	 * TODO
+	 *
+	 * @param dataset
+	 * @param mapDimensions
+	 * 		maps Imaris dimension indices to imglib2 dimension indices.
+	 * 		If {@code i} is dimension index from Imaris (0..4 means X,Y,Z,C,T)
+	 * 		then {@code mapDimensions[i]} is the corresponding dimension in {@code Img}.
+	 * 		For {@code Img} dimensions with size=1 are skipped.
+	 * 		E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
+	 * @param grid
+	 *
+	 * @throws Error
+	 */
 	public ImarisLoader(
 			final IDataSetPrx dataset,
 			final int[] mapDimensions,
@@ -96,20 +92,17 @@ public class ImarisLoader< A > implements CacheRemover< Long, Cell< A >, A >, Ca
 			final CellGrid grid,
 			final boolean withDirtyFlag ) throws Error
 	{
-		this.dataset = dataset;
-		datasetType = dataset.GetType();
 		this.grid = grid;
 		n = grid.numDimensions();
-		volatileArraySource = PixelSource.volatileArraySource( dataset, datasetType, mapDimensions, withDirtyFlag );
+		volatileArraySource = PixelSource.volatileArraySource( dataset, dataset.GetType(), mapDimensions, withDirtyFlag );
 	}
 
 	@Override
 	public Cell< A > get( final Long key ) throws Exception
 	{
-		final long index = key;
 		final long[] cellMin = new long[ n ];
 		final int[] cellDims = new int[ n ];
-		grid.getCellDimensions( index, cellMin, cellDims );
+		grid.getCellDimensions( key, cellMin, cellDims );
 		return new Cell<>(
 				cellDims,
 				cellMin,
@@ -140,7 +133,6 @@ public class ImarisLoader< A > implements CacheRemover< Long, Cell< A >, A >, Ca
 	@Override
 	public CompletableFuture< Void > persist( final Long key, final A valueData )
 	{
-		onRemoval( key, valueData );
 		return CompletableFuture.completedFuture( null );
 	}
 }

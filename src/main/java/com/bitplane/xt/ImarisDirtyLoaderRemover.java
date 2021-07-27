@@ -9,7 +9,8 @@ import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 
 /**
- * Variant of {@link ImarisLoaderRemover}, which writes cells Imaris {@code IDataset}, but <em>only if they were modified</em>.
+ * Variant of {@link ImarisLoaderRemover}, which writes cells to Imaris
+ * {@code IDataset}, but <em>only if they were modified</em>.
  *
  * @param <A>
  * 		access type

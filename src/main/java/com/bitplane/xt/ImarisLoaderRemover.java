@@ -48,7 +48,7 @@ import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 
 /**
- * Basic {@link CacheRemover}/{@link CacheLoader} for writing/reading cells
+ * Basic {@link CacheLoader}/{@link CacheRemover} for writing/reading cells
  * to an Imaris {@code IDataset}.
  * <p>
  * Blocks which are not in the cache (yet) are obtained from a backing
@@ -64,18 +64,8 @@ import net.imglib2.img.cell.CellGrid;
  *
  * @author Tobias Pietzsch
  */
-public class ImarisLoaderRemover< A > implements CacheRemover< Long, Cell< A >, A >, CacheLoader< Long, Cell< A > >
+public class ImarisLoaderRemover< A > extends ImarisLoader< A >
 {
-	private final IDataSetPrx dataset;
-
-	private final tType datasetType;
-
-	private final CellGrid grid;
-
-	private final int n;
-
-	private final PixelSource< A > volatileArraySource;
-
 	private final PixelSink< A > volatileArraySink;
 
 	/**
@@ -137,35 +127,18 @@ public class ImarisLoaderRemover< A > implements CacheRemover< Long, Cell< A >, 
 			final boolean persistOnLoad,
 			final boolean withDirtyFlag ) throws Error
 	{
-		this.dataset = dataset;
-		datasetType = dataset.GetType();
-		this.grid = grid;
-		n = grid.numDimensions();
+		super( dataset, mapDimensions, grid, withDirtyFlag );
 		this.backingLoader = backingLoader;
 		this.persistOnLoad = persistOnLoad;
-		volatileArraySource = PixelSource.volatileArraySource( dataset, datasetType, mapDimensions, withDirtyFlag );
-		volatileArraySink = PixelSink.volatileArraySink( dataset, datasetType, mapDimensions );
+		volatileArraySink = PixelSink.volatileArraySink( dataset, dataset.GetType(), mapDimensions );
 		written = backingLoader == null ? null : ConcurrentHashMap.newKeySet();
 	}
-
-	// -------------------------------------------------------------------
-	//  Writing Imaris blocks as primitive arrays
-	// -------------------------------------------------------------------
 
 	@Override
 	public Cell< A > get( final Long key ) throws Exception
 	{
-		final long index = key;
 		if ( written == null || written.contains( key ) )
-		{
-			final long[] cellMin = new long[ n ];
-			final int[] cellDims = new int[ n ];
-			grid.getCellDimensions( index, cellMin, cellDims );
-			return new Cell<>(
-					cellDims,
-					cellMin,
-					volatileArraySource.get( 0, cellMin, cellDims ) );
-		}
+			return super.get( key );
 		else
 		{
 			final Cell< A > cell = backingLoader.get( key );
@@ -176,28 +149,12 @@ public class ImarisLoaderRemover< A > implements CacheRemover< Long, Cell< A >, 
 	}
 
 	@Override
-	public A extract( final Cell< A > value )
-	{
-		return value.getData();
-	}
-
-	@Override
-	public Cell< A > reconstruct( final Long key, final A valueData )
-	{
-		final long index = key;
-		final long[] cellMin = new long[ n ];
-		final int[] cellDims = new int[ n ];
-		grid.getCellDimensions( index, cellMin, cellDims );
-		return new Cell<>( cellDims, cellMin, valueData );
-	}
-
-	@Override
 	public void onRemoval( final Long key, final A valueData )
 	{
 		onRemovalImp( key, valueData );
 	}
 
-	public void onRemovalImp( final Long key, final A valueData )
+	private void onRemovalImp( final Long key, final A valueData )
 	{
 		final long index = key;
 		final long[] cellMin = new long[ n ];
@@ -228,10 +185,6 @@ public class ImarisLoaderRemover< A > implements CacheRemover< Long, Cell< A >, 
 	// Later, this should possibly clear the Imaris dataset (is there a function for this?).
 	// It should clear the map of written blocks (blocks that were written to imaris once,
 	// and will therefore be loaded from imaris when they are next needed).
-	//
-	// @Override public void invalidate( final Long key ) {}
-	// @Override public void invalidateIf( final long parallelismThreshold, final Predicate< Long > condition ) {}
-	// @Override public void invalidateAll( final long parallelismThreshold ) {}
 
 	// TODO there should be a method to say that the image has been modified on the imaris side.
 	//  This would then clear the cache and mark all cells as written, so that they will be loaded from Imaris always.
