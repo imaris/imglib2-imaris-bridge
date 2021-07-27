@@ -130,7 +130,7 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			{
 				final CacheLoader< Long, Cell< A > > backingLoader = null;
 				// TODO: ImarisCellCache / ImarisDirtyCellCache
-				final ImarisCellCache< A > lr = new ImarisCellCache<>( dataset, mapDimensions, grid, backingLoader, false );
+				final ImarisLoaderRemover< A > lr = new ImarisLoaderRemover<>( dataset, mapDimensions, grid, backingLoader, false );
 				// TODO: wrap in IoSync
 				final IoSync< Long, Cell< A >, A > iosync = new IoSync<>(
 						lr, 1, 10 ); // TODO

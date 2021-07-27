@@ -3,7 +3,6 @@ package com.bitplane.xt.util;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.tType;
-import com.bitplane.xt.ImarisCellCache;
 
 /**
  * Common generic interface for {@link

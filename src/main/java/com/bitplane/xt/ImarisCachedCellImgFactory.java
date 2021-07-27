@@ -4,7 +4,6 @@ import Imaris.Error;
 import Imaris.IDataSetPrx;
 import bdv.util.AxisOrder;
 import com.bitplane.xt.util.MapDimensions;
-import java.util.Arrays;
 import net.imglib2.Dimensions;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;
@@ -385,9 +384,9 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		}
 
 		@SuppressWarnings( { "rawtypes", "unchecked" } )
-		final ImarisCellCache< A > imarisCache = options.dirtyAccesses()
-				? new ImarisDirtyCellCache( dataset, mapDimensions, grid, backingLoader, options.persistOnLoad() )
-				: new ImarisCellCache( dataset, mapDimensions, grid, backingLoader, options.persistOnLoad() );
+		final ImarisLoaderRemover< A > imarisCache = options.dirtyAccesses()
+				? new ImarisDirtyLoaderRemover( dataset, mapDimensions, grid, backingLoader, options.persistOnLoad() )
+				: new ImarisLoaderRemover( dataset, mapDimensions, grid, backingLoader, options.persistOnLoad() );
 
 		final IoSync< Long, Cell< A >, A > iosync = new IoSync<>(
 				imarisCache,

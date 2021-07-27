@@ -61,7 +61,7 @@ import static com.bitplane.xt.util.MapDimensions.selectIntervalDimension;
  * {@link CacheLoader}. Typically the backing loader will just create empty cells.
  * </p>
  * <p><em>
- * A {@link ImarisCellCache} should be connected to a in-memory cache through
+ * A {@link ImarisLoaderRemover} should be connected to a in-memory cache through
  * {@link IoSync} if the cache will be used concurrently by multiple threads!
  * </em></p>
  *
@@ -70,7 +70,7 @@ import static com.bitplane.xt.util.MapDimensions.selectIntervalDimension;
  *
  * @author Tobias Pietzsch
  */
-public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >, CacheLoader< Long, Cell< A > >
+public class ImarisLoaderRemover< A > implements CacheRemover< Long, Cell< A >, A >, CacheLoader< Long, Cell< A > >
 {
 	private final IDataSetPrx dataset;
 
@@ -114,7 +114,7 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 	//  for example a BitSet. But then we need to take care of concurrency ourselves, so...
 	private final Set< Long > written;
 
-	public ImarisCellCache(
+	public ImarisLoaderRemover(
 			final IDataSetPrx dataset,
 			final int[] mapDimensions,
 			final CellGrid grid,
@@ -124,7 +124,7 @@ public class ImarisCellCache< A > implements CacheRemover< Long, Cell< A >, A >,
 		this( dataset, mapDimensions, grid, backingLoader, persistOnLoad, false );
 	}
 
-	protected ImarisCellCache(
+	protected ImarisLoaderRemover(
 			final IDataSetPrx dataset,
 			final int[] mapDimensions,
 			final CellGrid grid,
