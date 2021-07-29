@@ -39,7 +39,6 @@ import net.imglib2.Dirty;
 import net.imglib2.cache.img.optional.AccessOptions;
 import net.imglib2.cache.img.optional.CacheOptions;
 import net.imglib2.cache.img.optional.CellDimensionsOptions;
-import net.imglib2.cache.img.optional.DiskCacheOptions;
 import net.imglib2.img.basictypeaccess.AccessFlags;
 import org.scijava.optional.AbstractOptions;
 
@@ -117,7 +116,7 @@ public class ImarisCachedCellImgOptions extends AbstractOptions< ImarisCachedCel
 		@Override
 		public int[] cellDimensions()
 		{
-			return getValueOrDefault( "cellDimensions", new int[] { 64, 64, 64, 1, 1 } );
+			return getValueOrDefault( "cellDimensions", null );
 		}
 
 		// NB overrides default value

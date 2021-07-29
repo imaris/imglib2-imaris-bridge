@@ -3,6 +3,7 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import bdv.util.AxisOrder;
+import com.bitplane.xt.util.CellGridUtils;
 import com.bitplane.xt.util.MapDimensions;
 import net.imglib2.Dimensions;
 import net.imglib2.cache.Cache;
@@ -361,7 +362,9 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 
 		final ImarisCachedCellImgOptions.Values options = factoryOptions.append( additionalOptions ).values;
 		final Fraction entitiesPerPixel = type.getEntitiesPerPixel();
-		final CellGrid grid = createCellGrid( dimensions, invMapDimensions, entitiesPerPixel, options );
+
+		final int[] cellDimensions = CellGridUtils.computeCellDimensions( dataset, invMapDimensions, options.cellDimensions() );
+		final CellGrid grid = CellGridUtils.createCellGrid( dimensions, cellDimensions, entitiesPerPixel );
 
 		@SuppressWarnings( "unchecked" )
 		CacheLoader< Long, Cell< A > > backingLoader = ( CacheLoader< Long, Cell< A > > ) cacheLoader;
@@ -418,33 +421,6 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 				accessType );
 		img.setLinkedType( typeFactory.createLinkedType( img ) );
 		return img;
-	}
-
-	// TODO: move to util?
-	//   (temporarily made public)
-	public static CellGrid createCellGrid(
-			final long[] dimensions,
-			final int[] invMapDimensions,
-			final Fraction entitiesPerPixel,
-			final ImarisCachedCellImgOptions.Values options )
-	{
-		final int n = dimensions.length;
-		final int[] cellDimensions = new int[ n ];
-
-		final int[] defaultCellDimensions = options.cellDimensions();
-		final int max = defaultCellDimensions.length - 1;
-		for ( int i = 0; i < n; i++ )
-		{
-			cellDimensions[ i ] = defaultCellDimensions[ Math.min( i, max ) ];
-			if ( invMapDimensions[ i ] < 0 )
-				cellDimensions[ i ] = 1;
-		}
-
-		final long numEntities = entitiesPerPixel.mulCeil( Intervals.numElements( cellDimensions ) );
-		if ( numEntities > Integer.MAX_VALUE )
-			throw new IllegalArgumentException( "Number of entities in cell too large. Use smaller cell size." );
-
-		return new CellGrid( dimensions, cellDimensions );
 	}
 
 	private IDataSetPrx createDataset( final long... dimensions ) throws Error

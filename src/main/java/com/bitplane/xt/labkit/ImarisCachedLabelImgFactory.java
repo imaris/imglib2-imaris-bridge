@@ -29,7 +29,8 @@ import net.imglib2.type.NativeTypeFactory;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.util.Fraction;
 
-import static com.bitplane.xt.ImarisCachedCellImgFactory.createCellGrid;
+import static com.bitplane.xt.util.CellGridUtils.computeCellDimensions;
+import static com.bitplane.xt.util.CellGridUtils.createCellGrid;
 
 /**
  * Factory for creating {@link ImarisCachedLabelImg}s. See
@@ -214,7 +215,8 @@ public class ImarisCachedLabelImgFactory< T extends NativeType< T > > extends Na
 
 		final ImarisCachedCellImgOptions.Values options = factoryOptions.append( additionalOptions ).values;
 		final Fraction entitiesPerPixel = type.getEntitiesPerPixel();
-		final CellGrid grid = createCellGrid( dimensions, invMapDimensions, entitiesPerPixel, options );
+		final int[] cellDimensions = computeCellDimensions( dataset, invMapDimensions, options.cellDimensions() );
+		final CellGrid grid = createCellGrid( dimensions, cellDimensions, entitiesPerPixel );
 
 		@SuppressWarnings( "unchecked" )
 		CacheLoader< Long, Cell< A > > backingLoader = ( CacheLoader< Long, Cell< A > > ) cacheLoader;

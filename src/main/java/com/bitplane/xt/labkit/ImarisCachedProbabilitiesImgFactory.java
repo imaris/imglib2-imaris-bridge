@@ -30,7 +30,8 @@ import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Fraction;
 
-import static com.bitplane.xt.ImarisCachedCellImgFactory.createCellGrid;
+import static com.bitplane.xt.util.CellGridUtils.computeCellDimensions;
+import static com.bitplane.xt.util.CellGridUtils.createCellGrid;
 
 /**
  * Factory for creating {@link ImarisCachedProbabilitiesImg}s. See
@@ -223,7 +224,8 @@ public class ImarisCachedProbabilitiesImgFactory< T extends NativeType< T > > ex
 
 		final ImarisCachedCellImgOptions.Values options = factoryOptions.append( additionalOptions ).values;
 		final Fraction entitiesPerPixel = type.getEntitiesPerPixel();
-		final CellGrid grid = createCellGrid( dimensions, invMapDimensions, entitiesPerPixel, options );
+		final int[] cellDimensions = computeCellDimensions( dataset, invMapDimensions, options.cellDimensions() );
+		final CellGrid grid = createCellGrid( dimensions, cellDimensions, entitiesPerPixel );
 
 		@SuppressWarnings( "unchecked" )
 		CacheLoader< Long, Cell< A > > backingLoader = ( CacheLoader< Long, Cell< A > > ) cacheLoader;
