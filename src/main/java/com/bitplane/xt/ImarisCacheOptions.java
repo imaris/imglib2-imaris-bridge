@@ -86,15 +86,15 @@ public interface ImarisCacheOptions< T > extends Options< T >
 	 * Specify whether cells initialized by a {@link CellLoader} should be
 	 * marked as dirty. It is useful to set this to {@code true} if
 	 * initialization is a costly operation. By this, it is made sure that cells
-	 * are initialized only once, and then written and retrieve from the disk
-	 * cache when they are next required.
+	 * are initialized only once, and then written and retrieved from Imaris
+	 * when they are next required.
 	 * <p>
 	 * This is {@code false} by default.
 	 * </p>
 	 * <p>
-	 * This option only has an effect for {@link DiskCachedCellImg} that are
+	 * This option only has an effect for {@link ImarisCachedCellImg} that are
 	 * created with a {@link CellLoader}
-	 * ({@link DiskCachedCellImgFactory#create(long[], CellLoader)}).
+	 * ({@link ImarisCachedCellImgFactory#create(long[], CellLoader)}).
 	 * </p>
 	 *
 	 * @param initializeAsDirty

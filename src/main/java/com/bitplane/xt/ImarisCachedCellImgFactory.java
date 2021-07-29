@@ -162,7 +162,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	 * It is assumed that {@code dataset} is empty and cells will be populated from the given {@code loader}.
 	 * Existing data in {@code dataset} will thus be potentially overwritten!
 	 */
-	// creates new Imaris dataset
+	// existing empty Imaris dataset
 	// initializes cells using the given loader
 	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
 	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final long[] dimensions, final CellLoader< T > loader )
@@ -170,7 +170,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		return create( dataset, dimensions, null, loader, type(), null );
 	}
 
-	// creates new Imaris dataset
+	// existing empty Imaris dataset
 	// initializes cells using the given loader
 	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
 	public ImarisCachedCellImg< T, ? > create( final IDataSetPrx dataset, final Dimensions dimensions, final CellLoader< T > loader )
@@ -178,7 +178,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		return create( dataset, Intervals.dimensionsAsLongArray( dimensions ), null, loader, type(), null );
 	}
 
-	// creates new Imaris dataset
+	// existing empty Imaris dataset
 	// initializes cells using the given loader
 	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
 	// additional options specify cache type, access type, cell dimensions, etc
@@ -187,7 +187,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		return create( dataset, dimensions, null, loader, type(), additionalOptions );
 	}
 
-	// creates new Imaris dataset
+	// existing empty Imaris dataset
 	// initializes cells using the given loader
 	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
 	// additional options specify cache type, access type, cell dimensions, etc
@@ -281,9 +281,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 
 	// TODO: Add missing create methods:
 	//  with IDataSetPrx dataset and CacheLoader
-	//  with IDataSetPrx dataset and CellLoader
 	//  with IDataSetPrx dataset and CacheLoader and additionalOptions
-	//  with IDataSetPrx dataset and CellLoader and additionalOptions
 	//  (each of those for long[] and for Dimensions
 
 
