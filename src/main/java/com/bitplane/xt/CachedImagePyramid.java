@@ -16,8 +16,10 @@ import net.imglib2.Volatile;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.IoSync;
+import net.imglib2.cache.LoaderCache;
 import net.imglib2.cache.LoaderRemoverCache;
 import net.imglib2.cache.img.CachedCellImg;
+import net.imglib2.cache.ref.SoftRefLoaderCache;
 import net.imglib2.cache.ref.SoftRefLoaderRemoverCache;
 import net.imglib2.cache.ref.WeakRefVolatileCache;
 import net.imglib2.cache.util.KeyBimap;
@@ -70,7 +72,10 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 
 	// TODO make constructor argument ?
 	// shared cache for cells of all resolution levels
-	private final LoaderRemoverCache< Key, Cell< A >, A > backingCache;
+	private final LoaderCache< Key, Cell< A > > backingCache;
+
+	// for writable images: full resolution image
+	private final LoaderRemoverCache< Long, Cell< A >, A > writableCache;
 
 	private final CachedCellImg< T, A >[] imgs;
 
@@ -106,7 +111,8 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 		volatileType = ( V ) VolatileTypeMatcher.getVolatileTypeForType( type );
 
 		queue = new SharedQueue( 16, numResolutions );
-		backingCache = new SoftRefLoaderRemoverCache<>();
+		backingCache = new SoftRefLoaderCache<>();
+		writableCache = writable ? new SoftRefLoaderRemoverCache<>() : null;
 
 		imgs = new CachedCellImg[ numResolutions ];
 		vimgs = new VolatileCachedCellImg[ numResolutions ];
@@ -135,12 +141,12 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 				// TODO: ImarisCellCache / ImarisDirtyCellCache
 				final ImarisLoaderRemover< A > loader = new ImarisLoaderRemover<>( dataset, mapDimensions, grid, backingLoader, false );
 				final IoSync< Long, Cell< A >, A > iosync = new IoSync<>( loader, numIoThreads, maxIoQueueSize );
-				cache = backingCache.mapKeys( bimap ).withLoader( iosync ).withRemover( iosync );
+				cache = writableCache.withLoader( iosync ).withRemover( iosync );
 			}
 			else
 			{
 				final ImarisLoader< A > loader = new ImarisLoader<>( dataset, mapDimensions, grid );
-				cache = backingCache.mapKeys( bimap ).withLoader( loader ).withRemover( loader );
+				cache = backingCache.mapKeys( bimap ).withLoader( loader );
 			}
 
 			final int priority = numResolutions - resolution - 1;
