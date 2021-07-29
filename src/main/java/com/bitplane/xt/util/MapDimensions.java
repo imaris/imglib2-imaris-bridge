@@ -5,7 +5,7 @@ import java.util.Arrays;
 /**
  * Utilities for mapping between Imaris and ImgLib2 dimension arrays.
  */
-public class MapDimensions
+public final class MapDimensions
 {
 	/**
 	 * Tries to derive a {@code mapDimensions} array matching the specified

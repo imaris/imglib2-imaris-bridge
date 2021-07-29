@@ -14,7 +14,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 /**
  * Convert Imaris color tables to imglib2.
  */
-public class ColorTableUtils
+public final class ColorTableUtils
 {
 	/**
 	 * Create an imglib2 {@code ColorTable8} for the given {@code channel} of
@@ -128,4 +128,6 @@ public class ColorTableUtils
 		components[ 2 ] = ( rgba >> 16 ) & 0xff;
 		components[ 3 ] = ( rgba >> 24 ) & 0xff;
 	}
+
+	private ColorTableUtils() {}
 }

@@ -91,7 +91,6 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			final long[][] dimensions,
 			final int[][] cellDimensions,
 			final IDataSetPrx dataset,
-			final tType datasetType,
 			final int[] mapDimensions ) throws Error
 	{
 		final int numIoThreads = 1; // TODO Make this a constructor argument
@@ -103,7 +102,6 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 		numResolutions = dimensions.length;
 		this.dimensions = dimensions;
 		this.cellDimensions = cellDimensions;
-		final int numDimensions = dimensions[ 0 ].length;
 		numChannels = axisOrder.hasChannels() ? ( int ) dimensions[ 0 ][ axisOrder.channelDimension() ] : 1;
 		numTimepoints = axisOrder.hasTimepoints() ? ( int ) dimensions[ 0 ][ axisOrder.timeDimension() ] : 1;
 
@@ -116,8 +114,6 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 
 		imgs = new CachedCellImg[ numResolutions ];
 		vimgs = new VolatileCachedCellImg[ numResolutions ];
-
-		final PixelSource< A > volatileArraySource = PixelSource.volatileArraySource( dataset, datasetType, mapDimensions, false );
 
 		// in: numResolutions, queue, backingCache, s, dimensions, cellDimensions
 		//     numResolutions == dimensions.length

@@ -46,8 +46,6 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 {
 	private final IDataSetPrx dataset;
 
-	private final tType datasetType;
-
 	/**
 	 * Maps Imaris dimension indices to imglib2 dimension indices.
 	 * If {@code i} is dimension index from Imaris (0..4 means X,Y,Z,C,T)
@@ -84,9 +82,8 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	{
 		this.dataset = dataset;
 
-		datasetType = dataset.GetType();
 		final T type;
-		switch ( datasetType )
+		switch ( dataset.GetType() )
 		{
 		case eTypeUInt8:
 			type = ( T ) new UnsignedByteType();
@@ -192,9 +189,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		// --------------------------------------------------------------------
 		// Create cached images.
 
-//		final PixelSource< A > arraySource = PixelSource.volatileArraySource( dataset, datasetType, mapDimensions, false );
-//		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>( type, axisOrder, dimensions, cellDimensions, arraySource );
-		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>( type, axisOrder, dimensions, cellDimensions, dataset, datasetType, mapDimensions );
+		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>( type, axisOrder, dimensions, cellDimensions, dataset, mapDimensions );
 		this.imagePyramid = imagePyramid;
 
 
