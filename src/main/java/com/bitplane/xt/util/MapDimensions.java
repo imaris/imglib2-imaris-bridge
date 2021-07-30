@@ -1,5 +1,6 @@
 package com.bitplane.xt.util;
 
+import bdv.util.AxisOrder;
 import java.util.Arrays;
 
 /**
@@ -55,6 +56,11 @@ public final class MapDimensions
 				throw new IllegalArgumentException( "image dimensions do not match dataset dimensions" );
 		}
 		return mapDimension;
+	}
+
+	public static int[] fromAxisOrder( final AxisOrder axisOrder )
+	{
+		return new int[] { 0, 1, axisOrder.zDimension(), axisOrder.channelDimension(), axisOrder.timeDimension() };
 	}
 
 	/**

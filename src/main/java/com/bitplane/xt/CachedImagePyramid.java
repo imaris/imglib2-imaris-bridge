@@ -2,13 +2,11 @@ package com.bitplane.xt;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
-import Imaris.tType;
 import bdv.img.cache.CreateInvalidVolatileCell;
 import bdv.img.cache.VolatileCachedCellImg;
 import bdv.util.AxisOrder;
 import bdv.util.volatiles.SharedQueue;
 import bdv.util.volatiles.VolatileTypeMatcher;
-import com.bitplane.xt.util.PixelSource;
 import java.util.ArrayList;
 import java.util.List;
 import net.imglib2.RandomAccessibleInterval;
@@ -19,6 +17,8 @@ import net.imglib2.cache.IoSync;
 import net.imglib2.cache.LoaderCache;
 import net.imglib2.cache.LoaderRemoverCache;
 import net.imglib2.cache.img.CachedCellImg;
+import net.imglib2.cache.img.EmptyCellCacheLoader;
+import net.imglib2.cache.ref.GuardedStrongRefLoaderRemoverCache;
 import net.imglib2.cache.ref.SoftRefLoaderCache;
 import net.imglib2.cache.ref.SoftRefLoaderRemoverCache;
 import net.imglib2.cache.ref.WeakRefVolatileCache;
@@ -35,6 +35,8 @@ import net.imglib2.type.NativeTypeFactory;
 import net.imglib2.type.numeric.RealType;
 
 import static net.imglib2.cache.volatiles.LoadingStrategy.BUDGETED;
+import static net.imglib2.img.basictypeaccess.AccessFlags.DIRTY;
+import static net.imglib2.img.basictypeaccess.AccessFlags.VOLATILE;
 
 /**
  * Implementation of {@link ImagePyramid} with images that are backed by a joint
@@ -54,6 +56,7 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 	 * Dimensions of the resolution pyramid images.
 	 * {@code dimensions[level][d]}.
 	 */
+	// TODO local variable
 	private final long[][] dimensions;
 
 	/**
@@ -61,20 +64,22 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 	 * {@code cellDimensions[level][d]}.
 	 * C, and T cell size are always {@code = 1}.
 	 */
+	// TODO local variable
 	private final int[][] cellDimensions;
 
 	private final T type;
 
 	private final V volatileType;
 
-	// TODO make constructor argument ?
 	private final SharedQueue queue;
 
 	// TODO make constructor argument ?
 	// shared cache for cells of all resolution levels
+	// TODO local variable
 	private final LoaderCache< Key, Cell< A > > backingCache;
 
 	// for writable images: full resolution image
+	// TODO local variable
 	private final LoaderRemoverCache< Long, Cell< A >, A > writableCache;
 
 	private final CachedCellImg< T, A >[] imgs;
@@ -85,43 +90,56 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 
 	private final int numTimepoints;
 
+	/**
+	 * TODO
+	 */
 	public CachedImagePyramid(
 			final T type,
 			final AxisOrder axisOrder,
+			final IDataSetPrx dataset,
 			final long[][] dimensions,
 			final int[][] cellDimensions,
-			final IDataSetPrx dataset,
-			final int[] mapDimensions ) throws Error
+			final int[] mapDimensions,
+			final SharedQueue queue,
+			final boolean writable,
+			final boolean isEmptyDataset,
+			final ImarisDatasetOptions options ) throws Error
 	{
-		final int numIoThreads = 1; // TODO Make this a constructor argument
-		final int maxIoQueueSize = 10; // TODO Make this a constructor argument
-		final boolean writable = false; // TODO Make this a constructor argument
-
-
 		this.axisOrder = axisOrder;
 		numResolutions = dimensions.length;
 		this.dimensions = dimensions;
 		this.cellDimensions = cellDimensions;
+
 		numChannels = axisOrder.hasChannels() ? ( int ) dimensions[ 0 ][ axisOrder.channelDimension() ] : 1;
 		numTimepoints = axisOrder.hasTimepoints() ? ( int ) dimensions[ 0 ][ axisOrder.timeDimension() ] : 1;
 
 		this.type = type;
 		volatileType = ( V ) VolatileTypeMatcher.getVolatileTypeForType( type );
 
-		queue = new SharedQueue( 16, numResolutions );
+		this.queue = queue;
 		backingCache = new SoftRefLoaderCache<>();
-		writableCache = writable ? new SoftRefLoaderRemoverCache<>() : null;
+
+		if ( writable )
+		{
+			switch ( options.values.cacheType() )
+			{
+			case BOUNDED:
+				writableCache = new GuardedStrongRefLoaderRemoverCache<>( options.values.maxCacheSize() );
+				break;
+			case SOFTREF:
+			default:
+				writableCache = new SoftRefLoaderRemoverCache<>();
+				break;
+			}
+		}
+		else
+		{
+			writableCache = null;
+		}
 
 		imgs = new CachedCellImg[ numResolutions ];
 		vimgs = new VolatileCachedCellImg[ numResolutions ];
 
-		// in: numResolutions, queue, backingCache, s, dimensions, cellDimensions
-		//     numResolutions == dimensions.length
-		//     queue and backingCache can be defined inside Images constructor
-		// so
-		// 	s, dimensions, cellDimensions
-		// are the real parameters required
-		// and type, so that we can figure out the rest of the types ourselves...
 		for ( int resolution = 0; resolution < numResolutions; ++resolution )
 		{
 			final CellGrid grid = new CellGrid( dimensions[ resolution ], cellDimensions[ resolution ] );
@@ -133,9 +151,14 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			final Cache< Long, Cell< A > > cache;
 			if ( level == 0 && writable )
 			{
-				final CacheLoader< Long, Cell< A > > backingLoader = null;
-				// TODO: ImarisCellCache / ImarisDirtyCellCache
-				final ImarisLoaderRemover< A > loader = new ImarisLoaderRemover<>( dataset, mapDimensions, grid, backingLoader, false );
+				final CacheLoader< Long, Cell< A > > backingLoader = isEmptyDataset
+						? EmptyCellCacheLoader.get( grid, type, AccessFlags.setOf( VOLATILE, DIRTY ) )
+						: null;
+
+				// raw types because ImarisDirtyLoaderRemover<A> requires A extends Dirty
+				final ImarisDirtyLoaderRemover loader = new ImarisDirtyLoaderRemover( dataset, mapDimensions, grid, backingLoader, false );
+				final int numIoThreads = options.values.numIoThreads();
+				final int maxIoQueueSize = options.values.maxIoQueueSize();
 				final IoSync< Long, Cell< A >, A > iosync = new IoSync<>( loader, numIoThreads, maxIoQueueSize );
 				cache = writableCache.withLoader( iosync ).withRemover( iosync );
 			}
@@ -149,7 +172,7 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			final CacheHints hints = new CacheHints( BUDGETED, priority, false );
 
 			final NativeTypeFactory< T, A > typeFactory = ( NativeTypeFactory< T, A > ) type.getNativeTypeFactory();
-			final A accessType = ArrayDataAccessFactory.get( typeFactory, AccessFlags.setOf( AccessFlags.VOLATILE ) );
+			final A accessType = ArrayDataAccessFactory.get( typeFactory, AccessFlags.setOf( VOLATILE ) );
 			final CachedCellImg< T, A > img = new CachedCellImg( grid, type, cache, accessType );
 			img.setLinkedType( typeFactory.createLinkedType( img ) );
 

@@ -2,12 +2,12 @@ package com.bitplane.xt;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
-import Imaris.tType;
 import bdv.util.AxisOrder;
 import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import com.bitplane.xt.util.ColorTableUtils;
+import com.bitplane.xt.util.MapDimensions;
 import java.util.ArrayList;
 import java.util.List;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
@@ -47,15 +47,6 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	private final IDataSetPrx dataset;
 
 	/**
-	 * Maps Imaris dimension indices to imglib2 dimension indices.
-	 * If {@code i} is dimension index from Imaris (0..4 means X,Y,Z,C,T)
-	 * then {@code mapDimensions[i]} is the corresponding dimension in {@link #getImage}.
-	 * For {@link #getImage} dimensions with size=1 are skipped.
-	 * E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
-	 */
-	private final int[] mapDimensions;
-
-	/**
 	 * physical calibration: size of voxel in X,Y,Z
 	 */
 	private final VoxelDimensions voxelDimensions;
@@ -82,6 +73,10 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	{
 		this.dataset = dataset;
 
+		final boolean writable = true; // TODO make argument
+		final boolean isEmptyDataset = true; // TODO: make argument
+		final ImarisDatasetOptions options = ImarisDatasetOptions.options(); // TODO: make argument
+
 		final T type;
 		switch ( dataset.GetType() )
 		{
@@ -104,7 +99,14 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		// calibration.
 
 		final ArrayList< CalibratedAxis > axes = new ArrayList<>();
-		mapDimensions = new int[] { 0, 1, -1, -1, -1 };
+
+		// Maps Imaris dimension indices to imglib2 dimension indices.
+		// If i is dimension index from Imaris (0..4 means X,Y,Z,C,T)
+		// then mapDimensions[i] is the corresponding imglib2 dimension, e.g., in imagePyramid.
+		//
+		// For imglib2 dimensions, Imaris dimensions with size=1 are skipped.
+        // E.g., for a XYC image {@code mapDimensions = {0,1,-1,2,-1}}.
+		final int[] mapDimensions = { 0, 1, -1, -1, -1 };
 
 		final int sx = dataset.GetSizeX();
 		final int sy = dataset.GetSizeY();
@@ -154,6 +156,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		final AxisOrder axisOrder = AxisOrder.valueOf( sbAxisOrder.toString() );
 
 
+
 		// --------------------------------------------------------------------
 		// Analyze pyramid sizes and derive imglib2 dimensions.
 
@@ -185,12 +188,37 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 			}
 		}
 
+		// handle optional cellDimensions override (for full resolution)
+		if ( options.values.cellDimensions() != null )
+		{
+			final int[] optionalCellDimensions = options.values.cellDimensions();
+			final int max = optionalCellDimensions.length - 1;
+			int[] invMapDimensions = MapDimensions.invertMapDimensions( mapDimensions );
+			for ( int dd = 0; dd < numDimensions; dd++ )
+			{
+				cellDimensions[ 0 ][ dd ] = optionalCellDimensions[ Math.min( dd, max ) ];
+				if ( invMapDimensions[ dd ] < 0 )
+					cellDimensions[ 0 ][ dd ] = 1;
+			}
+		}
+
+
 
 		// --------------------------------------------------------------------
 		// Create cached images.
 
-		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>( type, axisOrder, dimensions, cellDimensions, dataset, mapDimensions );
+		final SharedQueue queue = new SharedQueue( 16, numResolutions );
+
+		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>(
+				type, axisOrder, dataset,
+				dimensions, cellDimensions, mapDimensions,
+				queue,
+				writable,
+				isEmptyDataset,
+				options
+		);
 		this.imagePyramid = imagePyramid;
+
 
 
 		// --------------------------------------------------------------------
