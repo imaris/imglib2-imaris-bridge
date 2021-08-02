@@ -6,6 +6,7 @@ import Imaris.IDataSetPrx;
 import Imaris.IFactoryPrx;
 import Imaris.tType;
 import bdv.util.AxisOrder;
+import java.awt.geom.Dimension2D;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imagej.axis.Axes;
@@ -157,17 +158,34 @@ public class ImarisUtils
 		final int sc = axisOrder.hasChannels() ? ( int ) dimensions[ axisOrder.channelDimension() ] : 1;
 		final int st = axisOrder.hasTimepoints() ? ( int ) dimensions[ axisOrder.timeDimension() ] : 1;
 
+		return createDataset( app, type, sx, sy, sz, sc, st );
+	}
+
+	/**
+	 * Create an Imaris dataset.
+	 */
+	public static IDataSetPrx createDataset(
+			final IApplicationPrx app,
+			final tType type,
+			final int... dimensions ) throws Error
+	{
+		// Verify that numDimensions == 5, and each dimension >= 1.
+		Dimensions.verifyAllPositive( dimensions );
+		if ( dimensions.length != 5 )
+			throw new IllegalArgumentException( "exactly 5 dimensions expected" );
+		Dimensions.verifyAllPositive( dimensions );
+
 		// Create Imaris dataset
 		final IFactoryPrx factory = app.GetFactory();
 		final IDataSetPrx dataset = factory.CreateDataSet();
 
-		dataset.Create( type, sx, sy, sz, sc, st );
+		dataset.Create( type, dimensions[ 0 ], dimensions[ 1 ], dimensions[ 2 ], dimensions[ 3 ], dimensions[ 4 ] );
 		dataset.SetExtendMinX( 0 );
-		dataset.SetExtendMaxX( sx );
+		dataset.SetExtendMaxX( dimensions[ 0 ] );
 		dataset.SetExtendMinY( 0 );
-		dataset.SetExtendMaxY( sy );
+		dataset.SetExtendMaxY( dimensions[ 1 ] );
 		dataset.SetExtendMinZ( 0 );
-		dataset.SetExtendMaxZ( sz );
+		dataset.SetExtendMaxZ( dimensions[ 2 ] );
 
 		return dataset;
 	}

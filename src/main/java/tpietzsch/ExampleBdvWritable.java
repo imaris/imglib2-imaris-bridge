@@ -1,5 +1,6 @@
 package tpietzsch;
 
+import Imaris.Error;
 import Imaris.IDataSetPrx;
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
@@ -14,11 +15,11 @@ import org.scijava.Context;
 
 public class ExampleBdvWritable
 {
-	public static void main( String[] args ) throws InterruptedException
+	public static void main( String[] args ) throws InterruptedException, Error
 	{
 		final Context context = new Context();
 		final ImarisService imaris = context.getService( ImarisService.class );
-		final ImarisDataset< ? > dataset = imaris.getApplication().getImarisDataset();
+		final ImarisDataset< ? > dataset = imaris.getApplication().createDataset( new UnsignedByteType(), 600, 400, 100, 0, 0 );
 
 		final IDataSetPrx ds = dataset.getIDataSetPrx();
 		final int[][] pyramidSizes = ds.GetPyramidSizes();
@@ -47,6 +48,9 @@ public class ExampleBdvWritable
 
 		System.out.println("persisting");
 		dataset.persist();
+
+		System.out.println("setting dataset");
+		imaris.getApplication().getIApplicationPrx().SetDataSet( dataset.getIDataSetPrx() );
 
 		System.out.println("invalidatePyramid");
 		dataset.invalidatePyramid();
