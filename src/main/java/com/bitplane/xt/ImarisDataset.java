@@ -7,8 +7,6 @@ import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import com.bitplane.xt.util.ColorTableUtils;
-import com.bitplane.xt.util.DimensionUtils.DatasetDimensions;
-import com.bitplane.xt.util.MapDimensions;
 import java.util.ArrayList;
 import java.util.List;
 import mpicbg.spim.data.sequence.VoxelDimensions;
@@ -68,22 +66,24 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	 */
 	private final List< SourceAndConverter< T > > sources;
 
+	// open existing
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset( final IDataSetPrx dataset ) throws Error
 	{
 		this( dataset, ImarisDatasetOptions.options() );
 	}
 
+	// open existing
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset( final IDataSetPrx dataset, final ImarisDatasetOptions options ) throws Error
 	{
-		this( dataset, new DatasetDimensions( dataset, null ).getAxisOrder(), false, false, options );
+		this( dataset, new DatasetDimensions( dataset ), false, false, options );
 	}
 
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset(
 			final IDataSetPrx dataset,
-			final AxisOrder axisOrder, // TODO: supply DatasetDimensions instead? (Could also get mapDimensions from that...)
+			final DatasetDimensions datasetDimensions, // TODO: supply DatasetDimensions instead? (Could also get mapDimensions from that...)
 			final boolean writable,
 			final boolean isEmptyDataset,
 			final ImarisDatasetOptions options ) throws Error
@@ -114,6 +114,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 
 		voxelDimensions = ImarisUtils.getVoxelDimensions( dataset );
 
+		final AxisOrder axisOrder = datasetDimensions.getAxisOrder();
 		final ArrayList< CalibratedAxis > axes = new ArrayList<>();
 		axes.add( new DefaultLinearAxis( Axes.X, voxelDimensions.unit(), voxelDimensions.dimension( 0 ) ) );
 		axes.add( new DefaultLinearAxis( Axes.Y, voxelDimensions.unit(), voxelDimensions.dimension( 1 ) ) );
@@ -124,15 +125,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		if ( axisOrder.hasTimepoints() )
 			axes.add( new DefaultLinearAxis( Axes.TIME ) );
 
-		// Maps Imaris dimension indices to imglib2 dimension indices.
-		// If i is dimension index from Imaris (0..4 means X,Y,Z,C,T)
-		// then mapDimensions[i] is the corresponding imglib2 dimension, e.g., in imagePyramid.
-		//
-		// For imglib2 dimensions, Imaris dimensions with size=1 are skipped.
-		// E.g., for a XYC image {@code mapDimensions = {0,1,-1,2,-1}}.
-		final int[] mapDimensions = MapDimensions.fromAxisOrder( axisOrder );
 
-		final int numDimensions = axisOrder.numDimensions();
 
 
 
@@ -142,6 +135,8 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		final int[][] pyramidSizes = dataset.GetPyramidSizes();
 		final int[][] pyramidBlockSizes = dataset.GetPyramidBlockSizes();
 		final int numResolutions = pyramidSizes.length;
+		final int numDimensions = axisOrder.numDimensions();
+		final int[] mapDimensions = datasetDimensions.getMapDimensions();
 
 		final long[][] dimensions = new long[ numResolutions ][ numDimensions ];
 		final int[][] cellDimensions = new int[ numResolutions ][ numDimensions ];

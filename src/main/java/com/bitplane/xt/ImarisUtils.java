@@ -127,43 +127,19 @@ public class ImarisUtils
 
 	/**
 	 * Create an Imaris dataset.
-	 * <p>
-	 * {@code axisOrder} indicates the meaning of {@code dimensions},
-	 * and must match the number of {@code dimensions} arguments.
-	 * {@code axisOrder} must be a subset of XYZCT (in this order).
 	 */
 	public static IDataSetPrx createDataset(
 			final IApplicationPrx app,
 			final tType type,
-			final AxisOrder axisOrder,
-			final long... dimensions ) throws Error
+			final DatasetDimensions datasetDimensions ) throws Error
 	{
-		// Verify that numDimensions < 5.
-		// Verify that each for each dimension 0 < dim < Integer.MAX_VALUE.
-		Dimensions.verifyAllPositive( dimensions );
-		final int n = dimensions.length;
-		if ( n > 5 )
-			throw new IllegalArgumentException( "image must not have more than 5 dimensions" );
-		for ( int i = 0; i < dimensions.length; i++ )
-			if ( dimensions[ i ] > Integer.MAX_VALUE )
-				throw new IllegalArgumentException( "each individual image dimension must be < 2^31" );
-
-		checkAxisOrder( axisOrder );
-		if ( axisOrder.numDimensions() != n )
-			throw new IllegalArgumentException( "AxisOrder must match number of dimensions" );
-
-		final int sx = ( int ) dimensions[ 0 ];
-		final int sy = ( int ) dimensions[ 1 ];
-		final int sz = axisOrder.hasZ() ? ( int ) dimensions[ axisOrder.zDimension() ] : 1;
-		final int sc = axisOrder.hasChannels() ? ( int ) dimensions[ axisOrder.channelDimension() ] : 1;
-		final int st = axisOrder.hasTimepoints() ? ( int ) dimensions[ axisOrder.timeDimension() ] : 1;
-
-		return createDataset( app, type, sx, sy, sz, sc, st );
+		return createDataset( app, type, datasetDimensions.getImarisDimensions() );
 	}
 
 	/**
 	 * Create an Imaris dataset.
 	 */
+	// TODO: remove?
 	public static IDataSetPrx createDataset(
 			final IApplicationPrx app,
 			final tType type,

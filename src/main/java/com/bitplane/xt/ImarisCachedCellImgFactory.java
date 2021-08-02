@@ -425,25 +425,17 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 
 	private IDataSetPrx createDataset( final long... dimensions ) throws Error
 	{
-		final AxisOrder axisOrder;
-		switch ( dimensions.length )
-		{
-		case 2:
-			axisOrder = AxisOrder.XY;
-			break;
-		case 3:
-			axisOrder = AxisOrder.XYZ;
-			break;
-		case 4:
-			axisOrder = AxisOrder.XYZC;
-			break;
-		case 5:
-			axisOrder = AxisOrder.XYZCT;
-			break;
-		default:
+		if ( dimensions.length < 2 || dimensions.length > 5 )
 			throw new IllegalArgumentException( "image must not have more than 5 or less than 2 dimensions" );
-		}
-		return ImarisUtils.createDataset( imaris.getIApplicationPrx(), ImarisUtils.imarisTypeFor( type() ), axisOrder, dimensions );
+
+		final int sx = ( int ) dimensions[ 0 ];
+		final int sy = ( int ) dimensions[ 1 ];
+		final int sz = dimensions.length > 2 ? ( int ) dimensions[ 2 ] : 0;
+		final int sc = dimensions.length > 3 ? ( int ) dimensions[ 3 ] : 0;
+		final int st = dimensions.length > 4 ? ( int ) dimensions[ 4 ] : 0;
+		final DatasetDimensions datasetDimensions = new DatasetDimensions( sx, sy, sz, sc, st );
+
+		return ImarisUtils.createDataset( imaris.getIApplicationPrx(), ImarisUtils.imarisTypeFor( type() ), datasetDimensions );
 	}
 
 	// -- deprecated API --

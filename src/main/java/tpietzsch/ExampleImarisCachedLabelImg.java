@@ -5,6 +5,7 @@ import Imaris.IDataSetPrx;
 import Imaris.tType;
 import bdv.util.AxisOrder;
 import bdv.util.BdvFunctions;
+import com.bitplane.xt.DatasetDimensions;
 import com.bitplane.xt.ImarisCachedCellImgOptions;
 import com.bitplane.xt.labkit.ImarisCachedLabelImg;
 import com.bitplane.xt.labkit.ImarisCachedLabelImgFactory;
@@ -55,8 +56,12 @@ public class ExampleImarisCachedLabelImg
 		final IDataSetPrx dataset = ImarisUtils.createDataset(
 				imaris.getApplication().getIApplicationPrx(),
 				tType.eTypeUInt8,
-				AxisOrder.XYZCT,
-				dimensions[ 0 ], dimensions[ 1 ], dimensions[ 2 ], numChannels, dimensions[ 3 ] );
+				new DatasetDimensions(
+						( int ) dimensions[ 0 ],
+						( int ) dimensions[ 1 ],
+						( int ) dimensions[ 2 ],
+						numChannels,
+						( int ) dimensions[ 3 ] ) );
 
 		// TODO
 		final ImarisCachedLabelImg< ShortType, ? > imarisImg = factory.create( dataset, dimensions, cell -> {} );
