@@ -7,10 +7,10 @@ import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import com.bitplane.xt.util.ColorTableUtils;
+import com.bitplane.xt.util.DimensionUtils.DatasetDimensions;
 import com.bitplane.xt.util.MapDimensions;
 import java.util.ArrayList;
 import java.util.List;
-import mpicbg.spim.data.sequence.FinalVoxelDimensions;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
@@ -71,221 +71,23 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset( final IDataSetPrx dataset ) throws Error
 	{
-		this.dataset = dataset;
+		this( dataset, ImarisDatasetOptions.options() );
+	}
 
-		final boolean writable = true; // TODO make argument
-		final boolean isEmptyDataset = true; // TODO: make argument
-		final ImarisDatasetOptions options = ImarisDatasetOptions.options(); // TODO: make argument
-
-		final T type;
-		switch ( dataset.GetType() ) // TODO extract static method
-		{
-		case eTypeUInt8:
-			type = ( T ) new UnsignedByteType();
-			break;
-		case eTypeUInt16:
-			type = ( T ) new UnsignedShortType();
-			break;
-		case eTypeFloat:
-			type = ( T ) new FloatType();
-			break;
-		default:
-			throw new IllegalArgumentException();
-		}
-
-
-		// --------------------------------------------------------------------
-		// Analyze sizes and extends to find axis order, dimension mapping, and
-		// calibration.
-
-		final ArrayList< CalibratedAxis > axes = new ArrayList<>();
-
-		// Maps Imaris dimension indices to imglib2 dimension indices.
-		// If i is dimension index from Imaris (0..4 means X,Y,Z,C,T)
-		// then mapDimensions[i] is the corresponding imglib2 dimension, e.g., in imagePyramid.
-		//
-		// For imglib2 dimensions, Imaris dimensions with size=1 are skipped.
-        // E.g., for a XYC image {@code mapDimensions = {0,1,-1,2,-1}}.
-		final int[] mapDimensions = { 0, 1, -1, -1, -1 };
-
-		final int sx = dataset.GetSizeX();
-		final int sy = dataset.GetSizeY();
-		final int sz = dataset.GetSizeZ();
-		final int sc = dataset.GetSizeC();
-		final int st = dataset.GetSizeT();
-
-		final double maxX = dataset.GetExtendMaxX();
-		final double minX = dataset.GetExtendMinX();
-		final double maxY = dataset.GetExtendMaxY();
-		final double minY = dataset.GetExtendMinY();
-		final double maxZ = dataset.GetExtendMaxZ();
-		final double minZ = dataset.GetExtendMinZ();
-
-		final double[] calib = new double[] {
-				( maxX - minX ) / sx,
-				( maxY - minY ) / sy,
-				( maxZ - minZ ) / sz
-		};
-		final String unit = dataset.GetUnit();
-		voxelDimensions = new FinalVoxelDimensions( unit, calib );
-
-		axes.add( new DefaultLinearAxis( Axes.X, unit, calib[ 0 ] ) );
-		axes.add( new DefaultLinearAxis( Axes.Y, unit, calib[ 1 ] ) );
-		final StringBuffer sbAxisOrder = new StringBuffer( "XY" );
-
-		int d = 2;
-		if ( sz > 1 )
-		{
-			axes.add( new DefaultLinearAxis( Axes.Z, unit, calib[ 2 ] ) );
-			sbAxisOrder.append( "Z" );
-			mapDimensions[ 2 ] = d++;
-		}
-		if ( sc > 1 )
-		{
-			axes.add( new DefaultLinearAxis( Axes.CHANNEL ) );
-			sbAxisOrder.append( "C" );
-			mapDimensions[ 3 ] = d++;
-		}
-		if ( st > 1 )
-		{
-			axes.add( new DefaultLinearAxis( Axes.TIME ) );
-			sbAxisOrder.append( "T" );
-			mapDimensions[ 4 ] = d++;
-		}
-		final int numDimensions = d;
-		final AxisOrder axisOrder = AxisOrder.valueOf( sbAxisOrder.toString() );
-
-
-
-		// --------------------------------------------------------------------
-		// Analyze pyramid sizes and derive imglib2 dimensions.
-
-		final int[][] pyramidSizes = dataset.GetPyramidSizes();
-		final int[][] pyramidBlockSizes = dataset.GetPyramidBlockSizes();
-		final int numResolutions = pyramidSizes.length;
-
-		final long[][] dimensions = new long[ numResolutions ][ numDimensions ];
-		final int[][] cellDimensions = new int[ numResolutions ][ numDimensions ];
-		for ( int l = 0; l < numResolutions; ++l )
-		{
-			for ( int i = 0; i < 3; ++i )
-			{
-				if ( mapDimensions[ i ] >= 0 )
-				{
-					dimensions[ l ][ mapDimensions[ i ] ] = pyramidSizes[ l ][ i ];
-					cellDimensions[ l ][ mapDimensions[ i ] ] = pyramidBlockSizes[ l ][ i ];
-				}
-			}
-			if ( sc > 1 )
-			{
-				dimensions[ l ][ mapDimensions[ 3 ] ] = sc;
-				cellDimensions[ l ][ mapDimensions[ 3 ] ] = 1;
-			}
-			if ( st > 1 )
-			{
-				dimensions[ l ][ mapDimensions[ 4 ] ] = st;
-				cellDimensions[ l ][ mapDimensions[ 4 ] ] = 1;
-			}
-		}
-
-		// handle optional cellDimensions override (for full resolution)
-		if ( options.values.cellDimensions() != null )
-		{
-			final int[] optionalCellDimensions = options.values.cellDimensions();
-			final int max = optionalCellDimensions.length - 1;
-			int[] invMapDimensions = MapDimensions.invertMapDimensions( mapDimensions );
-			for ( int dd = 0; dd < numDimensions; dd++ )
-			{
-				cellDimensions[ 0 ][ dd ] = optionalCellDimensions[ Math.min( dd, max ) ];
-				if ( invMapDimensions[ dd ] < 0 )
-					cellDimensions[ 0 ][ dd ] = 1;
-			}
-		}
-
-
-
-		// --------------------------------------------------------------------
-		// Create cached images.
-
-		final SharedQueue queue = new SharedQueue( 16, numResolutions );
-
-		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>(
-				type, axisOrder, dataset,
-				dimensions, cellDimensions, mapDimensions,
-				queue,
-				writable,
-				isEmptyDataset,
-				options
-		);
-		this.imagePyramid = imagePyramid;
-
-
-
-		// --------------------------------------------------------------------
-		// Create ImgPlus with metadata and color tables.
-
-		final Img< T > img = getImage();
-		imp = new ImgPlus<>( img );
-		for ( int i = 0; i < axes.size(); ++i )
-			imp.setAxis( axes.get( i ), i );
-		imp.initializeColorTables( sc * sz * st );
-		for ( int c = 0; c < sc; ++c )
-		{
-			final ColorTable8 cT = ColorTableUtils.createChannelColorTable( dataset, c );
-			for ( int t = 0; t < st; ++t )
-				for ( int z = 0; z < sz; ++z )
-					imp.setColorTable( cT, z + sz * ( c + sc * t ) );
-		}
-		imp.setName( getName() );
-
-
-
-		// --------------------------------------------------------------------
-		// Instantiate multi-resolution sources.
-
-		sources = new ArrayList<>();
-
-		final double[][] mipmapScales = new double[ numResolutions ][ 3 ];
-		mipmapScales[ 0 ][ 0 ] = 1;
-		mipmapScales[ 0 ][ 1 ] = 1;
-		mipmapScales[ 0 ][ 2 ] = 1;
-		for ( int level = 1; level < numResolutions; ++level )
-		{
-			for ( d = 0; d < 3; ++d )
-			{
-				final boolean half = pyramidSizes[ level - 1 ][ d ] / 2 == pyramidSizes[ level ][ d ];
-				final double s = half ? 2 : 1;
-				mipmapScales[ level ][ d ] = s * mipmapScales[ level - 1 ][ d ];
-			}
-		}
-
-		final List< ImagePyramid< T, V > > channelPyramids = imagePyramid.splitIntoSourceStacks();
-		final V volatileType = imagePyramid.getVolatileType();
-		final boolean hasTimepoints = st > 1;
-		for ( int c = 0; c < sc; ++c )
-		{
-			final String name = String.format( "%s - %s", getName(), dataset.GetChannelName( c ) );
-			final ImagePyramid< T, V > channelPyramid = channelPyramids.get( c );
-			final Source< T > source = hasTimepoints
-					? new ImarisSource4D<>( voxelDimensions, minX, minY, minZ, type, channelPyramid.getImgs(), mipmapScales, name )
-					: new ImarisSource3D<>( voxelDimensions, minX, minY, minZ, type, channelPyramid.getImgs(), mipmapScales, name );
-			final Source< V > volatileSource = hasTimepoints
-					? new ImarisSource4D<>( voxelDimensions, minX, minY, minZ, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name )
-					: new ImarisSource3D<>( voxelDimensions, minX, minY, minZ, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name );
-			final SourceAndConverter< V > vsoc = new SourceAndConverter<>( volatileSource, ColorTableUtils.createChannelConverterToARGB( volatileType, dataset, c ) );
-			final SourceAndConverter< T > soc = new SourceAndConverter<>( source, ColorTableUtils.createChannelConverterToARGB( type, dataset, c ), vsoc );
-			sources.add( soc );
-		}
+	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
+	ImarisDataset( final IDataSetPrx dataset, final ImarisDatasetOptions options ) throws Error
+	{
+		this( dataset, new DatasetDimensions( dataset, null ).getAxisOrder(), false, false, options );
 	}
 
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset(
 			final IDataSetPrx dataset,
-			final AxisOrder axisOrder, // TODO: supply DatasetDimensions instead? (Could get mapDimensions from that...)
+			final AxisOrder axisOrder, // TODO: supply DatasetDimensions instead? (Could also get mapDimensions from that...)
 			final boolean writable,
+			final boolean isEmptyDataset,
 			final ImarisDatasetOptions options ) throws Error
 	{
-		final boolean isEmptyDataset = true; // TODO: this is true for newly created datasets
 
 		this.dataset = dataset;
 
@@ -310,37 +112,13 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		// --------------------------------------------------------------------
 		// Analyze sizes and extends to find dimension mapping and calibration.
 
-				final int sx = dataset.GetSizeX();
-				final int sy = dataset.GetSizeY();
-				final int sz = dataset.GetSizeZ();
-				final int sc = dataset.GetSizeC();
-				final int st = dataset.GetSizeT();
-
-				final double maxX = dataset.GetExtendMaxX();
-				final double minX = dataset.GetExtendMinX();
-				final double maxY = dataset.GetExtendMaxY();
-				final double minY = dataset.GetExtendMinY();
-				final double maxZ = dataset.GetExtendMaxZ();
-				final double minZ = dataset.GetExtendMinZ();
-
-				final double[] calib = new double[] {
-						( maxX - minX ) / sx,
-						( maxY - minY ) / sy,
-						( maxZ - minZ ) / sz
-				};
-				final String unit = dataset.GetUnit();
-				voxelDimensions = new FinalVoxelDimensions( unit, calib );
-
-		// TODO: put stuff above into a utility method getVoxelDimensions(IDataSetPrx)
-//		final String unit = voxelDimensions.unit();
-//		final double[] calib = new double[ 3 ];
-//		voxelDimensions.dimensions( calib );
+		voxelDimensions = ImarisUtils.getVoxelDimensions( dataset );
 
 		final ArrayList< CalibratedAxis > axes = new ArrayList<>();
-		axes.add( new DefaultLinearAxis( Axes.X, unit, calib[ 0 ] ) );
-		axes.add( new DefaultLinearAxis( Axes.Y, unit, calib[ 1 ] ) );
+		axes.add( new DefaultLinearAxis( Axes.X, voxelDimensions.unit(), voxelDimensions.dimension( 0 ) ) );
+		axes.add( new DefaultLinearAxis( Axes.Y, voxelDimensions.unit(), voxelDimensions.dimension( 1 ) ) );
 		if ( axisOrder.hasZ() )
-			axes.add( new DefaultLinearAxis( Axes.Z, unit, calib[ 2 ] ) );
+			axes.add( new DefaultLinearAxis( Axes.Z, voxelDimensions.unit(), voxelDimensions.dimension( 2 ) ) );
 		if ( axisOrder.hasChannels() )
 			axes.add( new DefaultLinearAxis( Axes.CHANNEL ) );
 		if ( axisOrder.hasTimepoints() )
@@ -415,6 +193,19 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 
 
 		// --------------------------------------------------------------------
+								// TODO: get rid of these:
+								final int sz = dataset.GetSizeZ();
+								final int sc = dataset.GetSizeC();
+								final int st = dataset.GetSizeT();
+								final double minX = dataset.GetExtendMinX();
+								final double minY = dataset.GetExtendMinY();
+								final double minZ = dataset.GetExtendMinZ();
+		// --------------------------------------------------------------------
+
+
+
+
+		// --------------------------------------------------------------------
 		// Create ImgPlus with metadata and color tables.
 
 		final Img< T > img = getImage();
@@ -454,7 +245,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 
 		final List< ImagePyramid< T, V > > channelPyramids = imagePyramid.splitIntoSourceStacks();
 		final V volatileType = imagePyramid.getVolatileType();
-		final boolean hasTimepoints = st > 1;
+		final boolean hasTimepoints = axisOrder.hasTimepoints();
 		for ( int c = 0; c < sc; ++c )
 		{
 			final String name = String.format( "%s - %s", getName(), dataset.GetChannelName( c ) );

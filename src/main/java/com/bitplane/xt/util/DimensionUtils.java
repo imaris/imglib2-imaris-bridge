@@ -1,5 +1,7 @@
 package com.bitplane.xt.util;
 
+import Imaris.Error;
+import Imaris.IDataSetPrx;
 import bdv.util.AxisOrder;
 
 public final class DimensionUtils
@@ -26,6 +28,7 @@ public final class DimensionUtils
 
 		private final AxisOrder axisOrder;
 
+		// TODO: javadoc
 		public DatasetDimensions( final int sx, final int sy, final int sz, final int sc, final int st )
 		{
 			if ( sx < 0 || sy < 0 || sz < 0 || sc < 0 || st < 0 )
@@ -34,34 +37,55 @@ public final class DimensionUtils
 			if ( sx <= 0 || sy <= 0 )
 				throw new IllegalArgumentException( "Dataset must have at least dimensions X and Y" );
 
-
-			mapDimensions = new int[] { 0, 1, -1, -1, -1 };
-
 			imarisDimensions = new int[] { sx, sy, 1, 1, 1 };
 
 			final StringBuffer sbAxisOrder = new StringBuffer( "XY" );
-			int d = 2;
 			if ( sz > 0 )
 			{
 				sbAxisOrder.append( "Z" );
-				mapDimensions[ 2 ] = d++;
 				imarisDimensions[ 2 ] = sz;
 			}
 			if ( sc > 0 )
 			{
 				sbAxisOrder.append( "C" );
-				mapDimensions[ 3 ] = d++;
 				imarisDimensions[ 3 ] = sc;
 			}
 			if ( st > 0 )
 			{
 				sbAxisOrder.append( "T" );
-				mapDimensions[ 4 ] = d++;
 				imarisDimensions[ 4 ] = st;
 			}
-			final int numDimensions = d;
 
 			axisOrder = AxisOrder.valueOf( sbAxisOrder.toString() );
+			mapDimensions = MapDimensions.fromAxisOrder( axisOrder );
+		}
+
+		// TODO: javadoc
+		public DatasetDimensions( final IDataSetPrx dataset, AxisOrder axes ) throws Error
+		{
+			final int sx = dataset.GetSizeX();
+			final int sy = dataset.GetSizeY();
+			final int sz = dataset.GetSizeZ();
+			final int sc = dataset.GetSizeC();
+			final int st = dataset.GetSizeT();
+
+			imarisDimensions = new int[] { sx, sy, sz, sc, st };
+
+			if ( axes != null )
+				axisOrder = axes;
+			else
+			{
+				final StringBuffer sbAxisOrder = new StringBuffer( "XY" );
+				if ( sz > 1 )
+					sbAxisOrder.append( "Z" );
+				if ( sc > 1 )
+					sbAxisOrder.append( "C" );
+				if ( st > 1 )
+					sbAxisOrder.append( "T" );
+				axisOrder = AxisOrder.valueOf( sbAxisOrder.toString() );
+			}
+
+			mapDimensions = MapDimensions.fromAxisOrder( axisOrder );
 		}
 
 		public int[] getMapDimensions()

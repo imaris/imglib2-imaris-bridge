@@ -223,4 +223,29 @@ public class ImarisUtils
 		dataset.SetExtendMaxY( ( float ) ( minY + sy * voxelDimensions.dimension( 1 ) ) );
 		dataset.SetExtendMaxZ( ( float ) ( minZ + sz * voxelDimensions.dimension( 2 ) ) );
 	}
+
+	/**
+	 * Get the {@code VoxelDimensions} that correspond to the extends of the specified {@code dataset}.
+	 */
+	public static VoxelDimensions getVoxelDimensions( final IDataSetPrx dataset ) throws Error
+	{
+		final int sx = dataset.GetSizeX();
+		final int sy = dataset.GetSizeY();
+		final int sz = dataset.GetSizeZ();
+
+		final double maxX = dataset.GetExtendMaxX();
+		final double minX = dataset.GetExtendMinX();
+		final double maxY = dataset.GetExtendMaxY();
+		final double minY = dataset.GetExtendMinY();
+		final double maxZ = dataset.GetExtendMaxZ();
+		final double minZ = dataset.GetExtendMinZ();
+
+		final double[] calib = new double[] {
+				( maxX - minX ) / sx,
+				( maxY - minY ) / sy,
+				( maxZ - minZ ) / sz
+		};
+		final String unit = dataset.GetUnit();
+		return new FinalVoxelDimensions( unit, calib );
+	}
 }
