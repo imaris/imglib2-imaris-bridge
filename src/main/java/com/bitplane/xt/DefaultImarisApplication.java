@@ -40,11 +40,11 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 	}
 
 	@Override
-	public Dataset getDataset()
+	public Dataset getIJDataset()
 	{
 		try
 		{
-			final ImarisDataset< ? > ds = getImarisDataset();
+			final ImarisDataset< ? > ds = getDataset();
 			final Dataset ijDataset = datasetService.create( ds.getImgPlus() );
 			ijDataset.setName( ds.getName() );
 			ijDataset.setRGBMerged( false );
@@ -57,15 +57,41 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 	}
 
 	@Override
-	public ImarisDataset< ? > getImarisDataset()
+	public	int getNumberOfImages()
 	{
 		try
 		{
-			final IDataSetPrx datasetPrx = getIApplicationPrx().GetDataSet();
+			return getIApplicationPrx().GetNumberOfImages();
+		}
+		catch ( final Error error )
+		{
+			throw new RuntimeException( error ); // TODO: revise exception handling
+		}
+	}
+
+	@Override
+	public ImarisDataset< ? > getImage( final int imageIndex )
+	{
+		try
+		{
+			final IDataSetPrx datasetPrx = getIApplicationPrx().GetImage( imageIndex );
 			if ( datasetPrx == null )
-				throw new RuntimeException( "No dataset is open in Imaris" );
+				return null;
 			final ImarisDatasetOptions options = ImarisDatasetOptions.options();
 			return new ImarisDataset<>( datasetPrx, options );
+		}
+		catch ( final Error error )
+		{
+			throw new RuntimeException( error ); // TODO: revise exception handling
+		}
+	}
+
+	@Override
+	public void setImage( final int imageIndex, final ImarisDataset< ? > dataset )
+	{
+		try
+		{
+			iApplicationPrx.SetImage( imageIndex, dataset.getIDataSetPrx() );
 		}
 		catch ( final Error error )
 		{

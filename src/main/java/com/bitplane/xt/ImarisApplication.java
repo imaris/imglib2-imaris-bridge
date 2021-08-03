@@ -21,12 +21,40 @@ public interface ImarisApplication
 	/**
 	 * Get the current Imaris image as an ImageJ {@code net.imagej.Dataset}.
 	 */
-	Dataset getDataset();
+	Dataset getIJDataset();
 
 	/**
-	 * Get the current Imaris image as an {@code ImarisDataset}.
+	 * Get the number of images loaded in the application.
 	 */
-	ImarisDataset< ? > getImarisDataset();
+	int getNumberOfImages();
+
+	/**
+	 * Get the Imaris image at {@code imageIndex} as an {@code ImarisDataset}.
+	 */
+	ImarisDataset< ? > getImage( int imageIndex );
+
+	/**
+	 * Get the first Imaris image as an {@code ImarisDataset}.
+	 * Equivalent to {@link #getImage getImage(0)}.
+	 */
+	default ImarisDataset< ? > getDataset()
+	{
+		return getImage( 0 );
+	}
+
+	/**
+	 * Set an image to the application. Image index is clamped to be at most the
+	 * current number of images in the application.
+	 */
+	void setImage( int imageIndex, ImarisDataset< ? > dataset );
+
+	/**
+	 * Equivalent to {@link #setImage setImage(0,dataset)}.
+	 */
+	default void setDataset( ImarisDataset< ? > dataset )
+	{
+		setImage( 0, dataset );
+	}
 
 	/**
 	 * Create a new {@code ImarisDataset} of the specified {@code type} with the
@@ -53,3 +81,5 @@ public interface ImarisApplication
 	< T extends NativeType< T > & RealType< T > >
 	ImarisDataset< T > createDataset( T type, final int sx, final int sy, final int sz, final int sc, final int st );
 }
+
+

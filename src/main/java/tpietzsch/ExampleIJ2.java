@@ -14,7 +14,7 @@ public class ExampleIJ2
 		ij.ui().showUI();
 
 		final ImarisService imaris = ij.get( ImarisService.class );
-		final Dataset dataset = imaris.getApplication().getDataset();
+		final Dataset dataset = imaris.getApplication().getIJDataset();
 		ij.ui().show( dataset );
 	}
 }
