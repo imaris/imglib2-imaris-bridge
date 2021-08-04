@@ -6,7 +6,6 @@ import Imaris.IDataSetPrx;
 import Imaris.IFactoryPrx;
 import Imaris.tType;
 import bdv.util.AxisOrder;
-import java.awt.geom.Dimension2D;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imagej.axis.Axes;
@@ -15,6 +14,8 @@ import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.LinearAxis;
 import net.imagej.space.CalibratedSpace;
 import net.imglib2.Dimensions;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
@@ -83,6 +84,7 @@ public class ImarisUtils
 	/**
 	 * Get XYZ calibration of {@code space} as {@code VoxelDimensions}.
 	 */
+	// TODO: remove?
 	public static VoxelDimensions getVoxelDimensions( final CalibratedSpace< ? > space ) throws IllegalArgumentException
 	{
 		String unit = null;
@@ -126,6 +128,25 @@ public class ImarisUtils
 	}
 
 	/**
+	 * Get the ImgLib2 {@code Type} corresponding to the given Imaris {@code type}
+	 */
+	public static < T extends NativeType< T > & RealType< T > > T imglibTypeFor( final tType type )
+	{
+		switch ( type )
+		{
+		case eTypeUInt8:
+			return  ( T ) new UnsignedByteType();
+		case eTypeUInt16:
+			return ( T ) new UnsignedShortType();
+		case eTypeFloat:
+			return ( T ) new FloatType();
+		default:
+			throw new IllegalArgumentException();
+		}
+	}
+
+
+	/**
 	 * Create an Imaris dataset.
 	 */
 	public static IDataSetPrx createDataset(
@@ -166,9 +187,32 @@ public class ImarisUtils
 		return dataset;
 	}
 
+	// TODO javadoc
+	// uses Imaris conventions for min
+	public static void setVoxelDimensions(
+			final IDataSetPrx dataset,
+			final String unit,
+			final float extendMinX,
+			final float extendMaxX,
+			final float extendMinY,
+			final float extendMaxY,
+			final float extendMinZ,
+			final float extendMaxZ ) throws Error
+	{
+		dataset.SetUnit( unit );
+		dataset.SetExtendMinX( extendMinX );
+		dataset.SetExtendMinY( extendMinY );
+		dataset.SetExtendMinZ( extendMinZ );
+		dataset.SetExtendMaxX( extendMaxX );
+		dataset.SetExtendMaxY( extendMaxY );
+		dataset.SetExtendMaxZ( extendMaxZ );
+	}
+
 	/**
 	 * Set the extends of {@code dataset} to correspond to the specified {@code voxelDimensions}.
 	 */
+	// TODO remove?
+	// uses ImgLib2 conventions for min
 	public static void setVoxelDimensions(
 			final IDataSetPrx dataset,
 			final VoxelDimensions voxelDimensions ) throws Error
@@ -179,6 +223,7 @@ public class ImarisUtils
 	/**
 	 * Set the extends of {@code dataset} to correspond to the specified {@code voxelDimensions}.
 	 */
+	// TODO javadoc: uses ImgLib2 conventions for min
 	public static void setVoxelDimensions(
 			final IDataSetPrx dataset,
 			final VoxelDimensions voxelDimensions,
@@ -190,14 +235,18 @@ public class ImarisUtils
 		final int sy = dataset.GetSizeY();
 		final int sz = dataset.GetSizeZ();
 
-		dataset.SetUnit( voxelDimensions.unit() );
+		final double vsx = voxelDimensions.dimension( 0 );
+		final double vsy = voxelDimensions.dimension( 1 );
+		final double vsz = voxelDimensions.dimension( 2 );
 
-		dataset.SetExtendMinX( ( float ) minX );
-		dataset.SetExtendMinY( ( float ) minY );
-		dataset.SetExtendMinZ( ( float ) minZ );
-		dataset.SetExtendMaxX( ( float ) ( minX + sx * voxelDimensions.dimension( 0 ) ) );
-		dataset.SetExtendMaxY( ( float ) ( minY + sy * voxelDimensions.dimension( 1 ) ) );
-		dataset.SetExtendMaxZ( ( float ) ( minZ + sz * voxelDimensions.dimension( 2 ) ) );
+		final float extendMinX = ( float ) ( minX - vsx / 2 );
+		final float extendMaxX = ( float ) ( extendMinX + sx * vsx );
+		final float extendMinY = ( float ) ( minY - vsy / 2 );
+		final float extendMaxY = ( float ) ( extendMinY + sy * vsy );
+		final float extendMinZ = ( float ) ( minZ - vsz / 2 );
+		final float extendMaxZ = ( float ) ( extendMinZ + sz * vsz );
+
+		setVoxelDimensions( dataset, voxelDimensions.unit(), extendMinX, extendMaxX, extendMinY, extendMaxY, extendMinZ, extendMaxZ );
 	}
 
 	/**

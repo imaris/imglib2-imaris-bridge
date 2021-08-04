@@ -13,7 +13,8 @@ public class ExampleBdv
 	{
 		final Context context = new Context();
 		final ImarisService imaris = context.getService( ImarisService.class );
-		final ImarisDataset< ? > dataset = imaris.getApplication().getImarisDataset();
+		final ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
+
 
 		final BdvStackSource< ? > source = BdvFunctions.show( dataset.getSources(), dataset.numTimepoints(), Bdv.options() );
 		source.getBdvHandle().getCacheControls().addCacheControl( dataset.getSharedQueue() );
