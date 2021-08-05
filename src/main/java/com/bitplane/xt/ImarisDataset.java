@@ -49,7 +49,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	private final DatasetDimensions datasetDimensions;
 
 	/**
-	 * physical calibration: size of voxel and min coordinate in X,Y,Z
+	 * Physical calibration: size of voxel and min coordinate in X,Y,Z
 	 * <p>
 	 * Note, that the min coordinate is in ImgLib2 convention:
 	 * it refers to the voxel center. This is in contrast to Imaris
@@ -238,10 +238,10 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	private void updateImpAxes()
 	{
 		final ArrayList< CalibratedAxis > axes = new ArrayList<>();
-		axes.add( new DefaultLinearAxis( Axes.X, calib.unit(), calib.dimension( 0 ) ) );
-		axes.add( new DefaultLinearAxis( Axes.Y, calib.unit(), calib.dimension( 1 ) ) );
+		axes.add( new DefaultLinearAxis( Axes.X, calib.unit(), calib.voxelSize( 0 ) ) );
+		axes.add( new DefaultLinearAxis( Axes.Y, calib.unit(), calib.voxelSize( 1 ) ) );
 		if ( axisOrder().hasZ() )
-			axes.add( new DefaultLinearAxis( Axes.Z, calib.unit(), calib.dimension( 2 ) ) );
+			axes.add( new DefaultLinearAxis( Axes.Z, calib.unit(), calib.voxelSize( 2 ) ) );
 		if ( axisOrder().hasChannels() )
 			axes.add( new DefaultLinearAxis( Axes.CHANNEL ) );
 		if ( axisOrder().hasTimepoints() )
@@ -267,8 +267,17 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	}
 
 
-	// TODO note imaris conventions in javadoc
-	// uses Imaris conventions for min
+	/**
+	 * Sets unit, voxel size, and min coordinate from Imaris extends.
+	 * <p>
+	 * Note, that the given min/max extends are in Imaris conventions: {@code
+	 * extendMinX} refers to the min corner of the min voxel of the dataset,
+	 * {@code extendMaxX} refers to the max corner of the max voxel of the
+	 * dataset.
+	 * <p>
+	 * This is in contrast to the ImgLib2 convention, where coordinates always
+	 * refer to the voxel center.
+	 */
 	public void setCalibration(
 			final String unit,
 			final float extendMinX,
@@ -278,27 +287,44 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 			final float extendMinZ,
 			final float extendMaxZ ) throws Error // TODO: revise exception handling
 	{
-		calib.set( unit, extendMinX, extendMaxX, extendMinY, extendMaxY, extendMinZ, extendMaxZ );
+		calib.setExtends( unit, extendMinX, extendMaxX, extendMinY, extendMaxY, extendMinZ, extendMaxZ );
 		updateSourceCalibrations();
 		updateImpAxes();
-		calib.setTo( dataset );
+		calib.applyToDataset( dataset );
 	}
 
-	// doesn't change the min
-	public void setCalibration( final VoxelDimensions voxelDimensions)
+	/**
+	 * Set the voxel size and unit.
+	 * (The min coordinate is not modified).
+	 */
+	public void setCalibration( final VoxelDimensions voxelDimensions ) throws Error
 	{
-		// TODO
-		throw new UnsupportedOperationException();
+		calib.setVoxelDimensions( voxelDimensions );
+		updateSourceCalibrations();
+		updateImpAxes();
+		calib.applyToDataset( dataset );
 	}
 
-	// uses ImgLib2 conventions for min
+	/**
+	 * Sets unit, voxel size, and min coordinate.
+	 * <p>
+	 * Note, that the min coordinate is in ImgLib2 convention: It refers to the
+	 * voxel center. This is in contrast to Imaris conventions, where {@code
+	 * ExtendMinX, ExtendMinY, ExtendMinZ} indicate the min corner of the min voxel.
+	 * <p>
+	 * This method translates the given min coordinate (etc) to Imaris {@code
+	 * extendMin/Max} extends.
+	 */
 	public void setCalibration( final VoxelDimensions voxelDimensions,
 			final double minX,
 			final double minY,
-			final double minZ )
+			final double minZ ) throws Error
 	{
-		// TODO
-		throw new UnsupportedOperationException();
+		calib.setMin( minX, minY, minZ );
+		calib.setVoxelDimensions( voxelDimensions );
+		updateSourceCalibrations();
+		updateImpAxes();
+		calib.applyToDataset( dataset );
 	}
 
 	/**

@@ -5,51 +5,88 @@ import Imaris.IDataSetPrx;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 
 /**
- * Modifiable implementation of {@link VoxelDimensions}. Units and dimensions
- * can be changed, but number of dimensions is fixed after construction.
+ * Calibration (voxel size and unit) and min coordinate for a Imaris dataset.
+ * <p>
+ * Note, that the min coordinate is in ImgLib2 convention: It refers to the
+ * voxel center. This is in contrast to Imaris conventions, where {@code
+ * ExtendMinX, ExtendMinY, ExtendMinZ} indicate the min corner of the min voxel.
+ * <p>
+ * When reading/writing extends from/to a {@code IDataSetPrx}, the min is
+ * translated appropriately from/to Imaris conventions.
  *
  * @author Tobias Pietzsch
  */
-// TODO rename
-public final class DatasetCalibration implements VoxelDimensions
+public final class DatasetCalibration
 {
 	private String unit = "pixel";
-
 	private final int[] size = { 1, 1, 1 };
-
 	private final double[] voxelSize = { 1, 1, 1 };
-
 	private final double[] min = { 0, 0, 0 };
-
-	public DatasetCalibration()
+	private final VoxelDimensions voxelDimensions = new VoxelDimensions()
 	{
-	}
-
-	public DatasetCalibration( final DatasetCalibration that )
-	{
-		set( that );
-	}
-
-	public void set( final DatasetCalibration that )
-	{
-		this.unit = that.unit;
-		for ( int d = 0; d < 3; d++ )
+		@Override
+		public String unit()
 		{
-			this.voxelSize[ d ] = that.voxelSize[ d ];
-			this.min[ d ] = that.min[ d ];
+			return unit;
 		}
+
+		@Override
+		public void dimensions( final double[] dims )
+		{
+			for ( int d = 0; d < dims.length; ++d )
+				dims[ d ] = voxelSize[ d ];
+		}
+
+		@Override
+		public double dimension( final int d )
+		{
+			return voxelSize[ d ];
+		}
+
+		@Override
+		public int numDimensions()
+		{
+			return 3;
+		}
+	};
+
+	/**
+	 * Construct with default calibration:
+	 * <ul>
+	 *     <li>voxel size is 1x1x1</li>
+	 *     <li>unit is "pixel"</li>
+	 *     <li>min coordinate is 0</li>
+	 * </ul>
+	 */
+	public DatasetCalibration() {}
+
+	/**
+	 * Construct by copying {@code calib}.
+	 */
+	public DatasetCalibration( final DatasetCalibration calib )
+	{
+		set( calib );
 	}
 
 	/**
-	 * TODO
-	 * Get the {@code VoxelDimensions} that correspond to the extends of the specified {@code dataset}.
+	 * Construct from the size and extends of {@code dataset}.
 	 */
 	public DatasetCalibration( final IDataSetPrx dataset ) throws Error
 	{
-		setFrom( dataset );
+		setFromDataset( dataset );
 	}
 
-	public void setTo( final IDataSetPrx dataset ) throws Error
+	public void set( final DatasetCalibration calib )
+	{
+		this.unit = calib.unit;
+		for ( int d = 0; d < 3; d++ )
+		{
+			this.voxelSize[ d ] = calib.voxelSize[ d ];
+			this.min[ d ] = calib.min[ d ];
+		}
+	}
+
+	public void applyToDataset( final IDataSetPrx dataset ) throws Error
 	{
 		final float extendMinX = ( float ) ( min[ 0 ] - voxelSize[ 0 ] / 2 );
 		final float extendMaxX = ( float ) ( extendMinX + size[ 0 ] * voxelSize[ 0 ] );
@@ -67,46 +104,31 @@ public final class DatasetCalibration implements VoxelDimensions
 		dataset.SetExtendMaxZ( extendMaxZ );
 	}
 
-	public void setFrom( final IDataSetPrx dataset ) throws Error
+	public void setFromDataset( final IDataSetPrx dataset ) throws Error
 	{
-		set( dataset.GetUnit(),
-				dataset.GetSizeX(),
-				dataset.GetSizeY(),
-				dataset.GetSizeZ(),
-				dataset.GetExtendMinX(),
-				dataset.GetExtendMaxX(),
-				dataset.GetExtendMinY(),
-				dataset.GetExtendMaxY(),
-				dataset.GetExtendMinZ(),
-				dataset.GetExtendMaxZ() );
+		size[ 0 ] = dataset.GetSizeX();
+		size[ 1 ] = dataset.GetSizeY();
+		size[ 2 ] = dataset.GetSizeZ();
+		setExtends( dataset.GetUnit(),
+				dataset.GetExtendMinX(), dataset.GetExtendMaxX(),
+				dataset.GetExtendMinY(), dataset.GetExtendMaxY(),
+				dataset.GetExtendMinZ(), dataset.GetExtendMaxZ() );
 	}
 
-	private void set(
-			final String unit,
-			final int sizeX,
-			final int sizeY,
-			final int sizeZ,
-			final double extendMinX,
-			final double extendMaxX,
-			final double extendMinY,
-			final double extendMaxY,
-			final double extendMinZ,
-			final double extendMaxZ )
-	{
-		size[ 0 ] = sizeX;
-		size[ 1 ] = sizeY;
-		size[ 2 ] = sizeZ;
-		set( unit, extendMinX, extendMaxX, extendMinY, extendMaxY, extendMinZ, extendMaxZ );
-	}
-
-	public void set(
-			final String unit,
-			final double extendMinX,
-			final double extendMaxX,
-			final double extendMinY,
-			final double extendMaxY,
-			final double extendMinZ,
-			final double extendMaxZ )
+	/**
+	 * Sets unit, voxel size, and min coordinate from Imaris extends.
+	 * <p>
+	 * Note, that the given min/max extends are in Imaris conventions:
+	 * {@code extendMinX} refers to the min corner of the min voxel of the dataset,
+	 * {@code extendMaxX} refers to the max corner of the max voxel of the dataset.
+	 * <p>
+	 * This is in contrast to the ImgLib2 convention, where coordinates always refer to the
+	 * voxel center. This method translates the {@code extendMin/Max} arguments to ImgLib2 conventions.
+	 */
+	public void setExtends( final String unit,
+			final double extendMinX, final double extendMaxX,
+			final double extendMinY, final double extendMaxY,
+			final double extendMinZ, final double extendMaxZ )
 	{
 		this.unit = unit;
 		voxelSize[ 0 ] = ( extendMaxX - extendMinX ) / size[ 0 ];
@@ -117,66 +139,72 @@ public final class DatasetCalibration implements VoxelDimensions
 		min[ 2 ] = extendMinZ + voxelSize[ 2 ] / 2;
 	}
 
-	public DatasetCalibration( final String unit, final double[] voxelSize, final double[] min )
-	{
-		if ( voxelSize.length != 3 )
-			throw new IllegalArgumentException();
-		if ( min.length != 3 )
-			throw new IllegalArgumentException();
-		this.unit = unit;
-		System.arraycopy( voxelSize, 0, this.voxelSize, 0, 3 );
-		System.arraycopy( min, 0, this.min, 0, 3 );
-	}
-
-	public void set( final VoxelDimensions voxelDimensions, final double... min )
+	/**
+	 * Set the voxel size and unit.
+	 * (The min coordinate is not modified).
+	 */
+	public void setVoxelDimensions( final VoxelDimensions voxelDimensions )
 	{
 		if ( voxelDimensions.numDimensions() != 3 )
 			throw new IllegalArgumentException();
+
+		unit = voxelDimensions.unit();
+		voxelDimensions.dimensions( voxelSize );
+	}
+
+	/**
+	 * Set the min coordinate.
+	 * (The voxel size and unit is not modified).
+	 * <p>
+	 * Note, that the min coordinate is in ImgLib2 convention: It refers to the
+	 * voxel center. This is in contrast to Imaris conventions, where {@code
+	 * ExtendMinX, ExtendMinY, ExtendMinZ} indicate the min corner of the min voxel.
+	 *
+	 * @param min
+	 * 		X,Y,Z of min coordinate
+	 */
+	public void setMin( final double... min )
+	{
 		if ( min.length != 3 )
 			throw new IllegalArgumentException();
-		this.unit = voxelDimensions.unit();
-		for ( int d = 0; d < 3; ++d )
-		{
-			voxelSize[ d ] = voxelDimensions.dimension( d );
-			this.min[ d ] = min[ d ];
-		}
+		System.arraycopy( min, 0, this.min, 0, 3 );
 	}
 
-	@Override
-	public int numDimensions()
+	/**
+	 * Get a {@code VoxelDimensions} view of this {@code DatasetCalibration}
+	 */
+	public VoxelDimensions voxelDimensions()
 	{
-		return 3;
+		return voxelDimensions;
 	}
 
-	@Override
+	/**
+	 * Get units for {@link #voxelSize(int)}
+	 */
 	public String unit()
 	{
 		return unit;
 	}
 
-	@Override
-	public void dimensions( final double[] dims )
+	/**
+	 * Get size of a voxel in dimension {@code d}.
+	 */
+	public double voxelSize( final int d )
 	{
-		for ( int d = 0; d < dims.length; ++d )
-			dims[ d ] = this.voxelSize[ d ];
+		return this.voxelSize[ d ];
 	}
 
-	@Override
-	public double dimension( final int d )
-	{
-		return voxelSize[ d ];
-	}
-
-	public VoxelDimensions voxelDimensions()
-	{
-		return this;
-	}
-
+	/**
+	 * Get the coordinate (in dimension {@code d}) of the min corner of the dataset.
+	 */
 	public double min( final int d )
 	{
 		return min[ d ];
 	}
 
+	/**
+	 * Get size of a voxel in dimension {@code d}.
+	 */
 	public int size( final int d )
 	{
 		return size[ d ];

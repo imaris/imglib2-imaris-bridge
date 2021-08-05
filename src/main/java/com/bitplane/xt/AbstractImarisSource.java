@@ -3,7 +3,6 @@ package com.bitplane.xt;
 import bdv.util.DefaultInterpolators;
 import bdv.viewer.Source;
 import com.bitplane.xt.util.DatasetCalibration;
-import com.bitplane.xt.util.ModifiableVoxelDimensions;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -119,9 +118,9 @@ abstract class AbstractImarisSource< T extends NumericType< T > > implements Sou
 
 		final AffineTransform3D sourceTransform = new AffineTransform3D();
 		sourceTransform.set(
-				calib.dimension( 0 ), 0, 0, calib.min( 0 ),
-				0, calib.dimension( 1 ), 0, calib.min( 1 ),
-				0, 0, calib.dimension( 2 ), calib.min( 2 ) );
+				calib.voxelSize( 0 ), 0, 0, calib.min( 0 ),
+				0, calib.voxelSize( 1 ), 0, calib.min( 1 ),
+				0, 0, calib.voxelSize( 2 ), calib.min( 2 ) );
 		for ( int s = 0; s < numResolutions; ++s )
 		{
 			final AffineTransform3D mipmapTransform = new AffineTransform3D();
