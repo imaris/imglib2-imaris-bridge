@@ -6,6 +6,7 @@ import Imaris.IDataSetPrx;
 import Imaris.IFactoryPrx;
 import Imaris.tType;
 import bdv.util.AxisOrder;
+import com.bitplane.xt.util.DatasetCalibration;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imagej.axis.Axes;

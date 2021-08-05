@@ -7,8 +7,9 @@ import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import com.bitplane.xt.util.ColorTableUtils;
-import com.bitplane.xt.util.ModifiableVoxelDimensions;
+import com.bitplane.xt.util.DatasetCalibration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imagej.ImgPlus;
@@ -43,9 +44,19 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	private final IDataSetPrx dataset;
 
 	/**
-	 * physical calibration: size of voxel in X,Y,Z
+	 * Dimensions of the Imaris dataset, and how they map to ImgLib2 dimensions.
 	 */
-	private final ModifiableVoxelDimensions voxelDimensions;
+	private final DatasetDimensions datasetDimensions;
+
+	/**
+	 * physical calibration: size of voxel and min coordinate in X,Y,Z
+	 * <p>
+	 * Note, that the min coordinate is in ImgLib2 convention:
+	 * it refers to the voxel center. This is in contrast to Imaris
+	 * conventions, where it would indicate the min corner of the min
+	 * voxel.
+	 */
+	private final DatasetCalibration calib;
 
 	/**
 	 * Non-volatile and volatile images for each resolution, backed by a joint cache which loads blocks from Imaris.
@@ -88,15 +99,11 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	{
 
 		this.dataset = dataset;
+		this.calib = new DatasetCalibration( dataset );
+		this.datasetDimensions = datasetDimensions;
 
 		// --------------------------------------------------------------------
-		// Get calibration from dataset.
-
-		voxelDimensions = new ModifiableVoxelDimensions( ImarisUtils.getVoxelDimensions( dataset ) );
-
-
-		// --------------------------------------------------------------------
-		// Analyze pyramid sizes and derive imglib2 dimensions.
+		// Determine imglib2 dimensions/cellDimensions for all pyramid levels.
 
 		final int[][] pyramidSizes = dataset.GetPyramidSizes();
 		final int[][] pyramidBlockSizes = dataset.GetPyramidBlockSizes();
@@ -104,6 +111,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		final AxisOrder axisOrder = datasetDimensions.getAxisOrder();
 		final int numDimensions = axisOrder.numDimensions();
 		final int[] mapDimensions = datasetDimensions.getMapDimensions();
+		final int[] imarisDimensions = datasetDimensions.getImarisDimensions();
 
 		final long[][] dimensions = new long[ numResolutions ][ numDimensions ];
 		final int[][] cellDimensions = new int[ numResolutions ][ numDimensions ];
@@ -114,10 +122,16 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 				final int d = mapDimensions[ i ];
 				if ( d >= 0 )
 				{
-					dimensions[ l ][ d ] = pyramidSizes[ l ][ i ];
-					cellDimensions[ l ][ d ] =  i < 3
-							? pyramidBlockSizes[ l ][ i ]
-							: 1;
+					if ( i < 3 )
+					{
+						dimensions[ l ][ d ] = pyramidSizes[ l ][ i ];
+						cellDimensions[ l ][ d ] = pyramidBlockSizes[ l ][ i ];
+					}
+					else
+					{
+						dimensions[ l ][ d ] = imarisDimensions[ i ];
+						cellDimensions[ l ][ d ] = 1;
+					}
 				}
 			}
 		}
@@ -165,21 +179,10 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		// --------------------------------------------------------------------
 		// Instantiate multi-resolution sources.
 
-
-		// --------------------------------------------------------------------
-		// TODO: get rid of these:
-		final int sc = dataset.GetSizeC();
-		final double minX = dataset.GetExtendMinX();
-		final double minY = dataset.GetExtendMinY();
-		final double minZ = dataset.GetExtendMinZ();
-		// --------------------------------------------------------------------
-
 		sources = new ArrayList<>();
 
 		final double[][] mipmapScales = new double[ numResolutions ][ 3 ];
-		mipmapScales[ 0 ][ 0 ] = 1;
-		mipmapScales[ 0 ][ 1 ] = 1;
-		mipmapScales[ 0 ][ 2 ] = 1;
+		Arrays.fill( mipmapScales[ 0 ], 1 );
 		for ( int level = 1; level < numResolutions; ++level )
 		{
 			for ( int d = 0; d < 3; ++d )
@@ -193,21 +196,76 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		final List< ImagePyramid< T, V > > channelPyramids = imagePyramid.splitIntoSourceStacks();
 		final V volatileType = imagePyramid.getVolatileType();
 		final boolean hasTimepoints = axisOrder.hasTimepoints();
+		final int sc = imarisDimensions[ 3 ];
 		for ( int c = 0; c < sc; ++c )
 		{
 			final String name = String.format( "%s - %s", getName(), dataset.GetChannelName( c ) );
 			final ImagePyramid< T, V > channelPyramid = channelPyramids.get( c );
 			final Source< T > source = hasTimepoints
-					? new ImarisSource4D<>( voxelDimensions, minX, minY, minZ, type, channelPyramid.getImgs(), mipmapScales, name )
-					: new ImarisSource3D<>( voxelDimensions, minX, minY, minZ, type, channelPyramid.getImgs(), mipmapScales, name );
+					? new ImarisSource4D<>( calib, type, channelPyramid.getImgs(), mipmapScales, name )
+					: new ImarisSource3D<>( calib, type, channelPyramid.getImgs(), mipmapScales, name );
 			final Source< V > volatileSource = hasTimepoints
-					? new ImarisSource4D<>( voxelDimensions, minX, minY, minZ, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name )
-					: new ImarisSource3D<>( voxelDimensions, minX, minY, minZ, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name );
+					? new ImarisSource4D<>( calib, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name )
+					: new ImarisSource3D<>( calib, volatileType, channelPyramid.getVolatileImgs(), mipmapScales, name );
 			final SourceAndConverter< V > vsoc = new SourceAndConverter<>( volatileSource, ColorTableUtils.createChannelConverterToARGB( volatileType, dataset, c ) );
 			final SourceAndConverter< T > soc = new SourceAndConverter<>( source, ColorTableUtils.createChannelConverterToARGB( type, dataset, c ), vsoc );
 			sources.add( soc );
 		}
 	}
+
+	/**
+	 * Create/update color tables for ImgPlus.
+	 */
+	private void updateImpColorTables() throws Error
+	{
+		final int[] imarisDimensions = datasetDimensions.getImarisDimensions();
+		final int sz = imarisDimensions[ 2 ];
+		final int sc = imarisDimensions[ 3 ];
+		final int st = imarisDimensions[ 4 ];
+		imp.initializeColorTables( sc * sz * st );
+		for ( int c = 0; c < sc; ++c )
+		{
+			final ColorTable8 cT = ColorTableUtils.createChannelColorTable( dataset, c );
+			for ( int t = 0; t < st; ++t )
+				for ( int z = 0; z < sz; ++z )
+					imp.setColorTable( cT, z + sz * ( c + sc * t ) );
+		}
+	}
+
+	/**
+	 * Create/update calibrated axes for ImgPlus.
+	 */
+	private void updateImpAxes()
+	{
+		final ArrayList< CalibratedAxis > axes = new ArrayList<>();
+		axes.add( new DefaultLinearAxis( Axes.X, calib.unit(), calib.dimension( 0 ) ) );
+		axes.add( new DefaultLinearAxis( Axes.Y, calib.unit(), calib.dimension( 1 ) ) );
+		if ( axisOrder().hasZ() )
+			axes.add( new DefaultLinearAxis( Axes.Z, calib.unit(), calib.dimension( 2 ) ) );
+		if ( axisOrder().hasChannels() )
+			axes.add( new DefaultLinearAxis( Axes.CHANNEL ) );
+		if ( axisOrder().hasTimepoints() )
+			axes.add( new DefaultLinearAxis( Axes.TIME ) );
+
+		for ( int i = 0; i < axes.size(); ++i )
+			imp.setAxis( axes.get( i ), i );
+	}
+
+	/**
+	 * Update all sources with the current {@link #calib}.
+	 * (This is called after {@link #setCalibration}.)
+	 */
+	private void updateSourceCalibrations()
+	{
+		for ( SourceAndConverter< T > soc : sources )
+		{
+			final AbstractImarisSource< ? > source = ( AbstractImarisSource< ? > ) soc.getSpimSource();
+			final AbstractImarisSource< ? > volatileSource = ( AbstractImarisSource< ? > ) soc.asVolatile().getSpimSource();
+			source.setCalibration( calib );
+			volatileSource.setCalibration( calib );
+		}
+	}
+
 
 	// TODO note imaris conventions in javadoc
 	// uses Imaris conventions for min
@@ -220,73 +278,10 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 			final float extendMinZ,
 			final float extendMaxZ ) throws Error // TODO: revise exception handling
 	{
-		final int sx = dataset.GetSizeX();
-		final int sy = dataset.GetSizeY();
-		final int sz = dataset.GetSizeZ();
-
-		final double[] calib = new double[] {
-				( extendMaxX - extendMinX ) / sx,
-				( extendMaxY - extendMinY ) / sy,
-				( extendMaxZ - extendMinZ ) / sz
-		};
-		voxelDimensions.set( unit, calib );
-
-		// --------------------------------------------------------------------
-		// update Sources
-
-		// The "+ calib[ d ] / 2" is for deal with Imaris having min at pixel
-		// corner, ImgLib having min at pixel center
-		final double minX = extendMinX + calib[ 0 ] / 2;
-		final double minY = extendMinY + calib[ 1 ] / 2;
-		final double minZ = extendMinZ + calib[ 2 ] / 2;
-
-		for ( SourceAndConverter< T > soc : sources )
-		{
-			final AbstractImarisSource< ? > source = ( AbstractImarisSource< ? > ) soc.getSpimSource();
-			final AbstractImarisSource< ? > volatileSource = ( AbstractImarisSource< ? > ) soc.asVolatile().getSpimSource();
-			source.setCalibration( voxelDimensions, minX, minY, minZ );
-			volatileSource.setCalibration( voxelDimensions, minX, minY, minZ );
-		}
-
-
+		calib.set( unit, extendMinX, extendMaxX, extendMinY, extendMaxY, extendMinZ, extendMaxZ );
+		updateSourceCalibrations();
 		updateImpAxes();
-
-		// --------------------------------------------------------------------
-		// update Imaris extends
-
-		ImarisUtils.setVoxelDimensions( dataset, unit, extendMinX, extendMaxX, extendMinY, extendMaxY, extendMinZ, extendMaxZ );
-	}
-
-	private void updateImpColorTables() throws Error
-	{
-		final int sz = dataset.GetSizeZ();
-		final int sc = dataset.GetSizeC();
-		final int st = dataset.GetSizeT();
-
-		imp.initializeColorTables( sc * sz * st );
-		for ( int c = 0; c < sc; ++c )
-		{
-			final ColorTable8 cT = ColorTableUtils.createChannelColorTable( dataset, c );
-			for ( int t = 0; t < st; ++t )
-				for ( int z = 0; z < sz; ++z )
-					imp.setColorTable( cT, z + sz * ( c + sc * t ) );
-		}
-	}
-
-	private void updateImpAxes()
-	{
-		final ArrayList< CalibratedAxis > axes = new ArrayList<>();
-		axes.add( new DefaultLinearAxis( Axes.X, voxelDimensions.unit(), voxelDimensions.dimension( 0 ) ) );
-		axes.add( new DefaultLinearAxis( Axes.Y, voxelDimensions.unit(), voxelDimensions.dimension( 1 ) ) );
-		if ( axisOrder().hasZ() )
-			axes.add( new DefaultLinearAxis( Axes.Z, voxelDimensions.unit(), voxelDimensions.dimension( 2 ) ) );
-		if ( axisOrder().hasChannels() )
-			axes.add( new DefaultLinearAxis( Axes.CHANNEL ) );
-		if ( axisOrder().hasTimepoints() )
-			axes.add( new DefaultLinearAxis( Axes.TIME ) );
-
-		for ( int i = 0; i < axes.size(); ++i )
-			imp.setAxis( axes.get( i ), i );
+		calib.setTo( dataset );
 	}
 
 	// doesn't change the min
@@ -391,7 +386,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	 */
 	public VoxelDimensions getVoxelDimensions()
 	{
-		return voxelDimensions;
+		return calib.voxelDimensions();
 	}
 
 	/**

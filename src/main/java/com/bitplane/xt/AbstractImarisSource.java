@@ -2,6 +2,7 @@ package com.bitplane.xt;
 
 import bdv.util.DefaultInterpolators;
 import bdv.viewer.Source;
+import com.bitplane.xt.util.DatasetCalibration;
 import com.bitplane.xt.util.ModifiableVoxelDimensions;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
@@ -20,7 +21,7 @@ import net.imglib2.type.numeric.NumericType;
  */
 abstract class AbstractImarisSource< T extends NumericType< T > > implements Source< T >
 {
-	final ModifiableVoxelDimensions voxelDimensions;
+	final DatasetCalibration calib;
 
 	final T type;
 
@@ -60,16 +61,13 @@ abstract class AbstractImarisSource< T extends NumericType< T > > implements Sou
 	final DefaultInterpolators< T > interpolators;
 
 	AbstractImarisSource(
-			final VoxelDimensions voxelDimensions,
-			final double minX,
-			final double minY,
-			final double minZ,
+			final DatasetCalibration calib,
 			final T type,
 			final RandomAccessibleInterval< T >[] mipmapSources,
 			final double[][] mipmapScales,
 			final String name )
 	{
-		this.voxelDimensions = new ModifiableVoxelDimensions( voxelDimensions );
+		this.calib = new DatasetCalibration();
 		this.type = type;
 		this.mipmapScales = mipmapScales;
 		this.name = name;
@@ -79,7 +77,7 @@ abstract class AbstractImarisSource< T extends NumericType< T > > implements Sou
 		mipmapTransforms = new AffineTransform3D[ numResolutions ];
 		interpolators = new DefaultInterpolators<>();
 
-		setCalibration( voxelDimensions, minX, minY, minZ );
+		setCalibration( calib );
 	}
 
 	@Override
@@ -103,7 +101,7 @@ abstract class AbstractImarisSource< T extends NumericType< T > > implements Sou
 	@Override
 	public VoxelDimensions getVoxelDimensions()
 	{
-		return voxelDimensions;
+		return calib.voxelDimensions();
 	}
 
 	@Override
@@ -113,27 +111,17 @@ abstract class AbstractImarisSource< T extends NumericType< T > > implements Sou
 	}
 
 	/**
-	 * Recompute mipmapTransforms from the given voxelDimensions and min
-	 * coordinates.
-	 * <p>
-	 * Note, that min coordinates are in ImgLib2 convention, that is, they
-	 * indicate the center coordinate min voxel. This is in contrast to Iamris
-	 * conventions, where min coordinates indicate the min corner of the min
-	 * voxel.
+	 * Recompute mipmapTransforms from the given {@code DatasetCalibration}.
 	 */
-	public void setCalibration(
-			final VoxelDimensions voxelDimensions,
-			final double minX,
-			final double minY,
-			final double minZ )
+	public void setCalibration( final DatasetCalibration calib )
 	{
-		this.voxelDimensions.set( voxelDimensions );
+		this.calib.set( calib );
 
 		final AffineTransform3D sourceTransform = new AffineTransform3D();
 		sourceTransform.set(
-				voxelDimensions.dimension( 0 ), 0, 0, minX,
-				0, voxelDimensions.dimension( 1 ), 0, minY,
-				0, 0, voxelDimensions.dimension( 2 ), minZ );
+				calib.dimension( 0 ), 0, 0, calib.min( 0 ),
+				0, calib.dimension( 1 ), 0, calib.min( 1 ),
+				0, 0, calib.dimension( 2 ), calib.min( 2 ) );
 		for ( int s = 0; s < numResolutions; ++s )
 		{
 			final AffineTransform3D mipmapTransform = new AffineTransform3D();

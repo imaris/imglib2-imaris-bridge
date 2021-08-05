@@ -1,6 +1,7 @@
 package com.bitplane.xt;
 
 import bdv.viewer.Interpolation;
+import com.bitplane.xt.util.DatasetCalibration;
 import java.util.Arrays;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
@@ -26,16 +27,13 @@ class ImarisSource4D< T extends NumericType< T > > extends AbstractImarisSource<
 	private final RealRandomAccessible< T >[][] currentInterpolatedMipmapSources;
 
 	ImarisSource4D(
-			final VoxelDimensions voxelDimensions,
-			final double minX,
-			final double minY,
-			final double minZ,
+			final DatasetCalibration calib,
 			final T type,
 			final RandomAccessibleInterval< T >[] mipmapSources,
 			final double[][] mipmapScales,
 			final String name )
 	{
-		super( voxelDimensions, minX, minY, minZ, type, mipmapSources, mipmapScales, name );
+		super( calib, type, mipmapSources, mipmapScales, name );
 
 		numTimepoints = ( int ) mipmapSources[ 0 ].dimension( 3 );
 		currentMipmapSources = new RandomAccessibleInterval[ numResolutions ];
