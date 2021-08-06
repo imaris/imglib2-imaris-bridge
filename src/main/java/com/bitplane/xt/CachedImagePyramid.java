@@ -164,7 +164,7 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 			}
 			else
 			{
-				final ImarisLoader< A > loader = new ImarisLoader<>( dataset, mapDimensions, grid );
+				final ImarisLoader< A > loader = new ImarisLoader<>( dataset, mapDimensions, grid, level );
 				cache = backingCache.mapKeys( bimap ).withLoader( loader );
 			}
 

@@ -62,6 +62,8 @@ public class ImarisLoader< A > implements CacheRemover< Long, Cell< A >, A >, Ca
 
 	protected final int n;
 
+	private final int level;
+
 	private final PixelSource< A > volatileArraySource;
 
 	/**
@@ -75,25 +77,29 @@ public class ImarisLoader< A > implements CacheRemover< Long, Cell< A >, A >, Ca
 	 * 		For {@code Img} dimensions with size=1 are skipped.
 	 * 		E.g., for a X,Y,C image {@code mapDimensions = {0,1,-1,2,-1}}.
 	 * @param grid
+	 * @param level
 	 *
 	 * @throws Error
 	 */
 	public ImarisLoader(
 			final IDataSetPrx dataset,
 			final int[] mapDimensions,
-			final CellGrid grid ) throws Error
+			final CellGrid grid,
+			final int level ) throws Error
 	{
-		this( dataset, mapDimensions, grid, false );
+		this( dataset, mapDimensions, grid, level,false );
 	}
 
 	protected ImarisLoader(
 			final IDataSetPrx dataset,
 			final int[] mapDimensions,
 			final CellGrid grid,
+			final int level,
 			final boolean withDirtyFlag ) throws Error
 	{
 		this.grid = grid;
 		n = grid.numDimensions();
+		this.level = level;
 		volatileArraySource = PixelSource.volatileArraySource( dataset, dataset.GetType(), mapDimensions, withDirtyFlag );
 	}
 
@@ -106,7 +112,7 @@ public class ImarisLoader< A > implements CacheRemover< Long, Cell< A >, A >, Ca
 		return new Cell<>(
 				cellDims,
 				cellMin,
-				volatileArraySource.get( 0, cellMin, cellDims ) );
+				volatileArraySource.get( level, cellMin, cellDims ) );
 	}
 
 	@Override

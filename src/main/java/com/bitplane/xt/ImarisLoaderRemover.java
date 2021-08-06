@@ -127,7 +127,7 @@ public class ImarisLoaderRemover< A > extends ImarisLoader< A >
 			final boolean persistOnLoad,
 			final boolean withDirtyFlag ) throws Error
 	{
-		super( dataset, mapDimensions, grid, withDirtyFlag );
+		super( dataset, mapDimensions, grid, 0, withDirtyFlag );
 		this.backingLoader = backingLoader;
 		this.persistOnLoad = persistOnLoad;
 		volatileArraySink = PixelSink.volatileArraySink( dataset, dataset.GetType(), mapDimensions );

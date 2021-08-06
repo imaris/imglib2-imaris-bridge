@@ -2,6 +2,7 @@ package com.bitplane.xt.util;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
+import java.util.Arrays;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 
 /**
@@ -48,6 +49,16 @@ public final class DatasetCalibration
 		{
 			return 3;
 		}
+
+		@Override
+		public String toString()
+		{
+			final StringBuffer sb = new StringBuffer( this.getClass().getSimpleName() );
+			sb.append( "{unit='" ).append( unit ).append( '\'' );
+			sb.append( ", dimensions=" ).append( Arrays.toString( voxelSize ) );
+			sb.append( '}' );
+			return sb.toString();
+		}
 	};
 
 	/**
@@ -81,6 +92,7 @@ public final class DatasetCalibration
 		this.unit = calib.unit;
 		for ( int d = 0; d < 3; d++ )
 		{
+			this.size[ d ] = calib.size[ d ];
 			this.voxelSize[ d ] = calib.voxelSize[ d ];
 			this.min[ d ] = calib.min[ d ];
 		}
@@ -208,5 +220,44 @@ public final class DatasetCalibration
 	public int size( final int d )
 	{
 		return size[ d ];
+	}
+
+	@Override
+	public String toString()
+	{
+		final StringBuffer sb = new StringBuffer( "DatasetCalibration{" );
+		sb.append( "unit='" ).append( unit ).append( '\'' );
+		sb.append( ", size=" );
+		if ( size == null )
+			sb.append( "null" );
+		else
+		{
+			sb.append( '[' );
+			for ( int i = 0; i < size.length; ++i )
+				sb.append( i == 0 ? "" : ", " ).append( size[ i ] );
+			sb.append( ']' );
+		}
+		sb.append( ", voxelSize=" );
+		if ( voxelSize == null )
+			sb.append( "null" );
+		else
+		{
+			sb.append( '[' );
+			for ( int i = 0; i < voxelSize.length; ++i )
+				sb.append( i == 0 ? "" : ", " ).append( voxelSize[ i ] );
+			sb.append( ']' );
+		}
+		sb.append( ", min=" );
+		if ( min == null )
+			sb.append( "null" );
+		else
+		{
+			sb.append( '[' );
+			for ( int i = 0; i < min.length; ++i )
+				sb.append( i == 0 ? "" : ", " ).append( min[ i ] );
+			sb.append( ']' );
+		}
+		sb.append( '}' );
+		return sb.toString();
 	}
 }
