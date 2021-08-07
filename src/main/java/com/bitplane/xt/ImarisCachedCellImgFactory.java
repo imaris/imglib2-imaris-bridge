@@ -2,9 +2,10 @@ package com.bitplane.xt;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
-import bdv.util.AxisOrder;
 import com.bitplane.xt.util.CellGridUtils;
+import com.bitplane.xt.util.ImarisUtils;
 import com.bitplane.xt.util.MapDimensions;
+import com.bitplane.xt.util.TypeUtils;
 import net.imglib2.Dimensions;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;
@@ -435,7 +436,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		final int st = dimensions.length > 4 ? ( int ) dimensions[ 4 ] : 0;
 		final DatasetDimensions datasetDimensions = new DatasetDimensions( sx, sy, sz, sc, st );
 
-		return ImarisUtils.createDataset( imaris.getIApplicationPrx(), ImarisUtils.imarisTypeFor( type() ), datasetDimensions );
+		return ImarisUtils.createDataset( imaris.getIApplicationPrx(), TypeUtils.imarisTypeFor( type() ), datasetDimensions );
 	}
 
 	// -- deprecated API --

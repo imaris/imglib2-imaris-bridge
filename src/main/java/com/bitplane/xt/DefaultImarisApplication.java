@@ -3,6 +3,8 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IApplicationPrx;
 import Imaris.IDataSetPrx;
+import com.bitplane.xt.util.ImarisUtils;
+import com.bitplane.xt.util.TypeUtils;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imglib2.type.NativeType;
@@ -107,7 +109,7 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 		try
 		{
 			final DatasetDimensions dims = new DatasetDimensions( sx, sy, sz, sc, st );
-			final IDataSetPrx dataset = ImarisUtils.createDataset( iApplicationPrx, ImarisUtils.imarisTypeFor( type ), dims );
+			final IDataSetPrx dataset = ImarisUtils.createDataset( iApplicationPrx, TypeUtils.imarisTypeFor( type ), dims );
 			final boolean isEmptyDataset = true;
 			return new  ImarisDataset<>( dataset, dims, isEmptyDataset, options );
 		}

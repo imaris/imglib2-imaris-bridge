@@ -13,7 +13,7 @@ import static com.bitplane.xt.ImarisAxesOptions.Axis.C;
 import static com.bitplane.xt.ImarisAxesOptions.Axis.T;
 
 /**
- * Dimensions of an ImarisDataset.
+ * Dimensions of an {@code ImarisDataset}.
  * <p>
  * Stores the 5D {@link #getImarisDimensions() XYZCT dimensions} of the
  * underlying Imaris dataset, as well as the {@link #getMapDimensions() mapping}

@@ -1,12 +1,7 @@
-package com.bitplane.xt;
+package com.bitplane.xt.util;
 
-import Imaris.Error;
-import Imaris.IApplicationPrx;
-import Imaris.IDataSetPrx;
-import Imaris.IFactoryPrx;
 import Imaris.tType;
 import bdv.util.AxisOrder;
-import com.bitplane.xt.util.DatasetCalibration;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imagej.axis.Axes;
@@ -14,7 +9,6 @@ import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.LinearAxis;
 import net.imagej.space.CalibratedSpace;
-import net.imglib2.Dimensions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -25,10 +19,7 @@ import static Imaris.tType.eTypeFloat;
 import static Imaris.tType.eTypeUInt16;
 import static Imaris.tType.eTypeUInt8;
 
-/**
- * Helper functions mostly related to translating axes metadata.
- */
-public class ImarisUtils
+public final class AxisOrderUtils
 {
 	/**
 	 * Get the {@link AxisOrder} corresponding to {@code space}.
@@ -85,7 +76,6 @@ public class ImarisUtils
 	/**
 	 * Get XYZ calibration of {@code space} as {@code VoxelDimensions}.
 	 */
-	// TODO: remove?
 	public static VoxelDimensions getVoxelDimensions( final CalibratedSpace< ? > space ) throws IllegalArgumentException
 	{
 		String unit = null;
@@ -113,78 +103,5 @@ public class ImarisUtils
 		return new FinalVoxelDimensions( unit, dimensions );
 	}
 
-	/**
-	 * Get the Imaris {@code tType} corresponding to the given imglib2 {@code type}
-	 */
-	public static tType imarisTypeFor( final Object type )
-	{
-		if ( type instanceof UnsignedByteType )
-			return eTypeUInt8;
-		else if ( type instanceof UnsignedShortType )
-			return eTypeUInt16;
-		else if ( type instanceof FloatType )
-			return eTypeFloat;
-		else
-			throw new IllegalArgumentException( "Only UnsignedByteType, UnsignedShortType, FloatType are supported (not " + type.getClass().getSimpleName() + ")" );
-	}
-
-	/**
-	 * Get the ImgLib2 {@code Type} corresponding to the given Imaris {@code type}
-	 */
-	public static < T extends NativeType< T > & RealType< T > > T imglibTypeFor( final tType type )
-	{
-		switch ( type )
-		{
-		case eTypeUInt8:
-			return  ( T ) new UnsignedByteType();
-		case eTypeUInt16:
-			return ( T ) new UnsignedShortType();
-		case eTypeFloat:
-			return ( T ) new FloatType();
-		default:
-			throw new IllegalArgumentException();
-		}
-	}
-
-
-	/**
-	 * Create an Imaris dataset.
-	 */
-	public static IDataSetPrx createDataset(
-			final IApplicationPrx app,
-			final tType type,
-			final DatasetDimensions datasetDimensions ) throws Error
-	{
-		return createDataset( app, type, datasetDimensions.getImarisDimensions() );
-	}
-
-	/**
-	 * Create an Imaris dataset.
-	 */
-	// TODO: remove?
-	public static IDataSetPrx createDataset(
-			final IApplicationPrx app,
-			final tType type,
-			final int... dimensions ) throws Error
-	{
-		// Verify that numDimensions == 5, and each dimension >= 1.
-		Dimensions.verifyAllPositive( dimensions );
-		if ( dimensions.length != 5 )
-			throw new IllegalArgumentException( "exactly 5 dimensions expected" );
-		Dimensions.verifyAllPositive( dimensions );
-
-		// Create Imaris dataset
-		final IFactoryPrx factory = app.GetFactory();
-		final IDataSetPrx dataset = factory.CreateDataSet();
-
-		dataset.Create( type, dimensions[ 0 ], dimensions[ 1 ], dimensions[ 2 ], dimensions[ 3 ], dimensions[ 4 ] );
-		dataset.SetExtendMinX( 0 );
-		dataset.SetExtendMaxX( dimensions[ 0 ] );
-		dataset.SetExtendMinY( 0 );
-		dataset.SetExtendMaxY( dimensions[ 1 ] );
-		dataset.SetExtendMinZ( 0 );
-		dataset.SetExtendMaxZ( dimensions[ 2 ] );
-
-		return dataset;
-	}
+	private AxisOrderUtils() {}
 }

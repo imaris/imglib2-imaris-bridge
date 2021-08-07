@@ -8,6 +8,7 @@ import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import com.bitplane.xt.util.ColorTableUtils;
 import com.bitplane.xt.util.DatasetCalibration;
+import com.bitplane.xt.util.TypeUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -158,7 +159,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		// --------------------------------------------------------------------
 		// Create cached images.
 
-		final T type = ImarisUtils.imglibTypeFor( dataset.GetType() );
+		final T type = TypeUtils.imglibTypeFor( dataset.GetType() );
 		final SharedQueue queue = new SharedQueue( 16, numResolutions );
 		final CachedImagePyramid< T, V, A > imagePyramid = new CachedImagePyramid<>(
 				type, axisOrder, dataset,
