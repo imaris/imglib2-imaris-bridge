@@ -70,14 +70,13 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 	}
 
 	@Override
-	public ImarisDataset< ? > getImage( final int imageIndex )
+	public ImarisDataset< ? > getImage( final int imageIndex, final ImarisDatasetOptions options )
 	{
 		try
 		{
 			final IDataSetPrx datasetPrx = getIApplicationPrx().GetImage( imageIndex );
 			if ( datasetPrx == null )
 				return null;
-			final ImarisDatasetOptions options = ImarisDatasetOptions.options();
 			return new ImarisDataset<>( datasetPrx, options );
 		}
 		catch ( final Error error )
@@ -101,7 +100,9 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 
 	@Override
 	public < T extends NativeType< T > & RealType< T > >
-	ImarisDataset< T > createDataset( final T type, final int sx, final int sy, final int sz, final int sc, final int st )
+	ImarisDataset< T > createDataset( final T type,
+			final int sx, final int sy, final int sz, final int sc, final int st,
+			final ImarisDatasetOptions options )
 	{
 		try
 		{
@@ -109,7 +110,6 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 			final IDataSetPrx dataset = ImarisUtils.createDataset( iApplicationPrx, ImarisUtils.imarisTypeFor( type ), dims );
 			final boolean writable = true;
 			final boolean isEmptyDataset = true;
-			final ImarisDatasetOptions options = ImarisDatasetOptions.options();
 			return new  ImarisDataset<>( dataset, dims, writable, isEmptyDataset, options );
 		}
 		catch ( final Error error )

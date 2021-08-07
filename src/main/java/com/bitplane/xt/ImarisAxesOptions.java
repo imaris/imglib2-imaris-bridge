@@ -1,4 +1,4 @@
-/*
+/*-
  * #%L
  * ImgLib2: a general-purpose, multidimensional image processing library.
  * %%
@@ -33,80 +33,42 @@
  */
 package com.bitplane.xt;
 
-import java.util.Set;
 import java.util.function.BiConsumer;
-import net.imglib2.Dirty;
-import net.imglib2.cache.img.optional.AccessOptions;
-import net.imglib2.cache.img.optional.CacheOptions;
-import net.imglib2.cache.img.optional.CellDimensionsOptions;
-import net.imglib2.img.basictypeaccess.AccessFlags;
-import org.scijava.optional.AbstractOptions;
+import org.scijava.optional.Options;
+import org.scijava.optional.Values;
 
 /**
- * Optional parameters for constructing a {@link ImarisCachedCellImgFactory}.
- *
- * @author Tobias Pietzsch
+ * TODO
  */
-public class ImarisDatasetOptions extends AbstractOptions< ImarisDatasetOptions >
-		implements
-		CellDimensionsOptions< ImarisDatasetOptions >,
-		CacheOptions< ImarisDatasetOptions >,
-		ImarisCacheOptions< ImarisDatasetOptions >,
-		ImarisAxesOptions< ImarisDatasetOptions >
+public interface ImarisAxesOptions< T > extends Options< T >
 {
-	public final Values values = new Values();
-
-	public ImarisDatasetOptions()
+	enum Axis
 	{
+		X,Y,Z,C,T
 	}
 
 	/**
-	 * Create default {@link ImarisDatasetOptions}.
+	 * TODO
+	 *   explain that size=1 axes are usually stripped
 	 *
-	 * @return default {@link ImarisDatasetOptions}.
+	 * @param axes
+	 * 		the axes that should be included (at least) when mapping the Imaris dataset to ImgLib2 image.
 	 */
-	public static ImarisDatasetOptions options()
+	default T includeAxes( final Axis... axes )
 	{
-		return new ImarisDatasetOptions();
+		return setValue( "includeAxes", axes );
 	}
 
-	@Override
-	// TODO: Temporarily made public so that factories from labkit package can access it. Should these be more decoupled?
-	public ImarisDatasetOptions append( final ImarisDatasetOptions additionalOptions )
+	interface Val extends Values
 	{
-		return super.append( additionalOptions );
-	}
-
-	private ImarisDatasetOptions( final ImarisDatasetOptions that )
-	{
-		super( that );
-	}
-
-	@Override
-	protected ImarisDatasetOptions copyOrThis()
-	{
-		return new ImarisDatasetOptions( this );
-	}
-
-	public class Values extends AbstractValues implements
-			CellDimensionsOptions.Val,
-			CacheOptions.Val,
-			ImarisCacheOptions.Val,
-			ImarisAxesOptions.Val
-	{
-		// NB overrides default value
-		@Override
-		public int[] cellDimensions()
+		default void forEach( BiConsumer< String, Object > action )
 		{
-			return getValueOrDefault( "cellDimensions", null );
+			action.accept( "includeAxes", includeAxes() );
 		}
 
-		@Override
-		public void forEach( final BiConsumer< String, Object > action )
+		default Axis[] includeAxes()
 		{
-			CellDimensionsOptions.Val.super.forEach( action );
-			CacheOptions.Val.super.forEach( action );
-			ImarisCacheOptions.Val.super.forEach( action );
+			return getValueOrDefault( "includeAxes", new Axis[ 0 ] );
 		}
 	}
 }

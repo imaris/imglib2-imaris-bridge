@@ -86,7 +86,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset( final IDataSetPrx dataset, final ImarisDatasetOptions options ) throws Error
 	{
-		this( dataset, new DatasetDimensions( dataset ), false, false, options );
+		this( dataset, new DatasetDimensions( dataset, options.values.includeAxes() ), false, false, options );
 	}
 
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >

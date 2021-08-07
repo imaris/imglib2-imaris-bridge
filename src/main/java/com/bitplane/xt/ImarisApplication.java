@@ -31,7 +31,15 @@ public interface ImarisApplication
 	/**
 	 * Get the Imaris image at {@code imageIndex} as an {@code ImarisDataset}.
 	 */
-	ImarisDataset< ? > getImage( int imageIndex );
+	ImarisDataset< ? > getImage( int imageIndex, ImarisDatasetOptions options );
+
+	/**
+	 * Get the Imaris image at {@code imageIndex} as an {@code ImarisDataset}.
+	 */
+	default ImarisDataset< ? > getImage( int imageIndex )
+	{
+		return getImage( imageIndex, ImarisDatasetOptions.options() );
+	}
 
 	/**
 	 * Get the first Imaris image as an {@code ImarisDataset}.
@@ -40,6 +48,15 @@ public interface ImarisApplication
 	default ImarisDataset< ? > getDataset()
 	{
 		return getImage( 0 );
+	}
+
+	/**
+	 * Get the first Imaris image as an {@code ImarisDataset}.
+	 * Equivalent to {@link #getImage getImage(0)}.
+	 */
+	default ImarisDataset< ? > getDataset( ImarisDatasetOptions options )
+	{
+		return getImage( 0, options );
 	}
 
 	/**
@@ -60,10 +77,11 @@ public interface ImarisApplication
 	 * Create a new {@code ImarisDataset} of the specified {@code type} with the
 	 * specified dimensions.
 	 * <p>
-	 * Sizes {@code s≤0} indicate missing dimensions. For example,
-	 * {@code new createDataset(new UnsignedByteType(), 300, 200, 0, 0, 0)} creates a 2D {@code ImarisDataset}
-	 * with axes {@code [X,Y]}. The size along missing dimensions (Z, C, T in
-	 * this example) is set to {@code s=1} on the Imaris side.
+	 * Sizes {@code s≤0} indicate missing dimensions. For example, {@code
+	 * createDataset(new UnsignedByteType(), 300, 200, 0, 0, 0)} creates a 2D
+	 * {@code ImarisDataset} with axes {@code [X,Y]}. The size along missing
+	 * dimensions (Z, C, T in this example) is set to {@code s=1} on the Imaris
+	 * side.
 	 *
 	 * @param type
 	 * 		imglib2 pixel type. Must be one of {@code UnsignedByteType}, {@code UnsignedShortType}, or {@code FloatType}.
@@ -77,9 +95,20 @@ public interface ImarisApplication
 	 * 		size in C (channel) dimension
 	 * @param st
 	 * 		size in T (time) dimension
+	 * @param options
 	 */
 	< T extends NativeType< T > & RealType< T > >
-	ImarisDataset< T > createDataset( T type, final int sx, final int sy, final int sz, final int sc, final int st );
+	ImarisDataset< T > createDataset( T type, int sx, int sy, int sz, int sc, int st, ImarisDatasetOptions options );
+
+	/**
+	 * Calls {@link #createDataset(NativeType, int, int, int, int, int, ImarisDatasetOptions)} with default options.
+	 */
+	default < T extends NativeType< T > & RealType< T > >
+	ImarisDataset< T > createDataset( T type, int sx, int sy, int sz, int sc, int st )
+	{
+		return createDataset( type, sx, sy, sz, sc, st, ImarisDatasetOptions.options() );
+	}
+
 }
 
 
