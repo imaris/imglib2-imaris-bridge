@@ -61,6 +61,16 @@ public class ImarisDatasetOptions extends AbstractOptions< ImarisDatasetOptions 
 	}
 
 	/**
+	 * TODO
+	 *
+	 * default is writable image
+	 */
+	public ImarisDatasetOptions readOnly()
+	{
+		return setValue( "readOnly", true );
+	}
+
+	/**
 	 * Create default {@link ImarisDatasetOptions}.
 	 *
 	 * @return default {@link ImarisDatasetOptions}.
@@ -101,12 +111,19 @@ public class ImarisDatasetOptions extends AbstractOptions< ImarisDatasetOptions 
 			return getValueOrDefault( "cellDimensions", null );
 		}
 
+		public boolean readOnly()
+		{
+			return getValueOrDefault( "readOnly", false );
+		}
+
 		@Override
 		public void forEach( final BiConsumer< String, Object > action )
 		{
 			CellDimensionsOptions.Val.super.forEach( action );
 			CacheOptions.Val.super.forEach( action );
 			ImarisCacheOptions.Val.super.forEach( action );
+			ImarisAxesOptions.Val.super.forEach( action );
+			action.accept( "readOnly", readOnly() );
 		}
 	}
 }

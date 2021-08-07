@@ -59,6 +59,12 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	private final DatasetCalibration calib;
 
 	/**
+	 * Whether the dataset is writable. If the dataset is not writable,
+	 * modifying methods will throw an {@code UnsupportedOperationException}.
+	 */
+	private boolean writable;
+
+	/**
 	 * Non-volatile and volatile images for each resolution, backed by a joint cache which loads blocks from Imaris.
 	 */
 	private final CachedImagePyramid< T, ?, ? > imagePyramid;
@@ -86,21 +92,20 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset( final IDataSetPrx dataset, final ImarisDatasetOptions options ) throws Error
 	{
-		this( dataset, new DatasetDimensions( dataset, options.values.includeAxes() ), false, false, options );
+		this( dataset, new DatasetDimensions( dataset, options.values.includeAxes() ), false, options );
 	}
 
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset(
 			final IDataSetPrx dataset,
 			final DatasetDimensions datasetDimensions,
-			final boolean writable,
 			final boolean isEmptyDataset,
 			final ImarisDatasetOptions options ) throws Error
 	{
-
 		this.dataset = dataset;
 		this.calib = new DatasetCalibration( dataset );
 		this.datasetDimensions = datasetDimensions;
+		this.writable = !options.values.readOnly();
 
 		// --------------------------------------------------------------------
 		// Determine imglib2 dimensions/cellDimensions for all pyramid levels.
@@ -266,6 +271,11 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		}
 	}
 
+	private void ensureWritable()
+	{
+		if ( !writable )
+			throw new UnsupportedOperationException( "This dataset is not writable" );
+	}
 
 	/**
 	 * Sets unit, voxel size, and min coordinate from Imaris extends.
@@ -287,6 +297,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 			final float extendMinZ,
 			final float extendMaxZ ) throws Error // TODO: revise exception handling
 	{
+		ensureWritable();
 		calib.setExtends( unit, extendMinX, extendMaxX, extendMinY, extendMaxY, extendMinZ, extendMaxZ );
 		updateSourceCalibrations();
 		updateImpAxes();
@@ -299,6 +310,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	 */
 	public void setCalibration( final VoxelDimensions voxelDimensions ) throws Error
 	{
+		ensureWritable();
 		calib.setVoxelDimensions( voxelDimensions );
 		updateSourceCalibrations();
 		updateImpAxes();
@@ -320,6 +332,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 			final double minY,
 			final double minZ ) throws Error
 	{
+		ensureWritable();
 		calib.setMin( minX, minY, minZ );
 		calib.setVoxelDimensions( voxelDimensions );
 		updateSourceCalibrations();
@@ -458,6 +471,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	 */
 	public void persist()
 	{
+		ensureWritable();
 		this.imagePyramid.persist();
 	}
 

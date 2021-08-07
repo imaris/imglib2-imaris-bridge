@@ -108,9 +108,8 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 		{
 			final DatasetDimensions dims = new DatasetDimensions( sx, sy, sz, sc, st );
 			final IDataSetPrx dataset = ImarisUtils.createDataset( iApplicationPrx, ImarisUtils.imarisTypeFor( type ), dims );
-			final boolean writable = true;
 			final boolean isEmptyDataset = true;
-			return new  ImarisDataset<>( dataset, dims, writable, isEmptyDataset, options );
+			return new  ImarisDataset<>( dataset, dims, isEmptyDataset, options );
 		}
 		catch ( final Error error )
 		{
