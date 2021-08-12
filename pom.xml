@@ -7,18 +7,105 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>30.0.0</version>
+		<version>29.2.1</version>
 	</parent>
 
 	<groupId>com.bitplane</groupId>
 	<artifactId>imaris-bridge</artifactId>
-	<version>9.6.0-SNAPSHOT</version>
+	<version>9.6.0-SNAPSHOT</version> <!-- TODO: release version should be 9.7.2 -->
 
-	<dependencies>
+	<name>imaris-bridge</name>
+	<description>Expose the Imaris XT interface as an ImageJ2 service backed by ImgLib2.</description>
+	<url>https://github.com/imaris/imaris-bridge</url>
+	<inceptionYear>2019</inceptionYear>
+	<organization>
+		<name>Imaris</name>
+		<url>https://github.com/imaris/</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>Simplified BSD License</name>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<mailingLists>
+		<mailingList>
+			<name>Image.sc Forum</name>
+			<archive>https://forum.image.sc/</archive>
+		</mailingList>
+	</mailingLists>
+
+	<developers>
+		<developer>
+			<id>tpietzsch</id>
+			<name>Tobias Pietzsch</name>
+			<url>https://imagej.net/User:Pietzsch</url>
+			<roles>
+				<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+	</developers>
+	<contributors>
+		<!--
+		NB: Need at least one element to override the parent.
+		See: https://issues.apache.org/jira/browse/MNG-5220
+		-->
+		<contributor>
+			<name>None</name>
+		</contributor>
+	</contributors>
+
+	<scm>
+		<connection>scm:git:git://github.com/imaris/imaris-bridge</connection>
+		<developerConnection>scm:git:git@github.com:imaris/imaris-bridge</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/imaris/imaris-bridge</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/imaris/imaris-bridge/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>GitHub Actions</system>
+		<url>https://github.com/imaris/imaris-bridge/actions</url>
+	</ciManagement>
+
+	<repositories>
+		<repository>
+			<id>scijava.public</id>
+			<url>https://maven.scijava.org/content/groups/public</url>
+		</repository>
+	</repositories>
+
+	<properties>
+		<package.name>com.bitplane.xt</package.name>
+		<license.licenseName>bsd_2</license.licenseName>
+		<license.copyrightOwners>Bitplane AG</license.copyrightOwners>
+
+		<bigdataviewer-core.version>10.2.1</bigdataviewer-core.version>
+		<spim_data.version>2.2.6</spim_data.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
+		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
+		<imagej-common.version>0.34.1-SNAPSHOT</imagej-common.version>
+
+		<enforcer.skip>true</enforcer.skip> <!-- TODO remove -->
+
+		<!-- NB: Deploy releases to the SciJava Maven repository. -->
+		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
+	</properties>
+
+	<dependencies> <!-- TODO clean up -->
 		<dependency>
 			<groupId>com.bitplane</groupId>
 			<artifactId>imaris-lib</artifactId>
-			<version>9.6.0</version>
+			<version>9.7.2</version>
 		</dependency>
 
 		<dependency>
@@ -67,60 +154,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<properties>
-		<license.licenseName>commercial</license.licenseName>
-		<license.copyrightOwners>bitplane</license.copyrightOwners>
-
-		<bigdataviewer-core.version>10.2.1</bigdataviewer-core.version>
-		<spim_data.version>2.2.6</spim_data.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
-		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
-
-		<enforcer.skip>true</enforcer.skip>
-	</properties>
-
-	<repositories>
-		<repository>
-			<id>imagej.public</id>
-			<url>http://maven.imagej.net/content/groups/public</url>
-		</repository>
-	</repositories>
-
-	<name>imaris-bridge</name>
-	<description>none</description>
-	<url>none</url>
-	<inceptionYear>none</inceptionYear>
-	<organization>
-		<name>none</name>
-	</organization>
-	<licenses>
-		<license>
-			<name>none</name>
-		</license>
-	</licenses>
-	<mailingLists>
-		<mailingList>
-			<name>none</name>
-		</mailingList>
-	</mailingLists>
-	<scm>
-		<tag>none</tag>
-	</scm>
-	<issueManagement>
-		<system>none</system>
-	</issueManagement>
-	<ciManagement>
-		<system>none</system>
-	</ciManagement>
-	<developers>
-		<developer>
-			<id>tpietzsch</id>
-		</developer>
-	</developers>
-	<contributors>
-		<contributor>
-			<name>none</name>
-		</contributor>
-	</contributors>
 </project>
