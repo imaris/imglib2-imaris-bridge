@@ -342,6 +342,17 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	}
 
 	/**
+	 * Set the modification flag. Imaris asks whether to save a modified
+	 * dataset, if {@code modified=true}. Set {@code modified=false}, if you
+	 * want Imaris to terminate without prompting.
+	 */
+	public void setModified( final boolean modified ) throws Error
+	{
+		ensureWritable();
+		dataset.SetModified( modified );
+	}
+
+	/**
 	 * Get the full resolution image.
 	 * The image is a {@code CachedCellImg} which loads blocks from Imaris.
 	 */
