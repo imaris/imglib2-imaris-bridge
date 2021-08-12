@@ -49,27 +49,13 @@ public class ImarisDatasetOptions extends AbstractOptions< ImarisDatasetOptions 
 		CellDimensionsOptions< ImarisDatasetOptions >,
 		CacheOptions< ImarisDatasetOptions >,
 		ImarisCacheOptions< ImarisDatasetOptions >,
-		ImarisAxesOptions< ImarisDatasetOptions >
+		ImarisAxesOptions< ImarisDatasetOptions >,
+		ReadOnlyOptions< ImarisDatasetOptions >
 {
 	public final Values values = new Values();
 
 	public ImarisDatasetOptions()
 	{
-	}
-
-	/**
-	 * Open the dataset as read-only (vs modifiable).
-	 * <p>
-	 * Modifying methods like {@link ImarisDataset#setCalibration} will throw
-	 * {@code UnsupportedOperationException}. Changes to pixel values are
-	 * possible but will not be written back to Imaris and are forgotten when
-	 * the respective pixel is evicted from cache.
-	 * <p>
-	 * By default, all datasets are modifiable.
-	 */
-	public ImarisDatasetOptions readOnly()
-	{
-		return setValue( "readOnly", true );
 	}
 
 	/**
@@ -104,18 +90,14 @@ public class ImarisDatasetOptions extends AbstractOptions< ImarisDatasetOptions 
 			CellDimensionsOptions.Val,
 			CacheOptions.Val,
 			ImarisCacheOptions.Val,
-			ImarisAxesOptions.Val
+			ImarisAxesOptions.Val,
+			ReadOnlyOptions.Val
 	{
 		// NB overrides default value
 		@Override
 		public int[] cellDimensions()
 		{
 			return getValueOrDefault( "cellDimensions", null );
-		}
-
-		public boolean readOnly()
-		{
-			return getValueOrDefault( "readOnly", false );
 		}
 
 		@Override
@@ -125,7 +107,7 @@ public class ImarisDatasetOptions extends AbstractOptions< ImarisDatasetOptions 
 			CacheOptions.Val.super.forEach( action );
 			ImarisCacheOptions.Val.super.forEach( action );
 			ImarisAxesOptions.Val.super.forEach( action );
-			action.accept( "readOnly", readOnly() );
+			ReadOnlyOptions.Val.super.forEach( action );
 		}
 	}
 }
