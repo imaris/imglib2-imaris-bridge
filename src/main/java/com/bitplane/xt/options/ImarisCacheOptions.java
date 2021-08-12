@@ -33,7 +33,7 @@
  */
 package com.bitplane.xt.options;
 
-import com.bitplane.xt.ImarisImg;
+import com.bitplane.xt.img.ImarisImg;
 import com.bitplane.xt.img.ImarisCachedCellImg;
 import com.bitplane.xt.img.ImarisCachedCellImgFactory;
 import java.util.function.BiConsumer;

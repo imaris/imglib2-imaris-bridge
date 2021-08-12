@@ -1,7 +1,12 @@
-package com.bitplane.xt;
+package com.bitplane.xt.img;
 
 import Imaris.IDataSetPrx;
+import com.bitplane.xt.ImarisApplication;
 
+/**
+ * Implemented by the various ImarisCachedImgs. Provides access to the
+ * underlying ICE proxies.
+ */
 public interface ImarisImg
 {
 	/**
