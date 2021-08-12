@@ -33,21 +33,18 @@
  */
 package com.bitplane.xt.options;
 
+import com.bitplane.xt.ImarisImg;
 import com.bitplane.xt.img.ImarisCachedCellImg;
 import com.bitplane.xt.img.ImarisCachedCellImgFactory;
 import java.util.function.BiConsumer;
 import net.imglib2.cache.img.CellLoader;
 import org.scijava.optional.Options;
 import org.scijava.optional.Values;
+import com.bitplane.xt.ImarisDataset;
 
 /**
- * TODO
- * TODO
- * TODO
- * TODO
- * TODO
- * TODO
- * Optional arguments that specify the properties of {@link ImarisCachedCellImg}.
+ * Optional arguments that specify the cache behaviour of {@link
+ * ImarisCachedCellImg} or {@link ImarisDataset}.
  */
 public interface ImarisCacheOptions< T > extends Options< T >
 {
@@ -90,12 +87,10 @@ public interface ImarisCacheOptions< T > extends Options< T >
 	 * when they are next required.
 	 * <p>
 	 * This is {@code false} by default.
-	 * </p>
 	 * <p>
 	 * This option only has an effect for {@link ImarisCachedCellImg} that are
 	 * created with a {@link CellLoader}
 	 * ({@link ImarisCachedCellImgFactory#create(long[], CellLoader)}).
-	 * </p>
 	 *
 	 * @param initializeAsDirty
 	 *            whether cells initialized by a {@link CellLoader} should be
@@ -107,19 +102,28 @@ public interface ImarisCacheOptions< T > extends Options< T >
 	}
 
 	/**
-	 * TODO
-	 * TODO
-	 * TODO
-	 * TODO
-	 * TODO
-	 * TODO
-	 * TODO
-	 * TODO
+	 * Specify whether cells initialized by a {@link CellLoader} should be
+	 * immediately persisted to Imaris. It is useful to set this to {@code true}
+	 * for images that are lazily populated by a {@link CellLoader} representing
+	 * the result of some image processing operation. In this scenario, the image
+	 * is usually fully populated through the {@link CellLoader} by touching a
+	 * pixel in each cell, followed by {@link ImarisImg#persist() persisting} the
+	 * whole image to Imaris. It makes sense then, to immediately start writing
+	 * computed blocks to overlap computation and persisting.
+	 * <p>
+	 * This is {@code false} by default.
+	 * <p>
+	 * This option only has an effect for {@link ImarisCachedCellImg} that are
+	 * created with a {@link CellLoader}
+	 * ({@link ImarisCachedCellImgFactory#create(long[], CellLoader)}).
+	 * <p>
 	 * Note that it doesn't make much sense to use this with {@code
 	 * #initializeCellsAsDirty}: by definition newly initialized cells will by
 	 * clean because they are immediately persisted to backing storage.
 	 *
 	 * @param persistOnLoad
+	 * 		whether cells initialized by a {@link CellLoader} should be
+	 * 		immediately persisted to Imaris.
 	 */
 	default T persistOnLoad( final boolean persistOnLoad )
 	{

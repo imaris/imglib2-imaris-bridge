@@ -39,7 +39,8 @@ import org.scijava.optional.Options;
 import org.scijava.optional.Values;
 
 /**
- * TODO
+ * Specify whether {@link ImarisDataset} should be opened as read-only (vs
+ * modifiable).
  */
 public interface ReadOnlyOptions< T > extends Options< T >
 {

@@ -38,7 +38,8 @@ import org.scijava.optional.Options;
 import org.scijava.optional.Values;
 
 /**
- * TODO
+ * Option to specify which axes should be included (at least) when mapping an
+ * Imaris dataset to a ImgLib2 image.
  */
 public interface ImarisAxesOptions< T > extends Options< T >
 {
@@ -48,8 +49,22 @@ public interface ImarisAxesOptions< T > extends Options< T >
 	}
 
 	/**
-	 * TODO
-	 *   explain that size=1 axes are usually stripped
+	 * Specify which axes should be included (at least) when mapping an Imaris
+	 * dataset to a ImgLib2 image.
+	 * <p>
+	 * In Imaris, datasets are always 5D: for example, a 2D dataset (without channel
+	 * or time) is represented as 5D with {@code size=1} along Z, C, T axes. In
+	 * ImgLib2, there is a distinction between a 2D image and a 5D image with {@code
+	 * size=1} along the 3rd, 4th, and 5th dimension. Therefore, there are several
+	 * ways to represent such a dataset in ImgLib2.
+	 * <p>
+	 * By default, axes Z, C, and T are not represented in ImgLib2 if the
+	 * dataset size along those axes is {@code s=1}. By specifying these axes as
+	 * {@code includeAxes()} arguments, this can be overridden. For example, an
+	 * Imaris dataset with size {@code {100, 100, 1, 1, 1}} would be represented
+	 * as a 2D ImgLib2 image with size {@code {100, 100}}. Specifying {@code
+	 * includeAxes(Z, T)}, would result in a 4D ImgLib2 image with size {@code
+	 * {100,100,1,1}}.
 	 *
 	 * @param axes
 	 * 		the axes that should be included (at least) when mapping the Imaris dataset to ImgLib2 image.
