@@ -5,11 +5,11 @@ import com.bitplane.xt.ImarisService;
 import java.util.Arrays;
 import org.scijava.Context;
 
-import static com.bitplane.xt.ImarisAxesOptions.Axis.C;
-import static com.bitplane.xt.ImarisAxesOptions.Axis.T;
-import static com.bitplane.xt.ImarisAxesOptions.Axis.X;
-import static com.bitplane.xt.ImarisAxesOptions.Axis.Y;
-import static com.bitplane.xt.ImarisAxesOptions.Axis.Z;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.C;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.T;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.X;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.Y;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.Z;
 import static com.bitplane.xt.ImarisDatasetOptions.options;
 
 public class ExampleIncludeAxes

@@ -3,14 +3,14 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import bdv.util.AxisOrder;
-import com.bitplane.xt.ImarisAxesOptions.Axis;
+import com.bitplane.xt.options.ImarisAxesOptions.Axis;
 import com.bitplane.xt.util.MapDimensions;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.bitplane.xt.ImarisAxesOptions.Axis.Z;
-import static com.bitplane.xt.ImarisAxesOptions.Axis.C;
-import static com.bitplane.xt.ImarisAxesOptions.Axis.T;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.Z;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.C;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.T;
 
 /**
  * Dimensions of an {@code ImarisDataset}.

@@ -34,6 +34,9 @@
 package com.bitplane.xt;
 
 import com.bitplane.xt.img.ImarisCachedCellImgFactory;
+import com.bitplane.xt.options.ImarisAxesOptions;
+import com.bitplane.xt.options.ImarisCacheOptions;
+import com.bitplane.xt.options.ReadOnlyOptions;
 import java.util.function.BiConsumer;
 import net.imglib2.cache.img.optional.CacheOptions;
 import net.imglib2.cache.img.optional.CellDimensionsOptions;

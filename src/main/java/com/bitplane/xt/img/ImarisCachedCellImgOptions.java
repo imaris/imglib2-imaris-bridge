@@ -33,7 +33,7 @@
  */
 package com.bitplane.xt.img;
 
-import com.bitplane.xt.ImarisCacheOptions;
+import com.bitplane.xt.options.ImarisCacheOptions;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import net.imglib2.Dirty;

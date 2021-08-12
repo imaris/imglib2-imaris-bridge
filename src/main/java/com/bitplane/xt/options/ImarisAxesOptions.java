@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt;
+package com.bitplane.xt.options;
 
 import java.util.function.BiConsumer;
 import org.scijava.optional.Options;

@@ -31,8 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt;
+package com.bitplane.xt.options;
 
+import com.bitplane.xt.ImarisDataset;
 import java.util.function.BiConsumer;
 import org.scijava.optional.Options;
 import org.scijava.optional.Values;

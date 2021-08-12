@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt;
+package com.bitplane.xt.options;
 
 import com.bitplane.xt.img.ImarisCachedCellImg;
 import com.bitplane.xt.img.ImarisCachedCellImgFactory;
