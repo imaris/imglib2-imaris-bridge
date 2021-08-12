@@ -58,9 +58,14 @@ public class ImarisDatasetOptions extends AbstractOptions< ImarisDatasetOptions 
 	}
 
 	/**
-	 * TODO
-	 *
-	 * default is writable image
+	 * Open the dataset as read-only (vs modifiable).
+	 * <p>
+	 * Modifying methods like {@link ImarisDataset#setCalibration} will throw
+	 * {@code UnsupportedOperationException}. Changes to pixel values are
+	 * possible but will not be written back to Imaris and are forgotten when
+	 * the respective pixel is evicted from cache.
+	 * <p>
+	 * By default, all datasets are modifiable.
 	 */
 	public ImarisDatasetOptions readOnly()
 	{
