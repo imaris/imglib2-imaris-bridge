@@ -31,8 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt;
+package com.bitplane.xt.img;
 
+import com.bitplane.xt.ImarisCacheOptions;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import net.imglib2.Dirty;

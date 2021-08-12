@@ -31,9 +31,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt;
+package com.bitplane.xt.img;
 
 import Imaris.IDataSetPrx;
+import com.bitplane.xt.ImarisApplication;
+import com.bitplane.xt.ImarisImg;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.IoSync;
 import net.imglib2.cache.img.CachedCellImg;

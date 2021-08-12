@@ -33,13 +33,10 @@
  */
 package com.bitplane.xt;
 
-import java.util.Set;
+import com.bitplane.xt.img.ImarisCachedCellImgFactory;
 import java.util.function.BiConsumer;
-import net.imglib2.Dirty;
-import net.imglib2.cache.img.optional.AccessOptions;
 import net.imglib2.cache.img.optional.CacheOptions;
 import net.imglib2.cache.img.optional.CellDimensionsOptions;
-import net.imglib2.img.basictypeaccess.AccessFlags;
 import org.scijava.optional.AbstractOptions;
 
 /**

@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt.labkit;
+package com.bitplane.xt.img;
 
 import Imaris.IDataSetPrx;
 import com.bitplane.xt.ImarisApplication;
@@ -50,7 +50,12 @@ import net.imglib2.util.Fraction;
  * A {@link LazyCellImg} that creates empty Cells lazily when they are accessed
  * and sends (modified) Cells to Imaris when memory runs full.
  * <p>
- * Integer labels on the ImgLib2 side are translated into channels on the Imaris side.
+ * At each pixel the image is assumed to represent a probability distribution
+ * over channels. For storing to Imaris {@code IDataSetPrx} backing cache, the
+ * first channel ("background") is removed (only the other channels are stored).
+ * If the dataset has UINT8 or UINT16 type, the [0, 1] range is scaled to the
+ * [0, 2^8-1] or [0, 2^16-1], respectively. For loading data back from the cache
+ * this operation is reversed.
  *
  * @param <T>
  *            the pixel type
@@ -59,10 +64,10 @@ import net.imglib2.util.Fraction;
  *
  * @author Tobias Pietzsch
  */
-public class ImarisCachedLabelImg< T extends NativeType< T >, A > extends CachedCellImg< T, A >
+public class ImarisCachedProbabilitiesImg< T extends NativeType< T >, A > extends CachedCellImg< T, A >
 		implements ImarisImg
 {
-	private final ImarisCachedLabelImgFactory< T > factory;
+	private final ImarisCachedProbabilitiesImgFactory< T > factory;
 
 	private final IDataSetPrx dataset;
 
@@ -70,8 +75,8 @@ public class ImarisCachedLabelImg< T extends NativeType< T >, A > extends Cached
 
 	private final IoSync< ?, ?, ? > iosync;
 
-	public ImarisCachedLabelImg(
-			final ImarisCachedLabelImgFactory< T > factory,
+	public ImarisCachedProbabilitiesImg(
+			final ImarisCachedProbabilitiesImgFactory< T > factory,
 			final IDataSetPrx dataset,
 			final CellGrid grid,
 			final Fraction entitiesPerPixel,

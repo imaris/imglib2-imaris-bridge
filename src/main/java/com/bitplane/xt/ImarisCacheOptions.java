@@ -33,10 +33,10 @@
  */
 package com.bitplane.xt;
 
+import com.bitplane.xt.img.ImarisCachedCellImg;
+import com.bitplane.xt.img.ImarisCachedCellImgFactory;
 import java.util.function.BiConsumer;
 import net.imglib2.cache.img.CellLoader;
-import net.imglib2.cache.img.DiskCachedCellImg;
-import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import org.scijava.optional.Options;
 import org.scijava.optional.Values;
 

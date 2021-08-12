@@ -2,9 +2,9 @@ package tpietzsch;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
-import com.bitplane.xt.ImarisCachedCellImg;
-import com.bitplane.xt.ImarisCachedCellImgFactory;
-import com.bitplane.xt.ImarisCachedCellImgOptions;
+import com.bitplane.xt.img.ImarisCachedCellImg;
+import com.bitplane.xt.img.ImarisCachedCellImgFactory;
+import com.bitplane.xt.img.ImarisCachedCellImgOptions;
 import com.bitplane.xt.ImarisService;
 import ij.IJ;
 import ij.ImagePlus;

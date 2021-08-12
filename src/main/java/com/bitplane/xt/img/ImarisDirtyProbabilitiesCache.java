@@ -1,4 +1,4 @@
-package com.bitplane.xt.labkit;
+package com.bitplane.xt.img;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;

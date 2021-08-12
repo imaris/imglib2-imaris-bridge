@@ -1,11 +1,16 @@
-package com.bitplane.xt;
+package com.bitplane.xt.img;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
+import com.bitplane.xt.DatasetDimensions;
+import com.bitplane.xt.ImarisApplication;
+import com.bitplane.xt.ImarisDirtyLoaderRemover;
+import com.bitplane.xt.ImarisLoaderRemover;
 import com.bitplane.xt.util.CellGridUtils;
 import com.bitplane.xt.util.ImarisUtils;
 import com.bitplane.xt.util.MapDimensions;
 import com.bitplane.xt.util.TypeUtils;
+import java.util.Arrays;
 import net.imglib2.Dimensions;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;
@@ -365,6 +370,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 		final Fraction entitiesPerPixel = type.getEntitiesPerPixel();
 
 		final int[] cellDimensions = CellGridUtils.computeCellDimensions( dataset, invMapDimensions, options.cellDimensions() );
+		System.out.println( "cellDimensions = " + Arrays.toString( cellDimensions ) );
 		final CellGrid grid = CellGridUtils.createCellGrid( dimensions, cellDimensions, entitiesPerPixel );
 
 		@SuppressWarnings( "unchecked" )
