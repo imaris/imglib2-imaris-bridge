@@ -30,7 +30,7 @@ import net.imglib2.type.numeric.RealType;
  * <p>
  * The data is provided as
  * <ul>
- *     <li>an {@code Img} ({@link #getImage}),</li>
+ *     <li>an {@code Img} ({@link #getImg}),</li>
  *     <li>an {@code ImgPlus} with the correct metadata ({@link #getImgPlus}), and</li>
  *     <li>a list of {@code SourceAndConverter}, one for each channel, for display in BDV ({@link #getSources}).</li>
  * </ul>
@@ -175,7 +175,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		// --------------------------------------------------------------------
 		// Create ImgPlus with metadata and color tables.
 
-		final Img< T > img = getImage();
+		final Img< T > img = getImg();
 		imp = new ImgPlus<>( img );
 		imp.setName( getName() );
 		updateImpAxes();
@@ -354,15 +354,16 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 
 	/**
 	 * Get the full resolution image.
-	 * The image is a {@code CachedCellImg} which loads blocks from Imaris.
+	 * The image is a {@code CachedCellImg} which loads blocks from Imaris, and
+	 * writes modified blocks back to Imaris.
 	 */
-	public < A > Img< T > getImage() // TODO: rename to getImg()
+	public Img< T > getImg()
 	{
 		return imagePyramid.getImg( 0 );
 	}
 
 	/**
-	 * Get {@code ImgPlus} wrapping full resolution image (see {@link #getImage}).
+	 * Get {@code ImgPlus} wrapping full resolution image (see {@link #getImg}).
 	 * Metadata and color tables are set up according to Imaris
 	 * (at the time of construction of this {@code ImarisDataset}).
 	 */

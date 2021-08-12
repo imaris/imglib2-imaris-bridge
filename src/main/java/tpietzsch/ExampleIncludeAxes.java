@@ -1,9 +1,5 @@
 package tpietzsch;
 
-import Imaris.IDataSetPrx;
-import bdv.util.Bdv;
-import bdv.util.BdvFunctions;
-import bdv.util.BdvStackSource;
 import com.bitplane.xt.ImarisDataset;
 import com.bitplane.xt.ImarisService;
 import java.util.Arrays;
@@ -25,7 +21,7 @@ public class ExampleIncludeAxes
 		final ImarisDataset< ? > dataset = imaris.getApplication().getDataset( options()
 				.includeAxes( X, Y, Z, C, T ) );
 
-		System.out.println( "dataset.getImage().dimensionsAsLongArray() = " + Arrays.toString( dataset.getImage().dimensionsAsLongArray() ) );
+		System.out.println( "dataset.getImage().dimensionsAsLongArray() = " + Arrays.toString( dataset.getImg().dimensionsAsLongArray() ) );
 
 //		final BdvStackSource< ? > source = BdvFunctions.show( dataset.getSources(), dataset.numTimepoints(), Bdv.options() );
 //		source.getBdvHandle().getCacheControls().addCacheControl( dataset.getSharedQueue() );

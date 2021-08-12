@@ -35,7 +35,7 @@ public class ExampleBdvWritable
 		Thread.sleep( 3000 );
 
 		System.out.println( "type = " + dataset.getType().getClass() );
-		final Img< UnsignedByteType > img = ( Img< UnsignedByteType > ) dataset.getImage();
+		final Img< UnsignedByteType > img = ( Img< UnsignedByteType > ) dataset.getImg();
 		final long[] dims = img.dimensionsAsLongArray();
 		final long[] min = new long[ dims.length ];
 		final long[] max = new long[ dims.length ];
