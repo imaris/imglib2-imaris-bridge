@@ -180,6 +180,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		imp.setName( getName() );
 		updateImpAxes();
 		updateImpColorTables();
+		updateImpChannelMinMax();
 
 
 		// --------------------------------------------------------------------
@@ -216,6 +217,22 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 			final SourceAndConverter< V > vsoc = new SourceAndConverter<>( volatileSource, ColorTableUtils.createChannelConverterToARGB( volatileType, dataset, c ) );
 			final SourceAndConverter< T > soc = new SourceAndConverter<>( source, ColorTableUtils.createChannelConverterToARGB( type, dataset, c ), vsoc );
 			sources.add( soc );
+		}
+	}
+
+	/**
+	 * Transfer Imaris channel min/max settings to ImgPlus.
+	 */
+	private void updateImpChannelMinMax() throws Error
+	{
+		final int sc = datasetDimensions.getImarisDimensions()[ 3 ];
+		for ( int c = 0; c < sc; ++c )
+		{
+			final double min = dataset.GetChannelRangeMin( c );
+			final double max = dataset.GetChannelRangeMax( c );
+			System.out.println( String.format( "%d: %f, %f", c, min, max ) );
+			imp.setChannelMinimum( c, min );
+			imp.setChannelMaximum( c, max );
 		}
 	}
 
