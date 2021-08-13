@@ -1,4 +1,4 @@
-package tpietzsch;
+package com.bitplane.xt.tpietzsch;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
@@ -31,7 +31,7 @@ public class ExampleImarisCachedCellImg
 				Util.getTypeFromInterval( img ),
 				imaris.getApplication(),
 				ImarisCachedCellImgOptions.options()
-						.cellDimensions( 64 )
+//						.cellDimensions( 64 )
 						.numIoThreads( 20 ) );
 
 		final ImarisCachedCellImg< UnsignedByteType, ? > imarisImg = factory.create( img );

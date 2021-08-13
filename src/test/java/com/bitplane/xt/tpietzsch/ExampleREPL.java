@@ -1,4 +1,4 @@
-package tpietzsch;
+package com.bitplane.xt.tpietzsch;
 
 import Imaris.Error;
 import org.scijava.Context;

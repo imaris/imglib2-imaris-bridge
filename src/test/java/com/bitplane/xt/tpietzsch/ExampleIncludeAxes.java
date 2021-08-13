@@ -1,4 +1,4 @@
-package tpietzsch;
+package com.bitplane.xt.tpietzsch;
 
 import com.bitplane.xt.ImarisDataset;
 import com.bitplane.xt.ImarisService;

@@ -1,16 +1,13 @@
-package tpietzsch;
+package com.bitplane.xt.tpietzsch;
 
 import Imaris.Error;
-import Imaris.IDataSetPrx;
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvStackSource;
 import com.bitplane.xt.ImarisDataset;
 import com.bitplane.xt.ImarisService;
-import java.util.Arrays;
 import mpicbg.spim.data.sequence.FinalVoxelDimensions;
 import mpicbg.spim.data.sequence.VoxelDimensions;
-import net.imglib2.FinalInterval;
 import org.scijava.Context;
 
 public class ExampleSetCalibration
