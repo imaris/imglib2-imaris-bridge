@@ -19,11 +19,6 @@ public interface ImarisApplication
 	int getApplicationID();
 
 	/**
-	 * Get the current Imaris image as an ImageJ {@code net.imagej.Dataset}.
-	 */
-	Dataset getIJDataset();
-
-	/**
 	 * Get the number of images loaded in the application.
 	 */
 	int getNumberOfImages();

@@ -5,18 +5,12 @@ import Imaris.IApplicationPrx;
 import Imaris.IDataSetPrx;
 import com.bitplane.xt.util.ImarisUtils;
 import com.bitplane.xt.util.TypeUtils;
-import net.imagej.Dataset;
-import net.imagej.DatasetService;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import org.scijava.AbstractContextual;
-import org.scijava.plugin.Parameter;
 
 public class DefaultImarisApplication extends AbstractContextual implements ImarisApplication
 {
-	@Parameter
-	private DatasetService datasetService;
-
 	private IApplicationPrx iApplicationPrx;
 
 	private int applicationId;
@@ -42,23 +36,6 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 	}
 
 	@Override
-	public Dataset getIJDataset()
-	{
-		try
-		{
-			final ImarisDataset< ? > ds = getDataset();
-			final Dataset ijDataset = datasetService.create( ds.getImgPlus() );
-			ijDataset.setName( ds.getName() );
-			ijDataset.setRGBMerged( false );
-			return ijDataset;
-		}
-		catch ( final Error error )
-		{
-			throw new RuntimeException( error ); // TODO: revise exception handling
-		}
-	}
-
-	@Override
 	public	int getNumberOfImages()
 	{
 		try
@@ -79,7 +56,7 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 			final IDataSetPrx datasetPrx = getIApplicationPrx().GetImage( imageIndex );
 			if ( datasetPrx == null )
 				return null;
-			return new ImarisDataset<>( datasetPrx, options );
+			return new ImarisDataset<>( getContext(), datasetPrx, options );
 		}
 		catch ( final Error error )
 		{
@@ -111,7 +88,7 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 			final DatasetDimensions dims = new DatasetDimensions( sx, sy, sz, sc, st );
 			final IDataSetPrx dataset = ImarisUtils.createDataset( iApplicationPrx, TypeUtils.imarisTypeFor( type ), dims );
 			final boolean isEmptyDataset = true;
-			return new  ImarisDataset<>( dataset, dims, isEmptyDataset, options );
+			return new ImarisDataset<>( getContext(), dataset, dims, isEmptyDataset, options );
 		}
 		catch ( final Error error )
 		{

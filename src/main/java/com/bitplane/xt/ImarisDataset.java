@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import mpicbg.spim.data.sequence.VoxelDimensions;
+import net.imagej.Dataset;
+import net.imagej.DatasetService;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
@@ -24,6 +26,7 @@ import net.imglib2.img.basictypeaccess.volatiles.VolatileArrayDataAccess;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
+import org.scijava.Context;
 
 /**
  * Wraps Imaris {@code IDataSetPrx} into {@code CachedCellImg}s that are lazy-loaded.
@@ -42,6 +45,11 @@ import net.imglib2.type.numeric.RealType;
  */
 public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 {
+	/**
+	 * The scijava context. This is needed (only) for creating {@link #ijDataset}.
+	 */
+	private final Context context;
+
 	private final IDataSetPrx dataset;
 
 	/**
@@ -77,6 +85,11 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	private final ImgPlus< T > imp;
 
 	/**
+	 * IJ2 Dataset wrapping {@link #imp}. Lazily initialized.
+	 */
+	private Dataset ijDataset;
+
+	/**
 	 * List of sources, one for each channel of the dataset.
 	 * The sources provide nested volatile versions.
 	 */
@@ -84,25 +97,27 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 
 	// open existing
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
-	ImarisDataset( final IDataSetPrx dataset ) throws Error
+	ImarisDataset( final Context context, final IDataSetPrx dataset ) throws Error
 	{
-		this( dataset, ImarisDatasetOptions.options() );
+		this( context, dataset, ImarisDatasetOptions.options() );
 	}
 
 	// open existing
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
-	ImarisDataset( final IDataSetPrx dataset, final ImarisDatasetOptions options ) throws Error
+	ImarisDataset( final Context context, final IDataSetPrx dataset, final ImarisDatasetOptions options ) throws Error
 	{
-		this( dataset, new DatasetDimensions( dataset, options.values.includeAxes() ), false, options );
+		this( context, dataset, new DatasetDimensions( dataset, options.values.includeAxes() ), false, options );
 	}
 
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset(
+			final Context context,
 			final IDataSetPrx dataset,
 			final DatasetDimensions datasetDimensions,
 			final boolean isEmptyDataset,
 			final ImarisDatasetOptions options ) throws Error
 	{
+		this.context = context;
 		this.dataset = dataset;
 		this.calib = new DatasetCalibration( dataset );
 		this.datasetDimensions = datasetDimensions;
@@ -387,6 +402,27 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	public ImgPlus< T > getImgPlus()
 	{
 		return imp;
+	}
+
+	/**
+	 * Get IJ2 {@code net.imagej.Dataset} wrapping full resolution image (see
+	 * {@link #getImg}, {@link #getImgPlus()}). Metadata and color tables are
+	 * set up according to Imaris (at the time of construction of this {@code
+	 * ImarisDataset}).
+	 */
+	public Dataset getIJDataset()
+	{
+		synchronized ( imp )
+		{
+			if ( ijDataset == null )
+			{
+				final DatasetService datasetService = context.getService( DatasetService.class );
+				ijDataset = datasetService.create( imp );
+				ijDataset.setName( imp.getName() );
+				ijDataset.setRGBMerged( false );
+			}
+			return ijDataset;
+		}
 	}
 
 	/**

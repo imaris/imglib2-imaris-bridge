@@ -77,7 +77,7 @@ public class ExampleImgFactory
 //
 
 		app.SetImage( 0, dataset );
-		final ImarisDataset< ? > imarisDataset = new ImarisDataset<>( dataset );
+		final ImarisDataset< ? > imarisDataset = new ImarisDataset<>( null, dataset );
 		final BdvStackSource< ? > source = BdvFunctions.show( imarisDataset.getSources(), imarisDataset.numTimepoints(), Bdv.options() );
 		source.getBdvHandle().getCacheControls().addCacheControl( imarisDataset.getSharedQueue() );
 
