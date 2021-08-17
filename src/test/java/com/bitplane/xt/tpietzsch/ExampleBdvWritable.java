@@ -30,8 +30,7 @@ public class ExampleBdvWritable
 		System.out.println( "pyramidSizes = " + Arrays.deepToString( pyramidSizes ) );
 		System.out.println( "pyramidBlockSizes = " + Arrays.deepToString( pyramidBlockSizes ) );
 
-		final BdvStackSource< ? > source = BdvFunctions.show( dataset.getSources(), dataset.numTimepoints(), Bdv.options() );
-		source.getBdvHandle().getCacheControls().addCacheControl( dataset.getSharedQueue() );
+		final BdvStackSource< ? > source = BdvFunctions.show( dataset );
 		Thread.sleep( 3000 );
 
 		System.out.println( "type = " + dataset.getType().getClass() );

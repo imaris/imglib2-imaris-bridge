@@ -3,6 +3,7 @@ package com.bitplane.xt;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import bdv.util.AxisOrder;
+import bdv.util.ChannelSources;
 import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
@@ -43,7 +44,7 @@ import org.scijava.Context;
  * @param <T>
  * 		imglib2 pixel type
  */
-public class ImarisDataset< T extends NativeType< T > & RealType< T > >
+public class ImarisDataset< T extends NativeType< T > & RealType< T > > implements ChannelSources< T >
 {
 	/**
 	 * The scijava context. This is needed (only) for creating {@link #ijDataset}.
@@ -245,7 +246,6 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 		{
 			final double min = dataset.GetChannelRangeMin( c );
 			final double max = dataset.GetChannelRangeMax( c );
-			System.out.println( String.format( "%d: %f, %f", c, min, max ) );
 			imp.setChannelMinimum( c, min );
 			imp.setChannelMaximum( c, max );
 		}
@@ -430,9 +430,16 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	 * The sources provide nested volatile versions.
 	 * The sources are multi-resolution, reflecting the resolution pyramid of the Imaris dataset.
 	 */
+	@Override
 	public List< SourceAndConverter< T > > getSources()
 	{
 		return sources;
+	}
+
+	@Override
+	public SharedQueue getCacheControl()
+	{
+		return getSharedQueue();
 	}
 
 	/**
@@ -462,6 +469,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	/**
 	 * Get the number timepoints.
 	 */
+	@Override
 	public int numTimepoints()
 	{
 		return imagePyramid.numTimepoints();
@@ -470,6 +478,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > >
 	/**
 	 * Get an instance of the pixel type.
 	 */
+	@Override
 	public T getType()
 	{
 		return imagePyramid.getType();

@@ -28,8 +28,7 @@ public class ExampleSetCalibration
 				original.dimension( 1 ),
 				original.dimension( 2 ) * 1.2 );
 
-		final BdvStackSource< ? > source = BdvFunctions.show( dataset.getSources(), dataset.numTimepoints(), Bdv.options() );
-		source.getBdvHandle().getCacheControls().addCacheControl( dataset.getSharedQueue() );
+		final BdvStackSource< ? > source = BdvFunctions.show( dataset );
 
 		while( true )
 		{

@@ -91,7 +91,7 @@
 
 		<bigdataviewer-core.version>10.2.1</bigdataviewer-core.version>
 		<spim_data.version>2.2.6</spim_data.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-29-SNAPSHOT</bigdataviewer-vistools.version>
 		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
 		<imagej-common.version>0.34.1-SNAPSHOT</imagej-common.version>
 

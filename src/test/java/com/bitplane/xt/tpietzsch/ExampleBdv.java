@@ -1,6 +1,5 @@
 package com.bitplane.xt.tpietzsch;
 
-import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvStackSource;
 import com.bitplane.xt.ImarisDataset;
@@ -29,18 +28,7 @@ public class ExampleBdv
 
 		/*
 		 * Show the multiresolution version in BigDataViewer.
-		 * TODO:
-		 *   This should be easier!
-		 *   Add support to vistools to do this as just
-		 * 		BdvFunctions.show( dataset.asBdvSource() );
-		 *   or similar.
 		 */
-		final BdvStackSource< ? > source = BdvFunctions.show(
-				dataset.getSources(),
-				dataset.numTimepoints(),
-				Bdv.options() );
-
-		source.getBdvHandle().getCacheControls().addCacheControl(
-				dataset.getSharedQueue() );
+		final BdvStackSource< ? > source = BdvFunctions.show( dataset );
 	}
 }
