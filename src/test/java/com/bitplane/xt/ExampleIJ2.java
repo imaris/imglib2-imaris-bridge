@@ -1,10 +1,7 @@
-package com.bitplane.xt.tpietzsch;
-
-import com.bitplane.xt.ImarisDataset;
-import com.bitplane.xt.ImarisService;
-import net.imagej.ImageJ;
+package com.bitplane.xt;
 
 import Imaris.Error;
+import net.imagej.ImageJ;
 
 public class ExampleIJ2
 {
