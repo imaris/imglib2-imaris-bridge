@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -58,14 +58,16 @@ import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 
 /**
- * Wraps Imaris {@code IDataSetPrx} into {@code CachedCellImg}s that are lazy-loaded.
+ * {@code ImarisDataset} wraps an Imaris {@code IDataSetPrx} into a lazy-loaded ImgLib2 {@code CachedCellImg}.
  * <p>
  * The data is provided as
  * <ul>
- *     <li>an {@code Img} ({@link #getImg}),</li>
- *     <li>an {@code ImgPlus} with the correct metadata ({@link #getImgPlus}), and</li>
- *     <li>a list of {@code SourceAndConverter}, one for each channel, for display in BDV ({@link #getSources}).</li>
+ *     <li>an {@code Img}, via the {@link #asImg} method,</li>
+ *     <li>an {@code ImgPlus} with metadata, via the {@link #asImgPlus} method,</li>
+ *     <li>a {@code net.imagej.Dataset} with metadata, via the {@link #asDataset} method,</li>
+ *     <li>a list of BigDataViewer sources (one for each channel), via the {@link #getSources} method.</li>
  * </ul>
+ * <p>
  * All these are views on the same data, backed by a common cache.
  * The BDV sources are multi-resolution and have volatile versions.
  *
@@ -221,7 +223,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 		// --------------------------------------------------------------------
 		// Create ImgPlus with metadata and color tables.
 
-		final Img< T > img = getImg();
+		final Img< T > img = asImg();
 		imp = new ImgPlus<>( img );
 		imp.setName( getName() );
 		updateImpAxes();
@@ -368,7 +370,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * Set the voxel size and unit.
+	 * Set unit and voxel size.
 	 * (The min coordinate is not modified).
 	 */
 	public void setCalibration( final VoxelDimensions voxelDimensions ) throws Error
@@ -404,9 +406,11 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * Set the modification flag. Imaris asks whether to save a modified
-	 * dataset, if {@code modified=true}. Set {@code modified=false}, if you
-	 * want Imaris to terminate without prompting.
+	 * Set the modification flag of the Imaris dataset.
+	 * <p>
+	 * Imaris asks whether to save a modified dataset, if {@code modified=true}.
+	 * Set {@code modified=false}, if you want Imaris to terminate without
+	 * prompting.
 	 */
 	public void setModified( final boolean modified ) throws Error
 	{
@@ -419,28 +423,28 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	 * The image is a {@code CachedCellImg} which loads blocks from Imaris, and
 	 * writes modified blocks back to Imaris.
 	 */
-	public Img< T > getImg()
+	public Img< T > asImg()
 	{
 		return imagePyramid.getImg( 0 );
 	}
 
 	/**
-	 * Get {@code ImgPlus} wrapping full resolution image (see {@link #getImg}).
-	 * Metadata and color tables are set up according to Imaris
-	 * (at the time of construction of this {@code ImarisDataset}).
+	 * Get an {@code ImgPlus} wrapping the full resolution image (see {@link
+	 * #asImg}). Metadata and color tables are set up according to Imaris (at
+	 * the time of construction of this {@code ImarisDataset}).
 	 */
-	public ImgPlus< T > getImgPlus()
+	public ImgPlus< T > asImgPlus()
 	{
 		return imp;
 	}
 
 	/**
-	 * Get IJ2 {@code net.imagej.Dataset} wrapping full resolution image (see
-	 * {@link #getImg}, {@link #getImgPlus()}). Metadata and color tables are
+	 * Get a IJ2 {@code net.imagej.Dataset} wrapping the full resolution image
+	 * (see {@link #asImg}, {@link #asImgPlus()}). Metadata and color tables are
 	 * set up according to Imaris (at the time of construction of this {@code
 	 * ImarisDataset}).
 	 */
-	public Dataset getIJDataset()
+	public Dataset asDataset()
 	{
 		synchronized ( imp )
 		{
@@ -456,9 +460,10 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * Get the list of sources, one for each channel of the dataset.
-	 * The sources provide nested volatile versions.
-	 * The sources are multi-resolution, reflecting the resolution pyramid of the Imaris dataset.
+	 * Get a list of BigDataViewer sources, one for each channel of the dataset.
+	 * The sources provide nested volatile versions. The sources are
+	 * multi-resolution, reflecting the resolution pyramid of the Imaris
+	 * dataset.
 	 */
 	@Override
 	public List< SourceAndConverter< T > > getSources()
@@ -466,16 +471,11 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 		return sources;
 	}
 
-	@Override
-	public SharedQueue getCacheControl()
-	{
-		return getSharedQueue();
-	}
-
 	/**
 	 * Get the {@code SharedQueue} used for asynchronous loading of blocks from Imaris.
 	 */
-	public SharedQueue getSharedQueue()
+	@Override
+	public SharedQueue getCacheControl()
 	{
 		return imagePyramid.getSharedQueue();
 	}
@@ -545,7 +545,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * Get the "Image > Filename" parameter of the dataset.
+	 * Get the {@code "Image > Filename"} parameter of the dataset.
 	 */
 	public String getFilename() throws Error
 	{
@@ -553,7 +553,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * Get the "Image > Name" parameter of the dataset.
+	 * Get the {@code "Image > Name"} parameter of the dataset.
 	 */
 	public String getName() throws Error
 	{

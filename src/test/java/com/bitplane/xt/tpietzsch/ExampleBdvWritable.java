@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -30,7 +30,6 @@ package com.bitplane.xt.tpietzsch;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
-import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvStackSource;
 import com.bitplane.xt.ImarisDataset;
@@ -62,7 +61,7 @@ public class ExampleBdvWritable
 		Thread.sleep( 3000 );
 
 		System.out.println( "type = " + dataset.getType().getClass() );
-		final Img< UnsignedByteType > img = ( Img< UnsignedByteType > ) dataset.getImg();
+		final Img< UnsignedByteType > img = ( Img< UnsignedByteType > ) dataset.asImg();
 		final long[] dims = img.dimensionsAsLongArray();
 		final long[] min = new long[ dims.length ];
 		final long[] max = new long[ dims.length ];
