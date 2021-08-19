@@ -36,7 +36,6 @@ import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import com.bitplane.xt.util.ColorTableUtils;
-import com.bitplane.xt.util.DatasetCalibration;
 import com.bitplane.xt.util.TypeUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -364,10 +363,11 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 			final float extendMaxZ ) throws Error // TODO: revise exception handling
 	{
 		ensureWritable();
-		calib.setExtends( unit, extendMinX, extendMaxX, extendMinY, extendMaxY, extendMinZ, extendMaxZ );
+		final int[] size = datasetDimensions.getImarisDimensions();
+		calib.setExtends( unit, extendMinX, extendMaxX, extendMinY, extendMaxY, extendMinZ, extendMaxZ, size );
 		updateSourceCalibrations();
 		updateImpAxes();
-		calib.applyToDataset( dataset );
+		calib.applyToDataset( dataset, size );
 	}
 
 	/**
@@ -380,7 +380,8 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 		calib.setVoxelDimensions( voxelDimensions );
 		updateSourceCalibrations();
 		updateImpAxes();
-		calib.applyToDataset( dataset );
+		final int[] size = datasetDimensions.getImarisDimensions();
+		calib.applyToDataset( dataset, size );
 	}
 
 	/**
@@ -403,7 +404,28 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 		calib.setVoxelDimensions( voxelDimensions );
 		updateSourceCalibrations();
 		updateImpAxes();
-		calib.applyToDataset( dataset );
+		final int[] size = datasetDimensions.getImarisDimensions();
+		calib.applyToDataset( dataset, size );
+	}
+
+	/**
+	 * Sets unit, voxel size, and min coordinate.
+	 * <p>
+	 * Note, that the min coordinate is in ImgLib2 convention: It refers to the
+	 * voxel center. This is in contrast to Imaris conventions, where {@code
+	 * ExtendMinX, ExtendMinY, ExtendMinZ} indicate the min corner of the min voxel.
+	 * <p>
+	 * This method translates the given min coordinate (etc) to Imaris {@code
+	 * extendMin/Max} extents.
+	 */
+	public void setCalibration( final DatasetCalibration calibration ) throws Error
+	{
+		ensureWritable();
+		calib.set( calibration );
+		updateSourceCalibrations();
+		updateImpAxes();
+		final int[] size = datasetDimensions.getImarisDimensions();
+		calib.applyToDataset( dataset, size );
 	}
 
 	/**
@@ -518,11 +540,11 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * Get the physical calibration: size of voxel in X,Y,Z
+	 * Get the physical calibration: unit, voxel size, and min in XYZ.
 	 */
-	public VoxelDimensions getVoxelDimensions()
+	public DatasetCalibration getCalibration()
 	{
-		return calib.voxelDimensions();
+		return calib.copy();
 	}
 
 	/**

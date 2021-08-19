@@ -29,9 +29,7 @@
 package com.bitplane.xt;
 
 import bdv.viewer.Interpolation;
-import com.bitplane.xt.util.DatasetCalibration;
 import java.util.Arrays;
-import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.type.numeric.NumericType;

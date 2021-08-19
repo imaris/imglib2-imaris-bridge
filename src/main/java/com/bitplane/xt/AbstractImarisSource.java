@@ -30,7 +30,6 @@ package com.bitplane.xt;
 
 import bdv.util.DefaultInterpolators;
 import bdv.viewer.Source;
-import com.bitplane.xt.util.DatasetCalibration;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform3D;

@@ -29,13 +29,11 @@
 package com.bitplane.xt.tpietzsch;
 
 import Imaris.Error;
-import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvStackSource;
+import com.bitplane.xt.DatasetCalibration;
 import com.bitplane.xt.ImarisDataset;
 import com.bitplane.xt.ImarisService;
-import mpicbg.spim.data.sequence.FinalVoxelDimensions;
-import mpicbg.spim.data.sequence.VoxelDimensions;
 import org.scijava.Context;
 
 public class ExampleSetCalibration
@@ -46,15 +44,17 @@ public class ExampleSetCalibration
 		final ImarisService imaris = context.getService( ImarisService.class );
 		final ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
 
-		final VoxelDimensions voxelDimensions = dataset.getVoxelDimensions();
-		System.out.println( "dataset.getVoxelDimensions() = " + voxelDimensions );
+		final DatasetCalibration original = dataset.getCalibration();
+		System.out.println( "dataset.getCalibration() = " + original );
 
-		final VoxelDimensions original = new FinalVoxelDimensions( dataset.getVoxelDimensions() );
-		final VoxelDimensions stretched = new FinalVoxelDimensions(
+		final DatasetCalibration stretched = new DatasetCalibration(
 				original.unit(),
-				original.dimension( 0 ),
-				original.dimension( 1 ),
-				original.dimension( 2 ) * 1.2 );
+				original.voxelSize( 0 ),
+				original.voxelSize( 1 ),
+				original.voxelSize( 2 ) * 1.2,
+				original.min( 0 ),
+				original.min( 1 ),
+				original.min( 2 ) );
 
 		final BdvStackSource< ? > source = BdvFunctions.show( dataset );
 
