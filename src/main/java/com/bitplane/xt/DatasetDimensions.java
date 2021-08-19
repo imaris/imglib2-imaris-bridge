@@ -207,4 +207,119 @@ public final class DatasetDimensions
 	{
 		return axisOrder;
 	}
+
+	/**
+	 * Get the index of the X dimension in the ImgLib2 representation.
+	 * (This is always {@code 0}.)
+	 */
+	public int dimX()
+	{
+		return mapDimensions[ 0 ];
+	}
+
+	/**
+	 * Returns the size along X.
+	 */
+	public int sizeX()
+	{
+		return imarisDimensions[ 0 ];
+	}
+
+	/**
+	 * Get the index of the Y dimension in the ImgLib2 representation.
+	 * (This is always {@code 1}.)
+	 */
+	public int dimY()
+	{
+		return mapDimensions[ 1 ];
+	}
+
+	/**
+	 * Returns the size along Y.
+	 */
+	public int sizeY()
+	{
+		return imarisDimensions[ 1 ];
+	}
+
+	/**
+	 * Returns {@code true} if the ImgLib2 representation has a Z dimension.
+	 */
+	public boolean hasZ()
+	{
+		return dimZ() >= 0;
+	}
+
+	/**
+	 * Get the index of the Z dimension in the ImgLib2 representation.
+	 *
+	 * @return the index of the Z dimension, or -1 if the ImgLib2 representation doesn't have Z
+	 */
+	public int dimZ()
+	{
+		return mapDimensions[ 2 ];
+	}
+
+	/**
+	 * Returns the size along Z.
+	 * If the ImgLib2 representation does not have a Z dimension, returns {@code 1}.
+	 */
+	public int sizeZ()
+	{
+		return imarisDimensions[ 2 ];
+	}
+
+	/**
+	 * Returns {@code true} if the ImgLib2 representation has a channel dimension.
+	 */
+	public boolean hasC()
+	{
+		return dimC() >= 0;
+	}
+
+	/**
+	 * Get the index of the channel dimension in the ImgLib2 representation.
+	 *
+	 * @return the index of the channel dimension, or -1 if the ImgLib2 representation doesn't have channels
+	 */
+	public int dimC()
+	{
+		return mapDimensions[ 3 ];
+	}
+
+	/**
+	 * Returns the number of channels.
+	 * If the ImgLib2 representation does not have channels, returns {@code 1}.
+	 */
+	public int sizeC()
+	{
+		return imarisDimensions[ 3 ];
+	}
+
+	/**
+	 * Returns {@code true} if the ImgLib2 representation has a time dimension.
+	 */
+	public boolean hasT()
+	{
+		return dimT() >= 0;
+	}
+
+	/**
+	 * Get the index of the time dimension in the ImgLib2 representation.
+	 *
+	 * @return the index of the time dimension, or -1 if the ImgLib2 representation doesn't have a time dimension.
+	 */
+	public int dimT()
+	{
+		return mapDimensions[ 4 ];
+	}
+
+	/**
+	 * Returns the number of timepoints.
+	 * If the ImgLib2 representation does not have timepoints, return {@code 1}.
+	 */
+	public int sizeT()
+	{
+		return imarisDimensions[ 4 ];
+	}
 }

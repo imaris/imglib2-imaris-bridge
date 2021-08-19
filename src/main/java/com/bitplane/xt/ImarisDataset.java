@@ -310,11 +310,12 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 		final ArrayList< CalibratedAxis > axes = new ArrayList<>();
 		axes.add( new DefaultLinearAxis( Axes.X, calib.unit(), calib.voxelSize( 0 ) ) );
 		axes.add( new DefaultLinearAxis( Axes.Y, calib.unit(), calib.voxelSize( 1 ) ) );
-		if ( axisOrder().hasZ() )
+		final AxisOrder axisOrder = datasetDimensions.getAxisOrder();
+		if ( axisOrder.hasZ() )
 			axes.add( new DefaultLinearAxis( Axes.Z, calib.unit(), calib.voxelSize( 2 ) ) );
-		if ( axisOrder().hasChannels() )
+		if ( axisOrder.hasChannels() )
 			axes.add( new DefaultLinearAxis( Axes.CHANNEL ) );
-		if ( axisOrder().hasTimepoints() )
+		if ( axisOrder.hasTimepoints() )
 			axes.add( new DefaultLinearAxis( Axes.TIME ) );
 
 		for ( int i = 0; i < axes.size(); ++i )
@@ -343,9 +344,9 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * Sets unit, voxel size, and min coordinate from Imaris extends.
+	 * Sets unit, voxel size, and min coordinate from Imaris extents.
 	 * <p>
-	 * Note, that the given min/max extends are in Imaris conventions: {@code
+	 * Note, that the given min/max extents are in Imaris conventions: {@code
 	 * extendMinX} refers to the min corner of the min voxel of the dataset,
 	 * {@code extendMaxX} refers to the max corner of the max voxel of the
 	 * dataset.
@@ -390,7 +391,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	 * ExtendMinX, ExtendMinY, ExtendMinZ} indicate the min corner of the min voxel.
 	 * <p>
 	 * This method translates the given min coordinate (etc) to Imaris {@code
-	 * extendMin/Max} extends.
+	 * extendMin/Max} extents.
 	 */
 	public void setCalibration( final VoxelDimensions voxelDimensions,
 			final double minX,
@@ -489,14 +490,6 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * Get the number channels.
-	 */
-	public int numChannels()
-	{
-		return imagePyramid.numChannels();
-	}
-
-	/**
 	 * Get the number timepoints.
 	 */
 	@Override
@@ -515,14 +508,13 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * Get the axis order of this dataset.
-	 *
-	 * Note that Dimensions of size 1 are stripped from the dataset.
-	 * So a single-channel, single-timepoint image might have axis order {@code XYZ}.
+	 * Get the size of the underlying
+	 * 5D Imaris dataset and the mapping to dimensions of the ImgLib2
+	 * representation.
 	 */
-	public AxisOrder axisOrder()
+	public DatasetDimensions getDatasetDimensions()
 	{
-		return imagePyramid.axisOrder();
+		return datasetDimensions;
 	}
 
 	/**
