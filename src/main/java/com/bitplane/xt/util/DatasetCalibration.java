@@ -40,7 +40,7 @@ import mpicbg.spim.data.sequence.VoxelDimensions;
  * voxel center. This is in contrast to Imaris conventions, where {@code
  * ExtendMinX, ExtendMinY, ExtendMinZ} indicate the min corner of the min voxel.
  * <p>
- * When reading/writing extends from/to a {@code IDataSetPrx}, the min is
+ * When reading/writing extents from/to a {@code IDataSetPrx}, the min is
  * translated appropriately from/to Imaris conventions.
  *
  * @author Tobias Pietzsch
@@ -108,7 +108,7 @@ public final class DatasetCalibration
 	}
 
 	/**
-	 * Construct from the size and extends of {@code dataset}.
+	 * Construct from the size and extents of {@code dataset}.
 	 */
 	public DatasetCalibration( final IDataSetPrx dataset ) throws Error
 	{
@@ -156,9 +156,9 @@ public final class DatasetCalibration
 	}
 
 	/**
-	 * Sets unit, voxel size, and min coordinate from Imaris extends.
+	 * Sets unit, voxel size, and min coordinate from Imaris extents.
 	 * <p>
-	 * Note, that the given min/max extends are in Imaris conventions:
+	 * Note, that the given min/max extents are in Imaris conventions:
 	 * {@code extendMinX} refers to the min corner of the min voxel of the dataset,
 	 * {@code extendMaxX} refers to the max corner of the max voxel of the dataset.
 	 * <p>
@@ -240,14 +240,6 @@ public final class DatasetCalibration
 	public double min( final int d )
 	{
 		return min[ d ];
-	}
-
-	/**
-	 * Get size of a voxel in dimension {@code d}.
-	 */
-	public int size( final int d )
-	{
-		return size[ d ];
 	}
 
 	@Override
