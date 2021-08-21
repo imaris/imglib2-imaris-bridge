@@ -116,9 +116,17 @@ public class DefaultImarisApplication extends AbstractContextual implements Imar
 			final int sx, final int sy, final int sz, final int sc, final int st,
 			final ImarisDatasetOptions options )
 	{
+		return createDataset( type, new DatasetDimensions( sx, sy, sz, sc, st ), options );
+	}
+
+	@Override
+	public < T extends NativeType< T > & RealType< T > >
+	ImarisDataset< T > createDataset( final T type,
+			final DatasetDimensions dims,
+			final ImarisDatasetOptions options )
+	{
 		try
 		{
-			final DatasetDimensions dims = new DatasetDimensions( sx, sy, sz, sc, st );
 			final IDataSetPrx dataset = ImarisUtils.createDataset( iApplicationPrx, TypeUtils.imarisTypeFor( type ), dims );
 			final boolean isEmptyDataset = true;
 			return new ImarisDataset<>( getContext(), dataset, dims, isEmptyDataset, options );

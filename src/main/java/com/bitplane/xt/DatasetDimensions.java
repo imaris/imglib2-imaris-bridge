@@ -322,4 +322,23 @@ public final class DatasetDimensions
 	{
 		return imarisDimensions[ 4 ];
 	}
+
+	@Override
+	public String toString()
+	{
+		final StringBuffer sb = new StringBuffer( "DatasetDimensions{" );
+		sb.append( "imarisDimensions=" );
+		sb.append( '[' );
+		for ( int i = 0; i < imarisDimensions.length; ++i )
+			sb.append( i == 0 ? "" : ", " ).append( imarisDimensions[ i ] );
+		sb.append( ']' );
+		sb.append( ", mapDimensions=" );
+		sb.append( '[' );
+		for ( int i = 0; i < mapDimensions.length; ++i )
+			sb.append( i == 0 ? "" : ", " ).append( mapDimensions[ i ] );
+		sb.append( ']' );
+		sb.append( ", axisOrder=" ).append( axisOrder );
+		sb.append( '}' );
+		return sb.toString();
+	}
 }

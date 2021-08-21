@@ -57,18 +57,33 @@ import net.imglib2.type.numeric.RealType;
 import org.scijava.Context;
 
 /**
- * {@code ImarisDataset} wraps an Imaris {@code IDataSetPrx} into a lazy-loaded ImgLib2 {@code CachedCellImg}.
+ * {@code ImarisDataset} wraps an Imaris {@code IDataSetPrx} into a lazy-loaded
+ * ImgLib2 {@code CachedCellImg}.
  * <p>
- * The data is provided as
+ * Data is lazy-loaded from Imaris -- image blocks, when they are first
+ * accessed, are retrieved through the Imaris XT API and cached. Modified image
+ * blocks are persisted back to Imaris before they are evicted from the cache.
+ * (Imaris then in turn persists modified blocks to disk when they are evicted
+ * from its cache.)
+ * <p>
+ * {@code ImarisDataset} provides various views on the image data:
  * <ul>
  *     <li>an {@code Img}, via the {@link #asImg} method,</li>
  *     <li>an {@code ImgPlus} with metadata, via the {@link #asImgPlus} method,</li>
  *     <li>a {@code net.imagej.Dataset} with metadata, via the {@link #asDataset} method,</li>
- *     <li>a list of BigDataViewer sources (one for each channel), via the {@link #getSources} method.</li>
+ *     <li>a list of BigDataViewer sources (one for each channel), via the
+ *         {@link #getSources} method. The sources are multi-resolution and have
+ *         volatile versions for non-blocking display in BDV.</li>
  * </ul>
  * <p>
- * All these are views on the same data, backed by a common cache.
- * The BDV sources are multi-resolution and have volatile versions.
+ * All these are views on the same data, backed by a common cache. Note, that
+ * only the last one exposes the Imaris resolution pyramid. The {@code Img},
+ * {@code ImgPlus}, and {@code net.imagej.Dataset} views represent the
+ * full-resolution image.
+ * <p>
+ * The generic pixel type {@code T} is one of {@code UnsignedByteType}, {@code
+ * UnsignedShortType}, {@code FloatType}, and matches the type of the Imaris
+ * dataset.
  *
  * @param <T>
  * 		imglib2 pixel type
@@ -128,20 +143,40 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	private final List< SourceAndConverter< T > > sources;
 
 	// open existing
+
+	/**
+	 * Wrap an existing {@code IDataSetPrx}.
+	 *
+	 * @param context
+	 * 		a SciJava context. This is only required, if used as a {@link
+	 * 		#asDataset() net.imagej.Dataset}, otherwise can be {@code null}.
+	 * @param dataset
+	 * 		the Imaris dataset to wrap
+	 */
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset( final Context context, final IDataSetPrx dataset ) throws Error
 	{
 		this( context, dataset, ImarisDatasetOptions.options() );
 	}
 
-	// open existing
+	/**
+	 * Wrap an existing {@code IDataSetPrx}.
+	 *
+	 * @param context
+	 * 		a SciJava context. This is only required, if used as a {@link
+	 * 		#asDataset() net.imagej.Dataset}, otherwise can be {@code null}.
+	 * @param dataset
+	 * 		the Imaris dataset to wrap
+	 * @param options
+	 * 		additional options specifying which type of cache to use, etc.
+	 */
 	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset( final Context context, final IDataSetPrx dataset, final ImarisDatasetOptions options ) throws Error
 	{
 		this( context, dataset, new DatasetDimensions( dataset, options.values.includeAxes() ), false, options );
 	}
 
-	public < V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
+	< V extends Volatile< T > & NativeType< V > & RealType< V >, A extends VolatileArrayDataAccess< A > >
 	ImarisDataset(
 			final Context context,
 			final IDataSetPrx dataset,

@@ -33,7 +33,8 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
 /**
- * TODO
+ * {@code ImarisApplication} wraps {@code IApplicationPrx} and represents one
+ * particular Imaris instance.
  *
  * @author Tobias Pietzsch
  */
@@ -133,6 +134,21 @@ public interface ImarisApplication
 	ImarisDataset< T > createDataset( T type, int sx, int sy, int sz, int sc, int st )
 	{
 		return createDataset( type, sx, sy, sz, sc, st, ImarisDatasetOptions.options() );
+	}
+
+	/**
+	 * TODO
+	 */
+	< T extends NativeType< T > & RealType< T > >
+	ImarisDataset< T > createDataset( T type, DatasetDimensions size, ImarisDatasetOptions options );
+
+	/**
+	 * TODO
+	 */
+	default < T extends NativeType< T > & RealType< T > >
+	ImarisDataset< T > createDataset( T type, DatasetDimensions size )
+	{
+		return createDataset( type, size, ImarisDatasetOptions.options() );
 	}
 
 }

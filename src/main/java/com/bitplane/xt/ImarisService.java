@@ -29,14 +29,15 @@
 package com.bitplane.xt;
 
 import java.util.List;
-import org.scijava.service.SciJavaService;
+import net.imagej.ImageJService;
 
 /**
- * TODO
+ * {@code ImarisService} connects to the Imaris XT API, providing access to the
+ * running Imaris instance(s).
  *
  * @author Tobias Pietzsch
  */
-public interface ImarisService extends SciJavaService
+public interface ImarisService extends ImageJService
 {
 	/**
 	 * Get list of all running Imaris instances.

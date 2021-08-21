@@ -6,7 +6,8 @@ import java.util.Arrays;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 
 /**
- * Calibration (voxel size and unit) and min coordinate for a Imaris dataset.
+ * Calibration (voxel size and unit) and min coordinate for an {@code
+ * ImarisDataset}.
  * <p>
  * Note, that the min coordinate is in ImgLib2 convention: It refers to the
  * voxel center. This is in contrast to Imaris conventions, where {@code
