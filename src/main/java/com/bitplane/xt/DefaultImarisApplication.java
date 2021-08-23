@@ -38,7 +38,8 @@ import net.imglib2.type.numeric.RealType;
 import org.scijava.AbstractContextual;
 
 /**
- * TODO
+ * Default implementation of {@code ImarisApplication}, which  wraps {@code
+ * IApplicationPrx} and represents one particular Imaris instance.
  *
  * @author Tobias Pietzsch
  */

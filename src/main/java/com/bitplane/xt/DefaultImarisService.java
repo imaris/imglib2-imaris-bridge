@@ -46,7 +46,8 @@ import org.scijava.service.Service;
 import static Imaris.IApplicationPrxHelper.checkedCast;
 
 /**
- * TODO
+ * Default implementation of {@code ImarisService} for connecting to the Imaris
+ * XT API, and providing access to the running Imaris instance(s).
  *
  * @author Tobias Pietzsch
  */

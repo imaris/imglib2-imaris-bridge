@@ -287,10 +287,41 @@ min coordinates refer to voxel centers. `ImarisDataset` translates this to/from
 Imaris convention when talking to Imaris XT.
 
 #### Specifying additional ImarisDataset options
+Methods for
+[getting](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#getDataset-com.bitplane.xt.ImarisDatasetOptions-)
+or
+[creating](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#createDataset-T-int-int-int-int-int-com.bitplane.xt.ImarisDatasetOptions-)
+Imaris datasets take an optional `ImarisDatasetOptions` argument.
+[ImarisDatasetOptions](http://0.0.0.0:8080/com/bitplane/xt/ImarisDatasetOptions.html)
+is a builder-like class that allows to configure additional details about how
+the dataset should be wrapped.
 
-CONTINUE_HERE
+In particular, you can specify that certain axes must be included in the ImgLib2
+representation (as discussed above).
 
-***TODO*** 
+Besides that, you can also configure
+* which type of cache to use,
+* which cell size (blocks that are read and sent from/to Imaris as a whole) to use,
+* whether a dataset is used read-only (this potentially saves a bit of performance because the logic for tracking modified blocks is not necssary),
+* how many worker threads write blocks back to Imaris,
+
+but usually it should be fine to just go with the defaults.
+For details, please refer to the [ImarisDatasetOptions javadoc](http://0.0.0.0:8080/com/bitplane/xt/ImarisDatasetOptions.html).
+
+As an example, this is how you would get the current dataset with
+* axes XYZ and T present in the ImgLib2 representation,
+* using a size-bounded LRU cell cache with 128 entries,
+* using a queue of 16 blocks to send back to Imaris and 8 threads serving that queue:
+```java
+ImarisDataset<?> dataset = app.getDataset(ImarisDatasetOptions.options()
+        .includeAxes(X, Y, Z, T)
+        .cacheType(BOUNDED)
+        .maxCacheSize(128)
+        .maxIoQueueSize(16)
+        .numIoThreads(8));
+```
+
+#### Modifying datasets and sending changes to Imaris
 
 --------------
 
@@ -307,80 +338,8 @@ ui.show(dataset)
 ```
 (Make sure you have Imaris running and a dataset opened.)
 
-### Java
+### Java IJ2 plugin 
+
+### Java stand-alone 
 Here is a stand-alone Java application that you can run from an IDE.
 
-***TODO: Put on github***
-
-```java
-TODO
-TODO
-TODO
-TODO
-```
-
-
-
-In an 
-### another one with BigDataViewer?
-
-
-
-### Scripting
-
-In Fiji: Press `[` to open script editor.
-
-
-Use this flag to tell IJ1 compat layer whether to show channels or ARGB:
-`dataset.setRGBMerged(false);`
-
-
-## API in more detail
-
-The gateway into the Iamris-Bridge API is `ImarisService`. ***TODO: link to javadoc***
-You can 
- 		 * Show the multiresolution version in BigDataViewer.
- 		 * TODO:
- 		 *   This should be easier!
- 		 *   Add support to vistools to do this as just
- 		 * 		BdvFunctions.show( dataset.asBdvSource() );
- 		 *   or similar.
-
-
-
-
-## Implementation Notes
-
-ImarisDataset
-
-
-
-ImarisUtils
-    helper functions to translate metadata
-
-AbstractImarisSource implements Source
-ImarisSource3D extends AbstractImarisSource 
-ImarisSource4D extends AbstractImarisSource
-    nothing to do with Imaris actually
-
-
-ImagePyramid<T,V>
-  is implemented by 
-DefaultImagePyramid<T,V>
-  and
-CachedImagePyramid<T,V>
-
-
-
-CachedImagePyramid<T,V>
-[ ] queue and backingCache should be configurable
-
-ImarisDataset.PixelSource< A > volatileArraySource
-
-
-[ ] investigate:
-    create new imaris dataset
-    get block sizes from imaris
-		final int[][] pyramidSizes = dataset.GetPyramidSizes();
-		final int[][] pyramidBlockSizes = dataset.GetPyramidBlockSizes();
-		final int numResolutions = pyramidSizes.length;
