@@ -32,13 +32,15 @@ import com.bitplane.xt.img.ImarisCachedCellImgFactory;
 import com.bitplane.xt.options.ImarisAxesOptions;
 import com.bitplane.xt.options.ImarisCacheOptions;
 import com.bitplane.xt.options.ReadOnlyOptions;
+import java.lang.ref.SoftReference;
 import java.util.function.BiConsumer;
 import net.imglib2.cache.img.optional.CacheOptions;
 import net.imglib2.cache.img.optional.CellDimensionsOptions;
 import org.scijava.optional.AbstractOptions;
 
 /**
- * Optional parameters for constructing a {@link ImarisCachedCellImgFactory}.
+ * Optional parameters for creating {@link ImarisDataset}.
+ * This allows to tweak details about the cache, etc.
  *
  * @author Tobias Pietzsch
  */
@@ -57,6 +59,107 @@ public class ImarisDatasetOptions extends AbstractOptions< ImarisDatasetOptions 
 	}
 
 	/**
+	 * Override the dimensions of a cell.
+	 * <p>
+	 * By default, the block dimensions of the Imaris dataset are used.
+	 * <p>
+	 * The argument is extended or truncated as necessary. For example if {@code
+	 * cellDimensions=[64,32]} then for creating a 3D image it will be augmented
+	 * to {@code [64,32,32]}. For creating a 1D image it will be truncated to
+	 * {@code [64]}.
+	 *
+	 * @param cellDimensions
+	 *            dimensions of a cell.
+	 */
+	@Override
+	public ImarisDatasetOptions cellDimensions( final int... cellDimensions )
+	{
+		return CellDimensionsOptions.super.cellDimensions( cellDimensions );
+	}
+
+	// TODO: why is {@inheritDoc} not working here?
+	/**
+	 * Which in-memory cache type to use. The options are
+	 * <ul>
+	 * <li>{@link CacheType#SOFTREF SOFTREF}: The cache keeps SoftReferences to
+	 * values (cells), basically relying on GC for removal. The advantage of
+	 * this is that many caches can be created without needing to put a limit on
+	 * the size of any of them. GC will take care of balancing that. The
+	 * downside is that {@link OutOfMemoryError} may occur because
+	 * {@link SoftReference}s are cleared too slow. SoftReferences are not
+	 * collected for a certain time after they have been used. If there is heavy
+	 * thrashing with cells being constantly swapped in and out from disk then
+	 * OutOfMemory may happen because of this. This sounds worse than it is in
+	 * practice and should only happen in pathological situations. Tuning the
+	 * {@code -XX:SoftRefLRUPolicyMSPerMB} JVM flag does often help.</li>
+	 * <li>{@link CacheType#BOUNDED BOUNDED}: The cache keeps strong references
+	 * to a limited number of values (cells). The advantage is that there is
+	 * never OutOfMemory because of the issues described above (fingers
+	 * crossed). The downside is that the number of cells that should be cached
+	 * needs to be specified beforehand. So {@link OutOfMemoryError} may occur
+	 * if many caches are opened and consume too much memory in total.</li>
+	 * </ul>
+	 *
+	 * @param cacheType
+	 *            which cache type to use (default is {@code SOFTREF}).
+	 */
+	@Override
+	public ImarisDatasetOptions cacheType( final CacheType cacheType )
+	{
+		return CacheOptions.super.cacheType( cacheType );
+	}
+
+	// TODO: why is {@inheritDoc} not working here?
+	/**
+	 * Set the maximum number of values (cells) to keep in the cache. This is
+	 * only used if {@link #cacheType(CacheType)} is {@link CacheType#BOUNDED}.
+	 *
+	 * @param maxCacheSize
+	 *            maximum number of values in the cache (default is 1000).
+	 */
+	@Override
+	public ImarisDatasetOptions maxCacheSize( final long maxCacheSize )
+	{
+		return CacheOptions.super.maxCacheSize( maxCacheSize );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ImarisDatasetOptions numIoThreads( final int numIoThreads )
+	{
+		return ImarisCacheOptions.super.numIoThreads( numIoThreads );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ImarisDatasetOptions maxIoQueueSize( final int maxIoQueueSize )
+	{
+		return ImarisCacheOptions.super.maxIoQueueSize( maxIoQueueSize );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ImarisDatasetOptions includeAxes( final Axis... axes )
+	{
+		return ImarisAxesOptions.super.includeAxes( axes );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ImarisDatasetOptions readOnly()
+	{
+		return ReadOnlyOptions.super.readOnly();
+	}
+
+	/**
 	 * Create default {@link ImarisDatasetOptions}.
 	 *
 	 * @return default {@link ImarisDatasetOptions}.
@@ -64,13 +167,6 @@ public class ImarisDatasetOptions extends AbstractOptions< ImarisDatasetOptions 
 	public static ImarisDatasetOptions options()
 	{
 		return new ImarisDatasetOptions();
-	}
-
-	@Override
-	// TODO: Temporarily made public so that factories from labkit package can access it. Should these be more decoupled?
-	public ImarisDatasetOptions append( final ImarisDatasetOptions additionalOptions )
-	{
-		return super.append( additionalOptions );
 	}
 
 	private ImarisDatasetOptions( final ImarisDatasetOptions that )
