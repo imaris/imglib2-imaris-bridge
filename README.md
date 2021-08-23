@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Imaris-Bridge is exposes Imaris datasets as cached ImgLib2 images. The focus is
+Imaris-Bridge exposes Imaris datasets as cached ImgLib2 images. We focus
 in particular on big (larger-than-RAM) images, for which both Imaris and ImgLib2
 provide sophisticated caching infrastructure. On the ImgLib2 side, the images
 are represented as lazily cached tiled images -- image blocks, when they are
