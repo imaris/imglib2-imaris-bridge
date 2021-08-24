@@ -4,8 +4,8 @@
 
 ## Introduction
 
-Imaris-Bridge provides arbitrarily large images, that are shared between Imaris
-and Fiji/ImageJ2 without duplicating memory requirements.
+Imaris-Bridge provides arbitrarily large images that are shared between Imaris
+and Fiji/ImageJ2, without duplicating memory requirements.
 We focus on big (larger-than-RAM) images, for which both Imaris and ImgLib2
 provide sophisticated caching infrastructure.
 On the ImgLib2 side, we represent Imaris datasets as lazily cached tiled images -- image blocks, when they are
@@ -98,10 +98,10 @@ For developers, the Maven GAV is
 ### Connecting to Imaris
 
 To start, you need an instance of
-[`ImarisService`](http://0.0.0.0:8080/com/bitplane/xt/ImarisService.html).
+[ImarisService](http://0.0.0.0:8080/com/bitplane/xt/ImarisService.html).
 `ImarisService` connects to the Imaris XT API, giving you access to the running
 Imaris instance(s)
-([`ImarisApplication`](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html)).
+([ImarisApplication](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html)).
 
 
 #### Getting ImarisService
@@ -121,7 +121,7 @@ Similarly, if you are running from a script, put an annotated variable
 ```
 
 If you are running a stand-alone java application, create a SciJava
-[`Context`](https://javadoc.scijava.org/SciJava/org/scijava/Context.html)
+[Context](https://javadoc.scijava.org/SciJava/org/scijava/Context.html)
 and ask for the `ImarisService`
 ```java
 Context context = new Context();
@@ -138,9 +138,9 @@ ImarisApplication app = imaris.getApplication();
 
 For advanced scenarios, where there are multiple running Imaris instances at the
 same time, you can get a list of them using
-[`ImarisService.getApplications()`](http://0.0.0.0:8080/com/bitplane/xt/ImarisService.html#getApplications--),
+[ImarisService.getApplications()](http://0.0.0.0:8080/com/bitplane/xt/ImarisService.html#getApplications--),
 or get a specific instance by 
-[`ImarisService.getApplicationByID()`](http://0.0.0.0:8080/com/bitplane/xt/ImarisService.html#getApplicationByID-int-),
+[ImarisService.getApplicationByID()](http://0.0.0.0:8080/com/bitplane/xt/ImarisService.html#getApplicationByID-int-),
 
 
 
