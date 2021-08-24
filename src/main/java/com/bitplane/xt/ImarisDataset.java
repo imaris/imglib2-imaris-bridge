@@ -618,10 +618,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * TODO
-	 *
-	 * Persist changes back to Imaris.
-	 * Note that only the full resolution (level 0) image is writable!
+	 * Persist all modifications back to Imaris.
 	 */
 	public void persist()
 	{
@@ -630,9 +627,21 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	}
 
 	/**
-	 * TODO
+	 * Invalidate cache for all levels of the resolution pyramid, except the
+	 * full resolution. This is necessary when modifying a dataset and at the
+	 * same time visualizing it in BigDataViewer. (This scenario is not very
+	 * likely in practice, but still...)
+	 * <p>
+	 * While actual modifications to the full-resolution image are immediately
+	 * visible, updating the resolution pyramid needs to go through Imaris. That
+	 * is, after making modifications, first {@link #persist()} should be called
+	 * to ensure all changes have been transferred to Imaris. Second, the
+	 * dataset should be visible in Imaris, so that Imaris recomputes the
+	 * resolution pyramid. Finally, the lower-resolution images on the ImgLib2
+	 * side should be invalidated (using this method), so the recomputed pyramid
+	 * data is fetched from Imaris.
 	 */
-	public void invalidatePyramid() // TODO: rename!?
+	public void invalidatePyramid()
 	{
 		this.imagePyramid.invalidate();
 	}

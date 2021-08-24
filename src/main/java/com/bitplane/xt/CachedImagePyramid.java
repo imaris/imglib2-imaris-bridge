@@ -320,13 +320,16 @@ class CachedImagePyramid< T extends NativeType< T > & RealType< T >, V extends V
 	}
 
 	/**
-	 * TODO
+	 * Invalidate cache for all levels of the resolution pyramid, except the full resolution.
+	 * This is necessary when modifying a dataset and at the same time visualizing it in BigDataViewer.
+	 * (This scenario is not very likely in practice, but still...)
+	 * While actual modifications to the full-resolution image are immediately visible, updating the resolution pyramid needs to go through Imaris.
 	 */
 	public void invalidate() // TODO: rename!?
 	{
 		// TODO: from level 0 or 1?
 		//       or should we have both?
-		for ( int i = 0; i < vimgs.length; i++ )
+		for ( int i = 1; i < vimgs.length; i++ )
 			vimgs[ i ].getCache().invalidateAll();
 	}
 

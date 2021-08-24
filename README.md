@@ -4,20 +4,21 @@
 
 ## Introduction
 
-Imaris-Bridge exposes Imaris datasets as cached ImgLib2 images. We focus
-in particular on big (larger-than-RAM) images, for which both Imaris and ImgLib2
-provide sophisticated caching infrastructure. On the ImgLib2 side, the images
-are represented as lazily cached tiled images -- image blocks, when they are
+Imaris-Bridge provides arbitrarily large images, that are shared between Imaris
+and Fiji/ImageJ2 without duplicating memory requirements.
+We focus on big (larger-than-RAM) images, for which both Imaris and ImgLib2
+provide sophisticated caching infrastructure.
+On the ImgLib2 side, we represent Imaris datasets as lazily cached tiled images -- image blocks, when they are
 first accessed, are retrieved from Imaris through the [*Imaris
 XT*](https://imaris.oxinst.com/open/) API and cached.
-Modified image blocks are persisted back to Imaris before they are evicted from
+Importantly, these images are both readable and writable.
+Modified blocks are persisted back to Imaris before they are evicted from
 the cache. (Imaris then in turn persists modified blocks to disk when they are
-evicted from *its* cache). Therefore, Imaris-Bridge provides arbitrarily large,
-readable and writable images, that are transparently cached, and shared between
-Imaris and Fiji/ImageJ2 without duplicating memory requirements.
+evicted from *its* cache).
 
-Imaris-Bridge exposes the [*Imaris XT*](https://imaris.oxinst.com/open/)
-interface as an [ImageJ2 Service](https://javadoc.scijava.org/ImageJ/net/imagej/ImageJService.html?is-external=true).
+Technically, Imaris-Bridge exposes the [*Imaris XT*](https://imaris.oxinst.com/open/)
+interface as an [ImageJ2 Service](https://javadoc.scijava.org/ImageJ/net/imagej/ImageJService.html?is-external=true),
+providing easy access to running Imaris applications and opened datasets.
 Note, that this service only covers parts of Imaris XT that are relevant for
 image data. (Of course, the ImarisService provides full access to the underlying
 Imaris XT proxies. But only the image-related subset is wrapped in a "imglibby"
@@ -322,6 +323,27 @@ ImarisDataset<?> dataset = app.getDataset(ImarisDatasetOptions.options()
 ```
 
 #### Modifying datasets and sending changes to Imaris
+`ImarisDataset` is writable (unless is was constructed with the `readOnly()` option).
+The pixels of the full-resolution image, can be accessed and modified through the
+[ImarisDataset.asImg()](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html#asImg--) view, for example.
+The coarser levels of the resolution pyramid *cannot be written directly*.
+Instead, the resolution pyramid is computed internally by Imaris from the full-resolution image.
+
+When pixels are modified, the changes are not immediately visible in Imaris.
+Changes are batched into blocks corresponding to cells in the `CachedCellImg` representation.
+When a pixel in a cell is written, the cell is not transferred immediately
+because more changes in the same cell are to be expected, and it would be very
+inefficient to transfer the same block many times over, for each one-pixel
+modification. Instead, the block is merely marked modified and transferred only
+later, when it is evicted from the cache.
+
+This means, that it can take a long time for changes to "naturally" show up in Imaris.
+In fact, some changes might *never* show up, if for example Fiji or Imaris is quit before
+the cache eviction happens.
+Therefore, after you are done writing a `ImarisDataset`, you should explicitly persist all changes to Imaris
+using [ImarisDataset.persist()](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html#persist--).
+The `persist()` method blocks until all current changes have been made visible to Imaris.
+There should be no concurrent modifications made to the `ImarisDataset`, while `persist()` is running.  
 
 --------------
 
