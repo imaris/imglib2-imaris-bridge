@@ -351,7 +351,7 @@ modification. Instead, the block is merely marked modified and transferred only
 later, when it is evicted from the cache.
 
 This means, that it can take a long time for changes to "naturally" show up in Imaris.
-In fact, some changes might *never* show up, if for example Fiji or Imaris is quit before
+In fact, some changes might *never* show up if, for example, Fiji or Imaris are quit before
 the cache eviction happens.
 Therefore, after you are done writing a `ImarisDataset`, you should explicitly persist all changes to Imaris
 using [`ImarisDataset.persist()`](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html#persist--).
