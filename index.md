@@ -1,7 +1,5 @@
 # Imaris-Bridge
 
-
-
 ## Introduction
 
 Imaris-Bridge provides arbitrarily large images that are shared between Imaris
@@ -72,7 +70,7 @@ To show the sources in BigDataViewer, type `bdv.util.BdvFunctions.show(dataset)`
 bdv.util.BdvStackSource@17add147
 ```
 
-![image info](./quickstart800.png)
+![Screenshot quickstart in script interpreter](img/quickstart800.png)
 
 
 
@@ -98,10 +96,11 @@ For developers, the Maven GAV is
 ### Connecting to Imaris
 
 To start, you need an instance of
-[ImarisService](http://0.0.0.0:8080/com/bitplane/xt/ImarisService.html).
-`ImarisService` connects to the Imaris XT API, giving you access to the running
-Imaris instance(s)
-([ImarisApplication](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html)).
+[`ImarisService`](apidocs/com/bitplane/xt/ImarisService.html).
+[`ImarisService`](apidocs/com/bitplane/xt/ImarisService.html)
+connects to the Imaris XT API, giving you access to the running Imaris
+instance(s)
+([`ImarisApplication`](apidocs/com/bitplane/xt/ImarisApplication.html)).
 
 
 #### Getting ImarisService
@@ -121,7 +120,7 @@ Similarly, if you are running from a script, put an annotated variable
 ```
 
 If you are running a stand-alone java application, create a SciJava
-[Context](https://javadoc.scijava.org/SciJava/org/scijava/Context.html)
+[`Context`](https://javadoc.scijava.org/SciJava/org/scijava/Context.html)
 and ask for the `ImarisService`
 ```java
 Context context = new Context();
@@ -131,6 +130,7 @@ ImarisService imaris = context.getService(ImarisService.class);
 
 #### Getting ImarisApplication
 From the `ImarisService` you can get a handle to the running Imaris instance using
+[`ImarisService.getApplication()`](apidocs/com/bitplane/xt/ImarisService.html#getApplication--)
 ```java
 ImarisService imaris;
 ImarisApplication app = imaris.getApplication();
@@ -138,21 +138,22 @@ ImarisApplication app = imaris.getApplication();
 
 For advanced scenarios, where there are multiple running Imaris instances at the
 same time, you can get a list of them using
-[ImarisService.getApplications()](http://0.0.0.0:8080/com/bitplane/xt/ImarisService.html#getApplications--),
+[`ImarisService.getApplications()`](apidocs/com/bitplane/xt/ImarisService.html#getApplications--),
 or get a specific instance by 
-[ImarisService.getApplicationByID()](http://0.0.0.0:8080/com/bitplane/xt/ImarisService.html#getApplicationByID-int-),
+[`ImarisService.getApplicationByID()`](apidocs/com/bitplane/xt/ImarisService.html#getApplicationByID-int-),
 
 
 
 
 
 ### ImarisApplication API
-[ImarisApplication](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html)
+[`ImarisApplication`](apidocs/com/bitplane/xt/ImarisApplication.html)
 wraps Imaris XT `IApplicationPrx` and represents one particular Imaris instance.
 
-`ImarisApplication` comprises methods that mirror methods of the Imaris XT
-`IApplicationPrx` proxy, for creating/getting/showing datasets. You can also use
-[ImarisApplication.getIApplicationPrx()](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#getIApplicationPrx--)
+[`ImarisApplication`](apidocs/com/bitplane/xt/ImarisApplication.html)
+comprises methods that mirror methods of the Imaris XT `IApplicationPrx` proxy,
+for creating/getting/showing datasets. You can also use
+[`ImarisApplication.getIApplicationPrx()`](apidocs/com/bitplane/xt/ImarisApplication.html#getIApplicationPrx--)
 to access the underlying Imaris XT proxy for accessing functionality not covered
 by Imaris-Bridge (either directly or through
 [*EasyXT*](https://github.com/BIOP/EasyXT-FIJI)).
@@ -161,36 +162,40 @@ by Imaris-Bridge (either directly or through
 #### Getting an existing dataset
 
 Use
-[ImarisApplication.getNumberOfImages()](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#getNumberOfImages--)
+[`ImarisApplication.getNumberOfImages()`](apidocs/com/bitplane/xt/ImarisApplication.html#getNumberOfImages--)
 to get the number of images currently loaded in the Imaris application.
 
 Then, use
-[ImarisApplication.getImage(imageIndex)](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#getImage-int-)
+[`ImarisApplication.getImage(imageIndex)`](apidocs/com/bitplane/xt/ImarisApplication.html#getImage-int-)
 to get the Imaris image at a particular index (and wrap it as an `ImarisDataset`).
 
 Or use
-[ImarisApplication.getDataset()](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#getDataset--)
+[`ImarisApplication.getDataset()`](apidocs/com/bitplane/xt/ImarisApplication.html#getDataset--)
 as a shortcut to get the first image (and wrap it as an `ImarisDataset`).
 
 
 #### Creating a new dataset
 
 Use
-[ImarisApplication.createDataset(...)](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#createDataset-T-int-int-int-int-int-)
-to create a new Imaris dataset (and wrap it as an `ImarisDataset`).
-There are some intricacies related to mapping between Imaris and ImgLib2 data types and dimensionality, which are discussed below.
-`ImarisDataset` are by default writable: You can use them for computation results that are communicated back to Imaris.
-Newly create datasets are not immediately visible in Imaris. You have to use the following methods to make them visible. 
+[`ImarisApplication.createDataset(...)`](apidocs/com/bitplane/xt/ImarisApplication.html#createDataset-T-int-int-int-int-int-)
+to create a new Imaris dataset (and wrap it as an
+[`ImarisDataset`](apidocs/com/bitplane/xt/ImarisDataset.html)).
+There are some intricacies related to mapping between Imaris and ImgLib2 data
+types and dimensionality, which are discussed below.
+[`ImarisDataset`](apidocs/com/bitplane/xt/ImarisDataset.html) are by
+default writable: You can use them for computation results that are communicated
+back to Imaris. Newly create datasets are not immediately visible in Imaris. You
+have to use the following methods to make them visible.
 
 
-#### Showing a dataset
+#### Showing a dataset in Imaris
 
 To make a dataset visible in Imaris, you have to call
-[ImarisApplication.setImage(imageIndex, dataset)](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#setImage-int-com.bitplane.xt.ImarisDataset-)
+[`ImarisApplication.setImage(imageIndex, dataset)`](apidocs/com/bitplane/xt/ImarisApplication.html#setImage-int-com.bitplane.xt.ImarisDataset-)
 This will set the visible image at index `imageIndex` in the Surpass view to `dataset` (there can be multiple images visible at the same time).
 
 Or use
-[ImarisApplication.setDataset(dataset)](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#setDataset-com.bitplane.xt.ImarisDataset-)
+[`ImarisApplication.setDataset(dataset)`](apidocs/com/bitplane/xt/ImarisApplication.html#setDataset-com.bitplane.xt.ImarisDataset-)
 as a shortcut to set the image at index 0.
 
 
@@ -199,35 +204,37 @@ as a shortcut to set the image at index 0.
 
 ### ImarisDataset API
 
-[ImarisDataset](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html) wraps `IDataSetPrx` and represents an Imaris dataset.
-This is where the meat of Imaris-Bridge is. The Imaris dataset is wrapped into
-an ImgLib2 `CachedCellImg` that is both readable and writable. Data is
-lazy-loaded from Imaris -- image blocks, when they are first accessed, are
-retrieved through the Imaris XT API and cached. Modified image blocks are
-persisted back to Imaris before they are evicted from the cache. (Imaris then in
-turn persists modified blocks to disk when they are evicted from its cache.)
+[`ImarisDataset`](apidocs/com/bitplane/xt/ImarisDataset.html) wraps
+`IDataSetPrx` and represents an Imaris dataset. This is where the meat of
+Imaris-Bridge is. The Imaris dataset is wrapped into an ImgLib2 `CachedCellImg`
+that is both readable and writable. Data is lazy-loaded from Imaris -- image
+blocks, when they are first accessed, are retrieved through the Imaris XT API
+and cached. Modified image blocks are persisted back to Imaris before they are
+evicted from the cache. (Imaris then in turn persists modified blocks to disk
+when they are evicted from its cache.)
 
-ImarisDataset provides various views on the image data, that are useful in
-different contexts in Fiji. All the different views are backed by the same
-common cache. There is no duplication of image data, and modifications to any
-one of the views are visible in all other views.
+[`ImarisDataset`](apidocs/com/bitplane/xt/ImarisDataset.html)
+provides various views on the image data, each of which is useful in different
+contexts in Fiji. All the different views are backed by the same common cache.
+There is no duplication of image data, and modifications to any one of the views
+are visible in all other views.
 
 First, there are views on the full-resolution image (level 0 of the Imaris resolution pyramid): 
-* [ImarisDataset.asImg()](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html#asImg--)
+* [`ImarisDataset.asImg()`](apidocs/com/bitplane/xt/ImarisDataset.html#asImg--)
   exposes the dataset as an ImgLib2
-  [Img](https://javadoc.scijava.org/ImgLib2/net/imglib2/img/Img.html). This is
+  [`Img`](https://javadoc.scijava.org/ImgLib2/net/imglib2/img/Img.html). This is
   the representation that is most used for image processing, i.e., feeding into
   various ImgLib2 algorithms (which will simply work, as on any other `Img`).
-* [ImarisDataset.asImgPlus()](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html#asImgPlus--) exposes the dataset as an 
+* [`ImarisDataset.asImgPlus()`](apidocs/com/bitplane/xt/ImarisDataset.html#asImgPlus--) exposes the dataset as an 
   ImageJ2 [ImgPlus](https://javadoc.scijava.org/ImageJ/net/imagej/ImgPlus.html), that is, and `Img` with additional
   metadata about axes, calibration, etc.
-* [ImarisDataset.asDataset()](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html#asDataset--) exposes the dataset as an
-  ImageJ2 [Dataset](https://javadoc.scijava.org/ImageJ/net/imagej/Dataset.html).
+* [`ImarisDataset.asDataset()`](apidocs/com/bitplane/xt/ImarisDataset.html#asDataset--) exposes the dataset as an
+  ImageJ2 [`Dataset`](https://javadoc.scijava.org/ImageJ/net/imagej/Dataset.html).
   This is the representation that is most useful for putting the dataset into the standard ImageJ2 UI.
   E.g., calling `ij.ui().show(dataset.asDataset()` displays the dataset in a standard Fiji ImagePlus window.
   
 Besides that, `ImarisDataset` also implements BigDataViewers
-[ChannelSources](https://javadoc.scijava.org/Fiji/bdv/util/ChannelSources.html)
+[`ChannelSources`](https://javadoc.scijava.org/Fiji/bdv/util/ChannelSources.html)
 interface, which can be used in BigDataViewer and plugins built on top of it.
 The nice thing about this representation is that it
 * exposes the full Imaris resolution pyramid as a BDV resolution pyramid, and
@@ -236,7 +243,9 @@ Both are essential for working interactively with large images.
 Showing this representation of the `ImarisDataset` in BigDataViewer is as easy as `BdvFunctions.show(dataset)`.
 
 #### Mapping Imaris data types to ImgLib2
-The generic `T` parameter of `ImarisDataset<T>` is the ImgLib2 pixel type of the dataset.
+The generic `T` parameter of
+[`ImarisDataset<T>`](apidocs/com/bitplane/xt/ImarisDataset.html) is
+the ImgLib2 pixel type of the dataset.
 Imaris supports 8-bit, 16-bit, and 32-bit floating point images.
 The corresponding ImgLib2 types are `UnsignedByteType`, `UnsignedShortType`, and `FloatType`.
 (When creating new `ImarisDataset`, one of these types must be used).
@@ -256,7 +265,7 @@ desirable depends on the usage scenario.
 you need when creating a dataset, or getting a dataset from Imaris.
 
 A new dataset is created by
-[ImarisApplication.createDataset(type, sx, sy, sz, sc, st)](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#createDataset-T-int-int-int-int-int-).
+[`ImarisApplication.createDataset(type, sx, sy, sz, sc, st)`](apidocs/com/bitplane/xt/ImarisApplication.html#createDataset-T-int-int-int-int-int-).
 The `type` argument is either `UnsignedByteType`, `UnsignedShortType`, or `FloatType`.
 The `sx, sy, sz, sc, st` arguments specify the size of the new dataset along the 5 Imaris dimensions XYZCT.
 To indicate that a particular dimension should be left out of the ImgLib2 representation, you set the argument to 0.
@@ -266,7 +275,7 @@ However, the first one will have a 5D representation in ImgLib2 (e.g. `dataset.a
 will have a 3D representation.
 
 When wrapping an existing dataset, for example through
-[ImarisApplication.getDataset()](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#createDataset-T-int-int-int-int-int-),
+[`ImarisApplication.getDataset()`](apidocs/com/bitplane/xt/ImarisApplication.html#createDataset-T-int-int-int-int-int-),
 by default axes with size=1 will be stripped from the ImgLib2 representation. So
 the dataset created through either of the above calls would have a 2D
 representation. You can override this by specifying that certain axes should
@@ -281,19 +290,21 @@ pixel, whereas Imaris pixel coordinates refer to the "corner" of a pixel.
 
 The main thing to keep in mind is that when manipulating the calibration of an
 `ImarisDataset` ImgLib2 conventions are used. That is, when using
-[ImarisDataset.getCalibration()](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html#getCalibration--)
+[`ImarisDataset.getCalibration()`](apidocs/com/bitplane/xt/ImarisDataset.html#getCalibration--)
 or
-[ImarisDataset.setCalibration(...)](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html#setCalibration-com.bitplane.xt.DatasetCalibration-)
+[`ImarisDataset.setCalibration(...)`](apidocs/com/bitplane/xt/ImarisDataset.html#setCalibration-com.bitplane.xt.DatasetCalibration-)
 min coordinates refer to voxel centers. `ImarisDataset` translates this to/from
 Imaris convention when talking to Imaris XT.
 
 #### Specifying additional ImarisDataset options
 Methods for
-[getting](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#getDataset-com.bitplane.xt.ImarisDatasetOptions-)
+[getting](apidocs/com/bitplane/xt/ImarisApplication.html#getDataset-com.bitplane.xt.ImarisDatasetOptions-)
 or
-[creating](http://0.0.0.0:8080/com/bitplane/xt/ImarisApplication.html#createDataset-T-int-int-int-int-int-com.bitplane.xt.ImarisDatasetOptions-)
-Imaris datasets take an optional `ImarisDatasetOptions` argument.
-[ImarisDatasetOptions](http://0.0.0.0:8080/com/bitplane/xt/ImarisDatasetOptions.html)
+[creating](apidocs/com/bitplane/xt/ImarisApplication.html#createDataset-T-int-int-int-int-int-com.bitplane.xt.ImarisDatasetOptions-)
+Imaris datasets take an optional
+[`ImarisDatasetOptions`](apidocs/com/bitplane/xt/ImarisDatasetOptions.html)
+argument.
+[`ImarisDatasetOptions`](apidocs/com/bitplane/xt/ImarisDatasetOptions.html)
 is a builder-like class that allows to configure additional details about how
 the dataset should be wrapped.
 
@@ -307,7 +318,7 @@ Besides that, you can also configure
 * how many worker threads write blocks back to Imaris,
 
 but usually it should be fine to just go with the defaults.
-For details, please refer to the [ImarisDatasetOptions javadoc](http://0.0.0.0:8080/com/bitplane/xt/ImarisDatasetOptions.html).
+For details, please refer to the [`ImarisDatasetOptions` javadoc](apidocs/com/bitplane/xt/ImarisDatasetOptions.html).
 
 As an example, this is how you would get the current dataset with
 * axes XYZ and T present in the ImgLib2 representation,
@@ -325,7 +336,7 @@ ImarisDataset<?> dataset = app.getDataset(ImarisDatasetOptions.options()
 #### Modifying datasets and sending changes to Imaris
 `ImarisDataset` is writable (unless is was constructed with the `readOnly()` option).
 The pixels of the full-resolution image, can be accessed and modified through the
-[ImarisDataset.asImg()](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html#asImg--) view, for example.
+[`ImarisDataset.asImg()`](apidocs/com/bitplane/xt/ImarisDataset.html#asImg--) view, for example.
 The coarser levels of the resolution pyramid *cannot be written directly*.
 Instead, the resolution pyramid is computed internally by Imaris from the full-resolution image.
 
@@ -338,30 +349,191 @@ modification. Instead, the block is merely marked modified and transferred only
 later, when it is evicted from the cache.
 
 This means, that it can take a long time for changes to "naturally" show up in Imaris.
-In fact, some changes might *never* show up, if for example Fiji or Imaris is quit before
+In fact, some changes might *never* show up if, for example, Fiji or Imaris are quit before
 the cache eviction happens.
 Therefore, after you are done writing a `ImarisDataset`, you should explicitly persist all changes to Imaris
-using [ImarisDataset.persist()](http://0.0.0.0:8080/com/bitplane/xt/ImarisDataset.html#persist--).
-The `persist()` method blocks until all current changes have been made visible to Imaris.
-There should be no concurrent modifications made to the `ImarisDataset`, while `persist()` is running.  
-
---------------
+using [`ImarisDataset.persist()`](apidocs/com/bitplane/xt/ImarisDataset.html#persist--).
+The
+[`persist()`](apidocs/com/bitplane/xt/ImarisDataset.html#persist--)
+method blocks until all current changes have been made visible to Imaris. There
+should be no concurrent modifications made to the `ImarisDataset`, while
+`persist()` is running.
 
 ## Examples
 
-### Groovy script in Fiji/ImageJ2
-In Fiji, start the script editor (File > New > Script...), set the language to "Groovy" (Language > Groovy),
-and runt the following script:
-```groovy
-#@ ImarisService imaris
-#@ UIService ui
-dataset = imaris.getApplication().getIJDataset()
-ui.show(dataset)
+### Minimal IJ2 Example
+
+[ExampleIJ2](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleIJ2.java)
+shows a minimal stand-alone Java program, using `ImarisService` to show the current Imaris dataset in a new ImageJ instance.
+```java
+public class ExampleIJ2
+{
+    public static void main( final String[] args )
+    {
+        /*
+         * Start ImageJ2 and show the UI.
+         */
+        ImageJ ij = new ImageJ();
+        ij.ui().showUI();
+
+        /*
+         * Obtain the ImarisService instance.
+         */
+        ImarisService imaris = ij.get( ImarisService.class );
+
+        /*
+         * Get the currently open dataset from the first (and typically only)
+         * Imaris application.
+         */
+        ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
+
+        /*
+         * Show the IJ2 Dataset view in the ImageJ UI.
+         */
+        ij.ui().show( dataset.asDataset() );
+    }
+}
 ```
-(Make sure you have Imaris running and a dataset opened.)
+In particular, this illustrates how to get the `ImarisService` from an `net.imagej.ImageJ` instance.
 
-### Java IJ2 plugin 
+### Minimal BigDataViewer Example
 
-### Java stand-alone 
-Here is a stand-alone Java application that you can run from an IDE.
+[ExampleBdv](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleBdv.java)
+shows a minimal stand-alone Java program, using `ImarisService` to show the current Imaris dataset in BigDataViewer.
+```java
+public class ExampleBdv
+{
+    public static void main( String[] args )
+    {
+        /*
+         * Create a SciJava context, and obtain the ImarisService instance.
+         */
+        Context context = new Context();
+        ImarisService imaris = context.getService( ImarisService.class );
 
+        /*
+         * Get the currently open dataset from the first (and typically only)
+         * Imaris application.
+         */
+        ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
+
+        /*
+         * Show the multiresolution version in BigDataViewer.
+         */
+        BdvFunctions.show( dataset );
+    }
+}
+```
+In particular, this illustrates how to get the `ImarisService` from a new SciJava `Context`.
+
+### Creating a new Imaris dataset
+[ExampleCreateDataset](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleCreateDataset.java)
+shows how to create a new `ImarisDataset`, fill it with values, and show it in Imaris.
+```Java
+public class ExampleCreateDataset
+{
+    public static void main( String[] args )
+    {
+        /*
+         * Create a SciJava context, obtain the ImarisService instance, and get
+         * the first (typically only) Imaris application.
+         */
+        Context context = new Context();
+        ImarisService imaris = context.getService( ImarisService.class );
+        ImarisApplication app = imaris.getApplication();
+
+        /*
+         * Create a new Imaris dataset with pixel type UnsignedByteType, The
+         * ImgLib2 view of the dataset is 3D (XYZ) with size 128x128x128. (On
+         * the Imaris side, its 128x128x128x1x1).
+         */
+        ImarisDataset< UnsignedByteType > dataset = app.createDataset(
+                new UnsignedByteType(),
+                128, 128, 128, 0, 0 );
+
+        /*
+         * Use a ImgLib2 Cursor to fill the dataset with some values.
+         */
+        Cursor< UnsignedByteType > c = dataset.asImg().localizingCursor();
+        int[] pos = new int[ 3 ];
+        while ( c.hasNext() )
+        {
+            c.fwd();
+            c.localize( pos );
+            int value = pos[ 0 ] ^ pos[ 1 ] ^ pos[ 2 ];
+            c.get().set( value );
+        }
+
+        /*
+         * Make sure that all changes are persisted to Imaris.
+         */
+        dataset.persist();
+
+        /*
+         * Show the dataset in Imaris.
+         */
+        app.setDataset( dataset );
+    }
+}
+```
+![screenshot show created dataset in Imaris](img/createDataset800.png)
+
+
+### ImageJ2 Command using ImarisService and ImageJ Ops.
+[ExampleOp](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleOp.java)
+shows how to create Fiji plugins that operate on Imaris images.
+In particular, the code illustrates that
+* `ImarisDataset` can be modified in place, and
+* plugins can operate headlesslt, just reading and writing results to Imaris.
+
+The [ExampleOp](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleOp.java)
+command
+uses the ImageJ `OpService` to run a Gauss smoothing in X direction on the current Imaris dataset
+(running in-place, and modifying the dataset).
+It shows up in the Fiji menu *Plugins > Imaris > Smooth X*.
+```Java
+@Plugin( type = Command.class, menuPath = "Plugins>Imaris>Smooth X" )
+public class ExampleOp implements Command
+{
+    @Parameter
+    private ImarisService imaris;
+
+    @Parameter
+    private OpService op;
+
+    @Override
+    public void run()
+    {
+    	ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
+        Img img = dataset.asImg();
+        double[] sigmas = new double[ img.numDimensions() ];
+        sigmas[ 0 ] = 10.0;
+        op.filter().gauss( img, img, sigmas );
+        dataset.persist();
+    }
+}
+```
+![screenshot running gauss op in-place](img/op1200.png)
+
+### Groovy script in Fiji/ImageJ2
+Finally, here is the same "smooth in X" operation as a Groovy script:
+```groovy
+import com.bitplane.xt.*;
+
+#@ ImarisService imaris
+#@ OpService op
+
+dataset = imaris.getApplication().getDataset()
+
+img = dataset.asImg()
+double[] sigmas = new double[img.numDimensions()]
+sigmas[0] = 10.0
+op.filter().gauss(img, img, sigmas)
+
+dataset.persist()
+```
+You can save this to a file called `smooth.groovy`, then run it from the Fiji script editor, or from the command line
+```text
+$ FIJI --headless --run gauss.groovy
+```
+(where `FIJI` is the path to the Fiji executable.)
