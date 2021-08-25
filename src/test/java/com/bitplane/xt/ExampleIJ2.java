@@ -28,17 +28,17 @@
  */
 package com.bitplane.xt;
 
-import Imaris.Error;
 import net.imagej.ImageJ;
 
 /**
- * TODO
+ * A minimal stand-alone example: Start ImageJ and show the current dataset from
+ * Imaris.
  *
  * @author Tobias Pietzsch
  */
 public class ExampleIJ2
 {
-	public static void main( final String[] args ) throws Error
+	public static void main( final String[] args )
 	{
 		/*
 		 * Start ImageJ2 and show the UI.

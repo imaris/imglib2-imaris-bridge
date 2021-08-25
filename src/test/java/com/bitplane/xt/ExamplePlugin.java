@@ -36,8 +36,9 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 /**
- * A minimal IJ2 Command that will retrieve and show the current dataset from the running Imaris application.
- * It will show up in the Fiji menu "File>Import>From Imaris".
+ * A minimal IJ2 Command that will retrieve and show the current dataset from
+ * the running Imaris application. It will show up in the Fiji menu
+ * "File>Import>From Imaris".
  *
  * @author Tobias Pietzsch
  */

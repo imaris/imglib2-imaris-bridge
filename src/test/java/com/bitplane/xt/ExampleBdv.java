@@ -32,6 +32,12 @@ import bdv.util.BdvFunctions;
 import bdv.util.BdvStackSource;
 import org.scijava.Context;
 
+/**
+ * A minimal stand-alone example: Show the current dataset from
+ * Imaris in BigDataViewer.
+ *
+ * @author Tobias Pietzsch
+ */
 public class ExampleBdv
 {
 	public static void main( String[] args )

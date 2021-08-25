@@ -1,7 +1,5 @@
 # Imaris-Bridge
 
-
-
 ## Introduction
 
 Imaris-Bridge provides arbitrarily large images that are shared between Imaris
@@ -72,7 +70,7 @@ To show the sources in BigDataViewer, type `bdv.util.BdvFunctions.show(dataset)`
 bdv.util.BdvStackSource@17add147
 ```
 
-![image info](./quickstart800.png)
+![Screenshot quickstart in script interpreter](img/quickstart800.png)
 
 
 
@@ -361,23 +359,181 @@ method blocks until all current changes have been made visible to Imaris. There
 should be no concurrent modifications made to the `ImarisDataset`, while
 `persist()` is running.
 
---------------
-
 ## Examples
 
-### Groovy script in Fiji/ImageJ2
-In Fiji, start the script editor (File > New > Script...), set the language to "Groovy" (Language > Groovy),
-and runt the following script:
-```groovy
-#@ ImarisService imaris
-#@ UIService ui
-dataset = imaris.getApplication().getIJDataset()
-ui.show(dataset)
+### Minimal IJ2 Example
+
+[ExampleIJ2](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleIJ2.java)
+shows a minimal stand-alone Java program, using `ImarisService` to show the current Imaris dataset in a new ImageJ instance.
+```java
+public class ExampleIJ2
+{
+    public static void main( final String[] args )
+    {
+        /*
+         * Start ImageJ2 and show the UI.
+         */
+        ImageJ ij = new ImageJ();
+        ij.ui().showUI();
+
+        /*
+         * Obtain the ImarisService instance.
+         */
+        ImarisService imaris = ij.get( ImarisService.class );
+
+        /*
+         * Get the currently open dataset from the first (and typically only)
+         * Imaris application.
+         */
+        ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
+
+        /*
+         * Show the IJ2 Dataset view in the ImageJ UI.
+         */
+        ij.ui().show( dataset.asDataset() );
+    }
+}
 ```
-(Make sure you have Imaris running and a dataset opened.)
+In particular, this illustrates how to get the `ImarisService` from an `net.imagej.ImageJ` instance.
 
-### Java IJ2 plugin 
+### Minimal BigDataViewer Example
 
-### Java stand-alone 
-Here is a stand-alone Java application that you can run from an IDE.
+[ExampleBdv](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleBdv.java)
+shows a minimal stand-alone Java program, using `ImarisService` to show the current Imaris dataset in BigDataViewer.
+```java
+public class ExampleBdv
+{
+    public static void main( String[] args )
+    {
+        /*
+         * Create a SciJava context, and obtain the ImarisService instance.
+         */
+        Context context = new Context();
+        ImarisService imaris = context.getService( ImarisService.class );
 
+        /*
+         * Get the currently open dataset from the first (and typically only)
+         * Imaris application.
+         */
+        ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
+
+        /*
+         * Show the multiresolution version in BigDataViewer.
+         */
+        BdvFunctions.show( dataset );
+    }
+}
+```
+In particular, this illustrates how to get the `ImarisService` from a new SciJava `Context`.
+
+### Creating a new Imaris dataset
+[ExampleCreateDataset](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleCreateDataset.java)
+shows how to create a new `ImarisDataset`, fill it with values, and show it in Imaris.
+```Java
+public class ExampleCreateDataset
+{
+    public static void main( String[] args )
+    {
+        /*
+         * Create a SciJava context, obtain the ImarisService instance, and get
+         * the first (typically only) Imaris application.
+         */
+        Context context = new Context();
+        ImarisService imaris = context.getService( ImarisService.class );
+        ImarisApplication app = imaris.getApplication();
+
+        /*
+         * Create a new Imaris dataset with pixel type UnsignedByteType, The
+         * ImgLib2 view of the dataset is 3D (XYZ) with size 128x128x128. (On
+         * the Imaris side, its 128x128x128x1x1).
+         */
+        ImarisDataset< UnsignedByteType > dataset = app.createDataset(
+                new UnsignedByteType(),
+                128, 128, 128, 0, 0 );
+
+        /*
+         * Use a ImgLib2 Cursor to fill the dataset with some values.
+         */
+        Cursor< UnsignedByteType > c = dataset.asImg().localizingCursor();
+        int[] pos = new int[ 3 ];
+        while ( c.hasNext() )
+        {
+            c.fwd();
+            c.localize( pos );
+            int value = pos[ 0 ] ^ pos[ 1 ] ^ pos[ 2 ];
+            c.get().set( value );
+        }
+
+        /*
+         * Make sure that all changes are persisted to Imaris.
+         */
+        dataset.persist();
+
+        /*
+         * Show the dataset in Imaris.
+         */
+        app.setDataset( dataset );
+    }
+}
+```
+![screenshot show created dataset in Imaris](img/createDataset800.png)
+
+
+### ImageJ2 Command using ImarisService and ImageJ Ops.
+[ExampleOp](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleOp.java)
+shows how to create Fiji plugins that operate on Imaris images.
+In particular, the code illustrates that
+* `ImarisDataset` can be modified in place, and
+* plugins can operate headlesslt, just reading and writing results to Imaris.
+
+The [ExampleOp](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleOp.java)
+command
+uses the ImageJ `OpService` to run a Gauss smoothing in X direction on the current Imaris dataset
+(running in-place, and modifying the dataset).
+It shows up in the Fiji menu *Plugins > Imaris > Smooth X*.
+```Java
+@Plugin( type = Command.class, menuPath = "Plugins>Imaris>Smooth X" )
+public class ExampleOp implements Command
+{
+    @Parameter
+    private ImarisService imaris;
+
+    @Parameter
+    private OpService op;
+
+    @Override
+    public void run()
+    {
+    	ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
+        Img img = dataset.asImg();
+        double[] sigmas = new double[ img.numDimensions() ];
+        sigmas[ 0 ] = 10.0;
+        op.filter().gauss( img, img, sigmas );
+        dataset.persist();
+    }
+}
+```
+![screenshot running gauss op in-place](img/op1200.png)
+
+### Groovy script in Fiji/ImageJ2
+Finally, here is the same "smooth in X" operation as a Groovy script:
+```groovy
+import com.bitplane.xt.*;
+
+#@ ImarisService imaris
+#@ OpService op
+
+dataset = imaris.getApplication().getDataset()
+
+img = dataset.asImg()
+double[] sigmas = new double[img.numDimensions()]
+sigmas[0] = 10.0
+op.filter().gauss(img, img, sigmas)
+
+dataset.persist()
+```
+You can save this to a file called `smooth.groovy`, then run it from the Fiji script editor, or from the command line
+```text
+$ FIJI --headless --run gauss.groovy
+```
+(where `FIJI` is the path to the Fiji executable.)

@@ -38,9 +38,10 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 /**
- * A minimal IJ2 Command that will retrieve the current dataset from the running Imaris application,
- * then use ImageJ Ops to apply a Gauss filter in place, and persist the changes back to Imaris.
- * It will show up in the Fiji menu "Plugins>Imaris>Smooth X"".
+ * A minimal IJ2 Command that will retrieve the current dataset from the running
+ * Imaris application, then use ImageJ Ops to apply a Gauss filter in place, and
+ * persist the changes back to Imaris. It will show up in the Fiji menu
+ * "Plugins>Imaris>Smooth X".
  *
  * @author Tobias Pietzsch
  */
