@@ -47,6 +47,7 @@ import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
+import net.imglib2.EuclideanSpace;
 import net.imglib2.Volatile;
 import net.imglib2.display.ColorTable8;
 import net.imglib2.img.Img;
@@ -90,7 +91,7 @@ import org.scijava.Context;
  *
  * @author Tobias Pietzsch
  */
-public class ImarisDataset< T extends NativeType< T > & RealType< T > > implements ChannelSources< T >
+public class ImarisDataset< T extends NativeType< T > & RealType< T > > implements EuclideanSpace, ChannelSources< T >
 {
 	/**
 	 * The scijava context. This is needed (only) for creating {@link #ijDataset}.
@@ -538,6 +539,11 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 		return imagePyramid.getSharedQueue();
 	}
 
+	@Override
+	public int numDimensions()
+	{
+		return datasetDimensions.getAxisOrder().numDimensions();
+	}
 	/**
 	 * Get the number of levels in the resolution pyramid.
 	 */

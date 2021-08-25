@@ -28,40 +28,33 @@
  */
 package com.bitplane.xt;
 
-import net.imagej.Dataset;
-import net.imagej.ImageJ;
-import org.scijava.ItemIO;
-import org.scijava.command.Command;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
+import bdv.util.BdvFunctions;
+import bdv.util.BdvStackSource;
+import org.scijava.Context;
 
-/**
- * A minimal IJ2 Command that will retrieve and show the current dataset from the running Imaris application.
- * It will show up in the Fiji menu "File>Import>From Imaris".
- *
- * @author Tobias Pietzsch
- */
-@Plugin( type = Command.class, menuPath = "File>Import>From Imaris" )
-public class ExamplePlugin implements Command
+public class ExampleBdv
 {
-	@Parameter
-	private ImarisService imaris;
-
-	@Parameter( type = ItemIO.OUTPUT )
-	private Dataset dataset;
-
-	@Override
-	public void run()
+	public static void main( String[] args )
 	{
-		dataset = imaris.getApplication().getDataset().asDataset();
-	}
+		/*
+		 * Create a SciJava context, and obtain the ImarisService instance.
+		 *
+		 * Note that, when you run out of Fiji, the context is usually already
+		 * available. When writing plugins or scripts, you just use a @Parameter
+		 * annotation to get the ImarisService.
+		 */
+		final Context context = new Context();
+		final ImarisService imaris = context.getService( ImarisService.class );
 
-	/*
-	 * The main() method simply starts ImageJ and shows the UI, and is only
-	 * present for testing the plugin from an IDE.
-	 */
-	public static void main( final String[] args )
-	{
-		new ImageJ().ui().showUI();
+		/*
+		 * Get the currently open dataset from the first (and typically only)
+		 * Imaris application.
+		 */
+		final ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
+
+		/*
+		 * Show the multiresolution version in BigDataViewer.
+		 */
+		final BdvStackSource< ? > source = BdvFunctions.show( dataset );
 	}
 }

@@ -40,11 +40,26 @@ public class ExampleIJ2
 {
 	public static void main( final String[] args ) throws Error
 	{
+		/*
+		 * Start ImageJ2 and show the UI.
+		 */
 		final ImageJ ij = new ImageJ();
+		ij.ui().showUI();
+
+		/*
+		 * Obtain the ImarisService instance.
+		 */
 		final ImarisService imaris = ij.get( ImarisService.class );
+
+		/*
+		 * Get the currently open dataset from the first (and typically only)
+		 * Imaris application.
+		 */
 		final ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
 
-		ij.ui().showUI();
+		/*
+		 * Show the IJ2 Dataset view in the ImageJ UI.
+		 */
 		ij.ui().show( dataset.asDataset() );
 	}
 }

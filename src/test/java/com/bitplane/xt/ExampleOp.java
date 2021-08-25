@@ -30,30 +30,38 @@ package com.bitplane.xt;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
+import net.imagej.ops.OpService;
+import net.imglib2.img.Img;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 /**
- * A minimal IJ2 Command that will retrieve and show the current dataset from the running Imaris application.
- * It will show up in the Fiji menu "File>Import>From Imaris".
+ * A minimal IJ2 Command that will retrieve the current dataset from the running Imaris application,
+ * then use ImageJ Ops to apply a Gauss filter in place, and persist the changes back to Imaris.
+ * It will show up in the Fiji menu "Plugins>Imaris>Smooth X"".
  *
  * @author Tobias Pietzsch
  */
-@Plugin( type = Command.class, menuPath = "File>Import>From Imaris" )
-public class ExamplePlugin implements Command
+@Plugin( type = Command.class, menuPath = "Plugins>Imaris>Smooth X" )
+public class ExampleOp implements Command
 {
 	@Parameter
 	private ImarisService imaris;
 
-	@Parameter( type = ItemIO.OUTPUT )
-	private Dataset dataset;
+	@Parameter
+	private OpService op;
 
 	@Override
 	public void run()
 	{
-		dataset = imaris.getApplication().getDataset().asDataset();
+		final ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
+		final Img img = dataset.asImg();
+		final double[] sigmas = new double[ img.numDimensions() ];
+		sigmas[ 0 ] = 10.0;
+		op.filter().gauss( img, img, sigmas );
+		dataset.persist();
 	}
 
 	/*
