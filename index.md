@@ -1,7 +1,7 @@
-# Imaris-Bridge
+# ImgLib2-Imaris-Bridge
 {:.no_toc}
 
-Imaris-Bridge provides arbitrarily large images that are shared between Imaris
+ImgLib2-Imaris-Bridge provides arbitrarily large images that are shared between Imaris
 and Fiji/ImageJ2, without duplicating memory requirements.
 We focus on big (larger-than-RAM) images, for which both Imaris and ImgLib2
 provide sophisticated caching infrastructure.
@@ -16,7 +16,7 @@ evicted from *its* cache).
 * TOC
 {:toc}
 
-Technically, Imaris-Bridge exposes the [*Imaris XT*](https://imaris.oxinst.com/open/)
+Technically, ImgLib2-Imaris-Bridge exposes the [*Imaris XT*](https://imaris.oxinst.com/open/)
 interface as an [ImageJ2 Service](https://javadoc.scijava.org/ImageJ/net/imagej/ImageJService.html?is-external=true),
 providing easy access to running Imaris applications and opened datasets.
 Note, that this service only covers parts of Imaris XT that are relevant for
@@ -26,18 +26,18 @@ convenience layer.)
 
 For convenient access to spot detection, surfaces, and other un-related
 features, have a look at [*EasyXT*](https://github.com/BIOP/EasyXT-FIJI) from EPFL
-BIOP. (EasyXT and Imaris-Bridge can be used concurrently without difficulties.)
+BIOP. (EasyXT and ImgLib2-Imaris-Bridge can be used concurrently without difficulties.)
 
 
 
 # Quickstart
 
 If you have both Imaris and Fiji running (otherwise you won't care...), it's easy
-to start playing with Imaris-Bridge:
+to start playing with ImgLib2-Imaris-Bridge:
 
 Open a dataset in Imaris.
 
-In Fiji, activate the update site "Imaris-Bridge".
+In Fiji, activate the update site "ImgLib2-Imaris-Bridge".
 (See [this guide](https://imagej.net/update-sites/following) for how to activate update sites).
 
 Open the Script Interpreter (via *Plugins>Scripting>Script Interpreter* or shortcut `Shift` + `[`).
@@ -78,21 +78,21 @@ bdv.util.BdvStackSource@17add147
 
 # Installation
 
-In Fiji, activate the update site "Imaris-Bridge" `https://sites.imagej.net/Imaris-Bridge`.
+In Fiji, activate the update site "ImgLib2-Imaris-Bridge" `https://sites.imagej.net/ImgLib2-Imaris-Bridge`.
 (See [this guide](https://imagej.net/update-sites/following) for how to activate update sites).
 
 For developers, the Maven GAV is
 ```
 <dependency>
     <groupId>com.bitplane</groupId>
-    <artifactId>imaris-bridge</artifactId>
+    <artifactId>imglib2-imaris-bridge</artifactId>
     <version>9.7.2</version>
 <dependency>
 ```
 
 
 
-# Imaris-Bridge API
+# ImgLib2-Imaris-Bridge API
 
 ## Connecting to Imaris
 
@@ -156,7 +156,7 @@ comprises methods that mirror methods of the Imaris XT `IApplicationPrx` proxy,
 for creating/getting/showing datasets. You can also use
 [`ImarisApplication.getIApplicationPrx()`](apidocs/com/bitplane/xt/ImarisApplication.html#getIApplicationPrx--)
 to access the underlying Imaris XT proxy for accessing functionality not covered
-by Imaris-Bridge (either directly or through
+by ImgLib2-Imaris-Bridge (either directly or through
 [*EasyXT*](https://github.com/BIOP/EasyXT-FIJI)).
 
 
@@ -207,7 +207,7 @@ as a shortcut to set the image at index 0.
 
 [`ImarisDataset`](apidocs/com/bitplane/xt/ImarisDataset.html) wraps
 `IDataSetPrx` and represents an Imaris dataset. This is where the meat of
-Imaris-Bridge is. The Imaris dataset is wrapped into an ImgLib2 `CachedCellImg`
+ImgLib2-Imaris-Bridge is. The Imaris dataset is wrapped into an ImgLib2 `CachedCellImg`
 that is both readable and writable. Data is lazy-loaded from Imaris -- image
 blocks, when they are first accessed, are retrieved through the Imaris XT API
 and cached. Modified image blocks are persisted back to Imaris before they are
@@ -364,7 +364,7 @@ should be no concurrent modifications made to the `ImarisDataset`, while
 
 ## Minimal IJ2 Example
 
-[ExampleIJ2](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleIJ2.java)
+[ExampleIJ2](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleIJ2.java)
 shows a minimal stand-alone Java program, using `ImarisService` to show the current Imaris dataset in a new ImageJ instance.
 ```java
 public class ExampleIJ2
@@ -399,7 +399,7 @@ In particular, this illustrates how to get the `ImarisService` from an `net.imag
 
 ## Minimal BigDataViewer Example
 
-[ExampleBdv](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleBdv.java)
+[ExampleBdv](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleBdv.java)
 shows a minimal stand-alone Java program, using `ImarisService` to show the current Imaris dataset in BigDataViewer.
 ```java
 public class ExampleBdv
@@ -428,9 +428,9 @@ public class ExampleBdv
 In particular, this illustrates how to get the `ImarisService` from a new SciJava `Context`.
 
 ## Creating a new Imaris dataset
-[ExampleCreateDataset](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleCreateDataset.java)
+[ExampleCreateDataset](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleCreateDataset.java)
 shows how to create a new `ImarisDataset`, fill it with values, and show it in Imaris.
-```java
+```Java
 public class ExampleCreateDataset
 {
     public static void main( String[] args )
@@ -481,18 +481,18 @@ public class ExampleCreateDataset
 
 
 ## ImageJ2 Command using ImarisService and ImageJ Ops.
-[ExampleOp](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleOp.java)
+[ExampleOp](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleOp.java)
 shows how to create Fiji plugins that operate on Imaris images.
 In particular, the code illustrates that
 * `ImarisDataset` can be modified in place, and
 * plugins can operate headlesslt, just reading and writing results to Imaris.
 
-The [ExampleOp](https://github.com/tpietzsch/imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleOp.java)
+The [ExampleOp](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleOp.java)
 command
 uses the ImageJ `OpService` to run a Gauss smoothing in X direction on the current Imaris dataset
 (running in-place, and modifying the dataset).
 It shows up in the Fiji menu *Plugins > Imaris > Smooth X*.
-```java
+```Java
 @Plugin( type = Command.class, menuPath = "Plugins>Imaris>Smooth X" )
 public class ExampleOp implements Command
 {
