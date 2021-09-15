@@ -26,41 +26,57 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt;
+package com.bitplane.xt.examples;
 
-import bdv.util.BdvFunctions;
-import bdv.util.BdvStackSource;
+import com.bitplane.xt.ImarisApplication;
+import com.bitplane.xt.ImarisDataset;
+import com.bitplane.xt.ImarisService;
+import net.imglib2.Cursor;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.Context;
 
-/**
- * A minimal stand-alone example: Show the current dataset from
- * Imaris in BigDataViewer.
- *
- * @author Tobias Pietzsch
- */
-public class ExampleBdv
+public class ExampleCreateDataset
 {
 	public static void main( String[] args )
 	{
 		/*
-		 * Create a SciJava context, and obtain the ImarisService instance.
-		 *
-		 * Note that, when you run out of Fiji, the context is usually already
-		 * available. When writing plugins or scripts, you just use a @Parameter
-		 * annotation to get the ImarisService.
+		 * Create a SciJava context, obtain the ImarisService instance, and get
+		 * the first (typically only) Imaris application.
 		 */
 		final Context context = new Context();
 		final ImarisService imaris = context.getService( ImarisService.class );
+		final ImarisApplication app = imaris.getApplication();
 
 		/*
-		 * Get the currently open dataset from the first (and typically only)
-		 * Imaris application.
+		 * Create a new Imaris dataset with pixel type UnsignedByteType, The
+		 * ImgLib2 view of the dataset is 3D (XYZ) with size 128x128x128. (On
+		 * the Imaris side, its 128x128x128x1x1).
 		 */
-		final ImarisDataset< ? > dataset = imaris.getApplication().getDataset();
+		final ImarisDataset< UnsignedByteType > dataset = app.createDataset(
+				new UnsignedByteType(),
+				128, 128, 128, 0, 0 );
 
 		/*
-		 * Show the multiresolution version in BigDataViewer.
+		 * Use a ImgLib2 Cursor to fill the dataset with some values.
 		 */
-		final BdvStackSource< ? > source = BdvFunctions.show( dataset );
+		final Cursor< UnsignedByteType > c = dataset.asImg().localizingCursor();
+		final int[] pos = new int[ 3 ];
+		while ( c.hasNext() )
+		{
+			c.fwd();
+			c.localize( pos );
+			final int value = pos[ 0 ] ^ pos[ 1 ] ^ pos[ 2 ];
+			c.get().set( value );
+		}
+
+		/*
+		 * Make sure that all changes are persisted to Imaris.
+		 */
+		dataset.persist();
+
+		/*
+		 * Show the dataset in Imaris.
+		 */
+		app.setDataset( dataset );
 	}
 }

@@ -26,8 +26,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt;
+package com.bitplane.xt.examples;
 
+import com.bitplane.xt.ImarisDataset;
+import com.bitplane.xt.ImarisService;
 import net.imagej.ImageJ;
 
 /**

@@ -26,54 +26,44 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt;
+package com.bitplane.xt.examples;
 
-import net.imglib2.Cursor;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import org.scijava.Context;
+import com.bitplane.xt.ImarisService;
+import net.imagej.Dataset;
+import net.imagej.ImageJ;
+import org.scijava.ItemIO;
+import org.scijava.command.Command;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
 
-public class ExampleCreateDataset
+/**
+ * A minimal IJ2 Command that will retrieve and show the current dataset from
+ * the running Imaris application. It will show up in the Fiji menu
+ * "File>Import>From Imaris".
+ *
+ * @author Tobias Pietzsch
+ */
+@Plugin( type = Command.class, menuPath = "File>Import>From Imaris" )
+public class ExamplePlugin implements Command
 {
-	public static void main( String[] args )
+	@Parameter
+	private ImarisService imaris;
+
+	@Parameter( type = ItemIO.OUTPUT )
+	private Dataset dataset;
+
+	@Override
+	public void run()
 	{
-		/*
-		 * Create a SciJava context, obtain the ImarisService instance, and get
-		 * the first (typically only) Imaris application.
-		 */
-		final Context context = new Context();
-		final ImarisService imaris = context.getService( ImarisService.class );
-		final ImarisApplication app = imaris.getApplication();
+		dataset = imaris.getApplication().getDataset().asDataset();
+	}
 
-		/*
-		 * Create a new Imaris dataset with pixel type UnsignedByteType, The
-		 * ImgLib2 view of the dataset is 3D (XYZ) with size 128x128x128. (On
-		 * the Imaris side, its 128x128x128x1x1).
-		 */
-		final ImarisDataset< UnsignedByteType > dataset = app.createDataset(
-				new UnsignedByteType(),
-				128, 128, 128, 0, 0 );
-
-		/*
-		 * Use a ImgLib2 Cursor to fill the dataset with some values.
-		 */
-		final Cursor< UnsignedByteType > c = dataset.asImg().localizingCursor();
-		final int[] pos = new int[ 3 ];
-		while ( c.hasNext() )
-		{
-			c.fwd();
-			c.localize( pos );
-			final int value = pos[ 0 ] ^ pos[ 1 ] ^ pos[ 2 ];
-			c.get().set( value );
-		}
-
-		/*
-		 * Make sure that all changes are persisted to Imaris.
-		 */
-		dataset.persist();
-
-		/*
-		 * Show the dataset in Imaris.
-		 */
-		app.setDataset( dataset );
+	/*
+	 * The main() method simply starts ImageJ and shows the UI, and is only
+	 * present for testing the plugin from an IDE.
+	 */
+	public static void main( final String[] args )
+	{
+		new ImageJ().ui().showUI();
 	}
 }

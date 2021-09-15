@@ -26,43 +26,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package com.bitplane.xt;
+package com.bitplane.xt.examples.advanced;
 
-import net.imagej.Dataset;
-import net.imagej.ImageJ;
-import org.scijava.ItemIO;
-import org.scijava.command.Command;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
+import bdv.util.BdvFunctions;
+import com.bitplane.xt.ImarisApplication;
+import com.bitplane.xt.ImarisDataset;
+import com.bitplane.xt.ImarisDatasetOptions;
+import com.bitplane.xt.ImarisService;
+import org.scijava.Context;
 
-/**
- * A minimal IJ2 Command that will retrieve and show the current dataset from
- * the running Imaris application. It will show up in the Fiji menu
- * "File>Import>From Imaris".
- *
- * @author Tobias Pietzsch
- */
-@Plugin( type = Command.class, menuPath = "File>Import>From Imaris" )
-public class ExamplePlugin implements Command
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.T;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.X;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.Y;
+import static com.bitplane.xt.options.ImarisAxesOptions.Axis.Z;
+import static net.imglib2.cache.img.optional.CacheOptions.CacheType.BOUNDED;
+
+public class ExampleDatasetOptions
 {
-	@Parameter
-	private ImarisService imaris;
-
-	@Parameter( type = ItemIO.OUTPUT )
-	private Dataset dataset;
-
-	@Override
-	public void run()
+	public static void main( String[] args )
 	{
-		dataset = imaris.getApplication().getDataset().asDataset();
-	}
+		final Context context = new Context();
+		final ImarisService imaris = context.getService( ImarisService.class );
+		final ImarisApplication app = imaris.getApplication();
+		final ImarisDataset< ? > dataset = app.getDataset( ImarisDatasetOptions.options()
+				.includeAxes( X, Y, Z, T )
+				.cacheType( BOUNDED )
+				.maxCacheSize( 128 )
+				.maxIoQueueSize( 16 )
+				.numIoThreads( 8 ) );
 
-	/*
-	 * The main() method simply starts ImageJ and shows the UI, and is only
-	 * present for testing the plugin from an IDE.
-	 */
-	public static void main( final String[] args )
-	{
-		new ImageJ().ui().showUI();
+		System.out.println( dataset );
+		BdvFunctions.show( dataset );
+
+//		final BdvStackSource< ? > source = BdvFunctions.show( dataset.getSources(), dataset.numTimepoints(), Bdv.options() );
+//		source.getBdvHandle().getCacheControls().addCacheControl( dataset.getSharedQueue() );
 	}
 }
