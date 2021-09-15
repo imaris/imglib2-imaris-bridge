@@ -1,6 +1,6 @@
-title: Imaris Bridge
-description: Imaris-Bridge provides arbitrarily large images that are shared between Imaris and Fiji/ImageJ2, without duplicating memory requirements.
+title: ImgLib2-Imaris-Bridge
+description: ImgLib2-Imaris-Bridge provides arbitrarily large images that are shared between Imaris and Fiji/ImageJ2, without duplicating memory requirements.
 theme: jekyll-theme-cayman
-url: https://tpietzsch.github.io
-baseurl: /imaris-bridge
+url: https://imaris.github.io
+baseurl: /imglib2-imaris-bridge
 markdown: kramdown
