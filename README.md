@@ -497,7 +497,7 @@ public class ExampleCreateDataset
 shows how to create Fiji plugins that operate on Imaris images.
 In particular, the code illustrates that
 * `ImarisDataset` can be modified in place, and
-* plugins can operate headlesslt, just reading and writing results to Imaris.
+* plugins can operate headlessly, just reading and writing results to Imaris.
 
 The [ExampleOp](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleOp.java)
 command
