@@ -100,7 +100,7 @@ For developers, the Maven GAV is
 To start, you need an instance of
 [`ImarisService`](apidocs/com/bitplane/xt/ImarisService.html).
 [`ImarisService`](apidocs/com/bitplane/xt/ImarisService.html)
-connects to the Imaris XT API, giving you access to the running Imaris
+connects to the ImarisXT API, giving you access to the running Imaris
 instance(s)
 ([`ImarisApplication`](apidocs/com/bitplane/xt/ImarisApplication.html)).
 
@@ -134,7 +134,7 @@ ImarisService imaris = context.getService(ImarisService.class);
 From the `ImarisService` you can get a handle to the running Imaris instance using
 [`ImarisService.getApplication()`](apidocs/com/bitplane/xt/ImarisService.html#getApplication--)
 ```java
-ImarisService imaris;
+// ImarisService imaris created as described above
 ImarisApplication app = imaris.getApplication();
 ```
 
@@ -150,13 +150,13 @@ or get a specific instance by
 
 ## ImarisApplication API
 [`ImarisApplication`](apidocs/com/bitplane/xt/ImarisApplication.html)
-wraps Imaris XT `IApplicationPrx` and represents one particular Imaris instance.
+wraps ImarisXT `IApplicationPrx` and represents one particular Imaris instance.
 
 [`ImarisApplication`](apidocs/com/bitplane/xt/ImarisApplication.html)
-comprises methods that mirror methods of the Imaris XT `IApplicationPrx` proxy,
+comprises methods that mirror methods of the ImarisXT `IApplicationPrx` proxy,
 for creating/getting/showing datasets. You can also use
 [`ImarisApplication.getIApplicationPrx()`](apidocs/com/bitplane/xt/ImarisApplication.html#getIApplicationPrx--)
-to access the underlying Imaris XT proxy for accessing functionality not covered
+to access the underlying ImarisXT proxy for accessing functionality not covered
 by ImgLib2-Imaris-Bridge (either directly or through
 [*EasyXT*](https://github.com/BIOP/EasyXT-FIJI)).
 
@@ -210,7 +210,7 @@ as a shortcut to set the image at index 0.
 `IDataSetPrx` and represents an Imaris dataset. This is where the meat of
 ImgLib2-Imaris-Bridge is. The Imaris dataset is wrapped into an ImgLib2 `CachedCellImg`
 that is both readable and writable. Data is lazy-loaded from Imaris -- image
-blocks, when they are first accessed, are retrieved through the Imaris XT API
+blocks, when they are first accessed, are retrieved through the ImarisXT API
 and cached. Modified image blocks are persisted back to Imaris before they are
 evicted from the cache. (Imaris then in turn persists modified blocks to disk
 when they are evicted from its cache.)
@@ -296,7 +296,7 @@ The main thing to keep in mind is that when manipulating the calibration of an
 or
 [`ImarisDataset.setCalibration(...)`](apidocs/com/bitplane/xt/ImarisDataset.html#setCalibration-com.bitplane.xt.DatasetCalibration-)
 min coordinates refer to voxel centers. `ImarisDataset` translates this to/from
-Imaris convention when talking to Imaris XT.
+Imaris convention when talking to ImarisXT.
 
 ### Specifying additional ImarisDataset options
 Methods for
@@ -368,6 +368,9 @@ should be no concurrent modifications made to the `ImarisDataset`, while
 [ExampleIJ2](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleIJ2.java)
 shows a minimal stand-alone Java program, using `ImarisService` to show the current Imaris dataset in a new ImageJ instance.
 ```java
+import com.bitplane.xt.*;
+import net.imagej.ImageJ;
+
 public class ExampleIJ2
 {
     public static void main( final String[] args )
@@ -403,6 +406,10 @@ In particular, this illustrates how to get the `ImarisService` from an `net.imag
 [ExampleBdv](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleBdv.java)
 shows a minimal stand-alone Java program, using `ImarisService` to show the current Imaris dataset in BigDataViewer.
 ```java
+import bdv.util.*;
+import com.bitplane.xt.*;
+import org.scijava.Context;
+
 public class ExampleBdv
 {
     public static void main( String[] args )
@@ -432,6 +439,11 @@ In particular, this illustrates how to get the `ImarisService` from a new SciJav
 [ExampleCreateDataset](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleCreateDataset.java)
 shows how to create a new `ImarisDataset`, fill it with values, and show it in Imaris.
 ```Java
+import com.bitplane.xt.*;
+import net.imglib2.Cursor;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import org.scijava.Context;
+
 public class ExampleCreateDataset
 {
     public static void main( String[] args )
@@ -486,7 +498,7 @@ public class ExampleCreateDataset
 shows how to create Fiji plugins that operate on Imaris images.
 In particular, the code illustrates that
 * `ImarisDataset` can be modified in place, and
-* plugins can operate headlesslt, just reading and writing results to Imaris.
+* plugins can operate headlessly, just reading and writing results to Imaris.
 
 The [ExampleOp](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleOp.java)
 command
@@ -494,6 +506,13 @@ uses the ImageJ `OpService` to run a Gauss smoothing in X direction on the curre
 (running in-place, and modifying the dataset).
 It shows up in the Fiji menu *Plugins > Imaris > Smooth X*.
 ```Java
+import com.bitplane.xt.*;
+import net.imagej.ImageJ;
+import net.imagej.ops.OpService;
+import net.imglib2.img.Img;
+import org.scijava.command.Command;
+import org.scijava.plugin.*;
+
 @Plugin( type = Command.class, menuPath = "Plugins>Imaris>Smooth X" )
 public class ExampleOp implements Command
 {
