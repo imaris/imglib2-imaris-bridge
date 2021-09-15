@@ -77,6 +77,8 @@ bdv.util.BdvStackSource@17add147
 
 ## Installation
 
+To use the ImgLib2-Imaris-Bridge ensure that you have a license for the ImarisXT API as part of your Imaris license.
+
 In Fiji, activate the update site "ImgLib2-Imaris-Bridge" `https://sites.imagej.net/ImgLib2-Imaris-Bridge`.
 (See [this guide](https://imagej.net/update-sites/following) for how to activate update sites).
 
