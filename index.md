@@ -6,8 +6,7 @@ and Fiji/ImageJ2, without duplicating memory requirements.
 We focus on big (larger-than-RAM) images, for which both Imaris and ImgLib2
 provide sophisticated caching infrastructure.
 On the ImgLib2 side, we represent Imaris datasets as lazily cached tiled images -- image blocks, when they are
-first accessed, are retrieved from Imaris through the [*Imaris
-XT*](https://imaris.oxinst.com/open/) API and cached.
+first accessed, are retrieved from Imaris through the [*ImarisXT*](https://imaris.oxinst.com/open/) API and cached.
 Importantly, these images are both readable and writable.
 Modified blocks are persisted back to Imaris before they are evicted from
 the cache. (Imaris then in turn persists modified blocks to disk when they are
@@ -16,12 +15,12 @@ evicted from *its* cache).
 * TOC
 {:toc}
 
-Technically, ImgLib2-Imaris-Bridge exposes the [*Imaris XT*](https://imaris.oxinst.com/open/)
+Technically, ImgLib2-Imaris-Bridge exposes the [*ImarisXT*](https://imaris.oxinst.com/open/)
 interface as an [ImageJ2 Service](https://javadoc.scijava.org/ImageJ/net/imagej/ImageJService.html?is-external=true),
 providing easy access to running Imaris applications and opened datasets.
-Note, that this service only covers parts of Imaris XT that are relevant for
+Note, that this service only covers parts of ImarisXT that are relevant for
 image data. (Of course, the ImarisService provides full access to the underlying
-Imaris XT proxies. But only the image-related subset is wrapped in a "imglibby"
+ImarisXT proxies. But only the image-related subset is wrapped in a "imglibby"
 convenience layer.)
 
 For convenient access to spot detection, surfaces, and other un-related
@@ -77,6 +76,8 @@ bdv.util.BdvStackSource@17add147
 
 
 # Installation
+
+To use the ImgLib2-Imaris-Bridge ensure that you have a license for the ImarisXT API as part of your Imaris license.
 
 In Fiji, activate the update site "ImgLib2-Imaris-Bridge" `https://sites.imagej.net/ImgLib2-Imaris-Bridge`.
 (See [this guide](https://imagej.net/update-sites/following) for how to activate update sites).
