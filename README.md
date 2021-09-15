@@ -133,7 +133,7 @@ ImarisService imaris = context.getService(ImarisService.class);
 From the `ImarisService` you can get a handle to the running Imaris instance using
 [`ImarisService.getApplication()`](https://imaris.github.io/imglib2-imaris-bridge/apidocs//com/bitplane/xt/ImarisService.html#getApplication--)
 ```java
-ImarisService imaris;
+// ImarisService imaris created as described above
 ImarisApplication app = imaris.getApplication();
 ```
 
@@ -367,6 +367,9 @@ should be no concurrent modifications made to the `ImarisDataset`, while
 [ExampleIJ2](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleIJ2.java)
 shows a minimal stand-alone Java program, using `ImarisService` to show the current Imaris dataset in a new ImageJ instance.
 ```java
+import com.bitplane.xt.*;
+import net.imagej.ImageJ;
+
 public class ExampleIJ2
 {
     public static void main( final String[] args )
@@ -402,6 +405,10 @@ In particular, this illustrates how to get the `ImarisService` from an `net.imag
 [ExampleBdv](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleBdv.java)
 shows a minimal stand-alone Java program, using `ImarisService` to show the current Imaris dataset in BigDataViewer.
 ```java
+import bdv.util.*;
+import com.bitplane.xt.*;
+import org.scijava.Context;
+
 public class ExampleBdv
 {
     public static void main( String[] args )
@@ -431,6 +438,11 @@ In particular, this illustrates how to get the `ImarisService` from a new SciJav
 [ExampleCreateDataset](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/ExampleCreateDataset.java)
 shows how to create a new `ImarisDataset`, fill it with values, and show it in Imaris.
 ```Java
+import com.bitplane.xt.*;
+import net.imglib2.Cursor;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import org.scijava.Context;
+
 public class ExampleCreateDataset
 {
     public static void main( String[] args )
@@ -493,6 +505,13 @@ uses the ImageJ `OpService` to run a Gauss smoothing in X direction on the curre
 (running in-place, and modifying the dataset).
 It shows up in the Fiji menu *Plugins > Imaris > Smooth X*.
 ```Java
+import com.bitplane.xt.*;
+import net.imagej.ImageJ;
+import net.imagej.ops.OpService;
+import net.imglib2.img.Img;
+import org.scijava.command.Command;
+import org.scijava.plugin.*;
+
 @Plugin( type = Command.class, menuPath = "Plugins>Imaris>Smooth X" )
 public class ExampleOp implements Command
 {
