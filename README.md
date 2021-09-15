@@ -7,19 +7,18 @@ and Fiji/ImageJ2, without duplicating memory requirements.
 We focus on big (larger-than-RAM) images, for which both Imaris and ImgLib2
 provide sophisticated caching infrastructure.
 On the ImgLib2 side, we represent Imaris datasets as lazily cached tiled images -- image blocks, when they are
-first accessed, are retrieved from Imaris through the [*Imaris
-XT*](https://imaris.oxinst.com/open/) API and cached.
+first accessed, are retrieved from Imaris through the [*ImarisXT*](https://imaris.oxinst.com/open/) API and cached.
 Importantly, these images are both readable and writable.
 Modified blocks are persisted back to Imaris before they are evicted from
 the cache. (Imaris then in turn persists modified blocks to disk when they are
 evicted from *its* cache).
 
-Technically, ImgLib2-Imaris-Bridge exposes the [*Imaris XT*](https://imaris.oxinst.com/open/)
+Technically, ImgLib2-Imaris-Bridge exposes the [*ImarisXT*](https://imaris.oxinst.com/open/)
 interface as an [ImageJ2 Service](https://javadoc.scijava.org/ImageJ/net/imagej/ImageJService.html?is-external=true),
 providing easy access to running Imaris applications and opened datasets.
-Note, that this service only covers parts of Imaris XT that are relevant for
+Note, that this service only covers parts of ImarisXT that are relevant for
 image data. (Of course, the ImarisService provides full access to the underlying
-Imaris XT proxies. But only the image-related subset is wrapped in a "imglibby"
+ImarisXT proxies. But only the image-related subset is wrapped in a "imglibby"
 convenience layer.)
 
 For convenient access to spot detection, surfaces, and other un-related
@@ -100,7 +99,7 @@ For developers, the Maven GAV is
 To start, you need an instance of
 [`ImarisService`](https://imaris.github.io/imglib2-imaris-bridge/apidocs//com/bitplane/xt/ImarisService.html).
 [`ImarisService`](https://imaris.github.io/imglib2-imaris-bridge/apidocs//com/bitplane/xt/ImarisService.html)
-connects to the Imaris XT API, giving you access to the running Imaris
+connects to the ImarisXT API, giving you access to the running Imaris
 instance(s)
 ([`ImarisApplication`](https://imaris.github.io/imglib2-imaris-bridge/apidocs//com/bitplane/xt/ImarisApplication.html)).
 
@@ -150,13 +149,13 @@ or get a specific instance by
 
 ### ImarisApplication API
 [`ImarisApplication`](https://imaris.github.io/imglib2-imaris-bridge/apidocs//com/bitplane/xt/ImarisApplication.html)
-wraps Imaris XT `IApplicationPrx` and represents one particular Imaris instance.
+wraps ImarisXT `IApplicationPrx` and represents one particular Imaris instance.
 
 [`ImarisApplication`](https://imaris.github.io/imglib2-imaris-bridge/apidocs//com/bitplane/xt/ImarisApplication.html)
-comprises methods that mirror methods of the Imaris XT `IApplicationPrx` proxy,
+comprises methods that mirror methods of the ImarisXT `IApplicationPrx` proxy,
 for creating/getting/showing datasets. You can also use
 [`ImarisApplication.getIApplicationPrx()`](https://imaris.github.io/imglib2-imaris-bridge/apidocs//com/bitplane/xt/ImarisApplication.html#getIApplicationPrx--)
-to access the underlying Imaris XT proxy for accessing functionality not covered
+to access the underlying ImarisXT proxy for accessing functionality not covered
 by ImgLib2-Imaris-Bridge (either directly or through
 [*EasyXT*](https://github.com/BIOP/EasyXT-FIJI)).
 
@@ -210,7 +209,7 @@ as a shortcut to set the image at index 0.
 `IDataSetPrx` and represents an Imaris dataset. This is where the meat of
 ImgLib2-Imaris-Bridge is. The Imaris dataset is wrapped into an ImgLib2 `CachedCellImg`
 that is both readable and writable. Data is lazy-loaded from Imaris -- image
-blocks, when they are first accessed, are retrieved through the Imaris XT API
+blocks, when they are first accessed, are retrieved through the ImarisXT API
 and cached. Modified image blocks are persisted back to Imaris before they are
 evicted from the cache. (Imaris then in turn persists modified blocks to disk
 when they are evicted from its cache.)
@@ -296,7 +295,7 @@ The main thing to keep in mind is that when manipulating the calibration of an
 or
 [`ImarisDataset.setCalibration(...)`](https://imaris.github.io/imglib2-imaris-bridge/apidocs//com/bitplane/xt/ImarisDataset.html#setCalibration-com.bitplane.xt.DatasetCalibration-)
 min coordinates refer to voxel centers. `ImarisDataset` translates this to/from
-Imaris convention when talking to Imaris XT.
+Imaris convention when talking to ImarisXT.
 
 #### Specifying additional ImarisDataset options
 Methods for
