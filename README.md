@@ -1,8 +1,7 @@
 [![](https://github.com/imaris/imglib2-imaris-bridge/actions/workflows/build-main.yml/badge.svg)](https://github.com/imaris/imglib2-imaris-bridge/actions/workflows/build-main.yml)
+[![](https://img.shields.io/badge/apidocs-9.7.2-success)](https://imaris.github.io/imglib2-imaris-bridge/apidocs)
 
-# ImgLib2-Imaris-Bridge
-
-## Introduction
+# [ImgLib2-Imaris-Bridge](https://imaris.github.io/imglib2-imaris-bridge)
 
 ImgLib2-Imaris-Bridge provides arbitrarily large images that are shared between Imaris
 and Fiji/ImageJ2, without duplicating memory requirements.
