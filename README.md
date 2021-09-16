@@ -1,3 +1,5 @@
+[![](https://github.com/imaris/imglib2-imaris-bridge/actions/workflows/build-main.yml/badge.svg)](https://github.com/imaris/imglib2-imaris-bridge/actions/workflows/build-main.yml)
+
 # ImgLib2-Imaris-Bridge
 
 ## Introduction
