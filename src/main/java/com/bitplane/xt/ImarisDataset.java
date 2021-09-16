@@ -49,6 +49,7 @@ import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imglib2.EuclideanSpace;
 import net.imglib2.Volatile;
+import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.display.ColorTable8;
 import net.imglib2.img.Img;
 import net.imglib2.img.basictypeaccess.volatiles.VolatileArrayDataAccess;
@@ -482,7 +483,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	 * The image is a {@code CachedCellImg} which loads blocks from Imaris, and
 	 * writes modified blocks back to Imaris.
 	 */
-	public Img< T > asImg()
+	public CachedCellImg< T, ? > asImg()
 	{
 		return imagePyramid.getImg( 0 );
 	}
@@ -544,6 +545,7 @@ public class ImarisDataset< T extends NativeType< T > & RealType< T > > implemen
 	{
 		return datasetDimensions.getAxisOrder().numDimensions();
 	}
+
 	/**
 	 * Get the number of levels in the resolution pyramid.
 	 */
