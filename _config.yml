@@ -4,3 +4,4 @@ theme: jekyll-theme-cayman
 url: https://imaris.github.io
 baseurl: /imglib2-imaris-bridge
 markdown: kramdown
+apidoc_version: 9.7.2.0
