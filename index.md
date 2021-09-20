@@ -87,7 +87,7 @@ For developers, the Maven GAV is
 <dependency>
     <groupId>com.bitplane</groupId>
     <artifactId>imglib2-imaris-bridge</artifactId>
-    <version>9.7.2</version>
+    <version>9.7.2.0</version>
 <dependency>
 ```
 
