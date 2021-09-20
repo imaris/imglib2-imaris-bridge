@@ -1,5 +1,5 @@
 [![](https://github.com/imaris/imglib2-imaris-bridge/actions/workflows/build-main.yml/badge.svg)](https://github.com/imaris/imglib2-imaris-bridge/actions/workflows/build-main.yml)
-[![](https://img.shields.io/badge/apidocs-9.7.2-success)](https://imaris.github.io/imglib2-imaris-bridge/apidocs)
+[![](https://img.shields.io/badge/apidocs-9.7.2.0-success)](https://imaris.github.io/imglib2-imaris-bridge/apidocs)
 
 # [ImgLib2-Imaris-Bridge](https://imaris.github.io/imglib2-imaris-bridge)
 
@@ -87,7 +87,7 @@ For developers, the Maven GAV is
 <dependency>
     <groupId>com.bitplane</groupId>
     <artifactId>imglib2-imaris-bridge</artifactId>
-    <version>9.7.2</version>
+    <version>9.7.2.0</version>
 <dependency>
 ```
 
