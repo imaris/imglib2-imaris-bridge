@@ -438,7 +438,7 @@ In particular, this illustrates how to get the `ImarisService` from a new SciJav
 ## Creating a new Imaris dataset
 [ExampleCreateDataset](https://github.com/imaris/imglib2-imaris-bridge/blob/master/src/test/java/com/bitplane/xt/examples/ExampleCreateDataset.java)
 shows how to create a new `ImarisDataset`, fill it with values, and show it in Imaris.
-```Java
+```java
 import com.bitplane.xt.*;
 import net.imglib2.Cursor;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -505,7 +505,7 @@ command
 uses the ImageJ `OpService` to run a Gauss smoothing in X direction on the current Imaris dataset
 (running in-place, and modifying the dataset).
 It shows up in the Fiji menu *Plugins > Imaris > Smooth X*.
-```Java
+```java
 import com.bitplane.xt.*;
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
