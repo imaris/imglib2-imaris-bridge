@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.imagej.DatasetService;
 import org.scijava.Priority;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -53,6 +54,9 @@ import static Imaris.IApplicationPrxHelper.checkedCast;
 @Plugin( type = Service.class, priority = Priority.LOW )
 public class DefaultImarisService extends AbstractService implements ImarisService
 {
+	@Parameter
+	private DatasetService datasetService;
+
 	@Override
 	public synchronized void disconnect()
 	{
