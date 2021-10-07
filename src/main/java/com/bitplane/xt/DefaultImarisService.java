@@ -73,21 +73,15 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	@Override
 	public synchronized ImarisApplication getApplication()
 	{
-		final List< ImarisApplication > apps = getApplications();
-		return apps.isEmpty() ? null : apps.get( 0 );
+		final IServerPrx server = getServer();
+		final int applicationId = server.GetObjectID( 0 );
+		return getApplicationByID( applicationId, server );
 	}
 
 	@Override
 	public synchronized ImarisApplication getApplicationByID( int applicationId )
 	{
-		ImarisApplication app = idToApp.get( applicationId );
-		if ( app != null )
-		{
-			return app;
-		}
-
-		tryAddApplication( applicationId, getServer() );
-		return idToApp.get( applicationId );
+		return getApplicationByID( applicationId, getServer() );
 	}
 
 	//
@@ -100,11 +94,7 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 
 	private void refreshApplications()
 	{
-		final Map< Integer, ImarisApplication > existing = new HashMap<>();
-		existing.putAll( idToApp );
-
 		apps.clear();
-		idToApp.clear();
 
 		final IServerPrx server = getServer();
 		final int numObjects = server.GetNumberOfObjects();
@@ -114,33 +104,38 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 		for ( int i = 0; i < numObjects; i++ )
 		{
 			final int applicationId = server.GetObjectID( i );
-			ImarisApplication app = existing.get( applicationId );
-			if ( app == null )
-			{
-				tryAddApplication( applicationId, server );
-			}
-			else
-			{
+			final ImarisApplication app = getApplicationByID( applicationId, server );
+			if ( app != null )
 				apps.add( app );
-				idToApp.put( applicationId, app );
-			}
 		}
 	}
 
-	private void tryAddApplication( int applicationId, IServerPrx server )
+	private ImarisApplication getApplicationByID( int applicationId, IServerPrx server )
+	{
+		ImarisApplication app = idToApp.get( applicationId );
+		if ( app == null )
+		{
+			app = initApplication( applicationId, server );
+			if ( app != null )
+				idToApp.put( applicationId, app );
+		}
+		return app;
+	}
+
+	private ImarisApplication initApplication( int applicationId, IServerPrx server )
 	{
 		try
 		{
 			final IApplicationPrx iApplicationPrx = checkedCast( server.GetObject( applicationId ) );
-			ImarisApplication app = new DefaultImarisApplication( iApplicationPrx, applicationId );
+			final ImarisApplication app = new DefaultImarisApplication( iApplicationPrx, applicationId );
 			context().inject( app );
-			apps.add( app );
-			idToApp.put( applicationId, app );
+			return app;
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
+		return null;
 	}
 
 	private IceClient mIceClient;
