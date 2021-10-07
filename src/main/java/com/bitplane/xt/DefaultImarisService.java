@@ -115,27 +115,30 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 		{
 			final int applicationId = server.GetObjectID( i );
 			ImarisApplication app = existing.get( applicationId );
-			if ( app != null )
+			if ( app == null )
+			{
+				tryAddApplication( applicationId, server );
+			}
+			else
 			{
 				apps.add( app );
 				idToApp.put( applicationId, app );
-			}
-			else {
-				tryAddApplication( applicationId, server );
 			}
 		}
 	}
 
 	private void tryAddApplication( int applicationId, IServerPrx server )
 	{
-		try {
+		try
+		{
 			final IApplicationPrx iApplicationPrx = checkedCast( server.GetObject( applicationId ) );
 			ImarisApplication app = new DefaultImarisApplication( iApplicationPrx, applicationId );
 			context().inject( app );
 			apps.add( app );
 			idToApp.put( applicationId, app );
 		}
-		catch (Exception e) {
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 	}
