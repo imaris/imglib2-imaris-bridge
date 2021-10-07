@@ -80,7 +80,13 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	@Override
 	public synchronized ImarisApplication getApplicationByID( int applicationId )
 	{
-		refreshApplications();
+		ImarisApplication app = idToApp.get( applicationId );
+		if ( app != null )
+		{
+			return app;
+		}
+
+		tryAddApplication( applicationId, getServer() );
 		return idToApp.get( applicationId );
 	}
 
@@ -109,14 +115,28 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 		{
 			final int applicationId = server.GetObjectID( i );
 			ImarisApplication app = existing.get( applicationId );
-			if ( app == null )
+			if ( app != null )
 			{
-				final IApplicationPrx iApplicationPrx = checkedCast( server.GetObject( applicationId ) );
-				app = new DefaultImarisApplication( iApplicationPrx, applicationId );
-				context().inject( app );
+				apps.add( app );
+				idToApp.put( applicationId, app );
 			}
+			else {
+				tryAddApplication( applicationId, server );
+			}
+		}
+	}
+
+	private void tryAddApplication( int applicationId, IServerPrx server )
+	{
+		try {
+			final IApplicationPrx iApplicationPrx = checkedCast( server.GetObject( applicationId ) );
+			ImarisApplication app = new DefaultImarisApplication( iApplicationPrx, applicationId );
+			context().inject( app );
 			apps.add( app );
 			idToApp.put( applicationId, app );
+		}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
