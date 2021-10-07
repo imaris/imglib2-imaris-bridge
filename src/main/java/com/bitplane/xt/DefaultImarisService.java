@@ -36,7 +36,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.imagej.DatasetService;
 import org.scijava.Priority;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -54,9 +53,6 @@ import static Imaris.IApplicationPrxHelper.checkedCast;
 @Plugin( type = Service.class, priority = Priority.LOW )
 public class DefaultImarisService extends AbstractService implements ImarisService
 {
-	@Parameter
-	private DatasetService datasetService;
-
 	@Override
 	public synchronized void disconnect()
 	{
@@ -66,8 +62,19 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	@Override
 	public synchronized List< ImarisApplication > getApplications()
 	{
-		refreshApplications();
-		return unmodifiableApps;
+		final List< ImarisApplication > apps = new ArrayList<>();
+
+		final IServerPrx server = getServer();
+		final int numObjects = server.GetNumberOfObjects();
+		for ( int i = 0; i < numObjects; i++ )
+		{
+			final int applicationId = server.GetObjectID( i );
+			final ImarisApplication app = getApplicationByID( applicationId, server );
+			if ( app != null )
+				apps.add( app );
+		}
+
+		return apps;
 	}
 
 	@Override
@@ -88,27 +95,7 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	// ========================================================================
 	//
 
-	private final List< ImarisApplication > apps = new ArrayList<>();
-	private final List< ImarisApplication > unmodifiableApps = Collections.unmodifiableList( apps );
 	private final Map< Integer, ImarisApplication > idToApp = new HashMap<>();
-
-	private void refreshApplications()
-	{
-		apps.clear();
-
-		final IServerPrx server = getServer();
-		final int numObjects = server.GetNumberOfObjects();
-		if ( numObjects < 0 )
-			throw error( "Server returned invalid number of objects" );
-
-		for ( int i = 0; i < numObjects; i++ )
-		{
-			final int applicationId = server.GetObjectID( i );
-			final ImarisApplication app = getApplicationByID( applicationId, server );
-			if ( app != null )
-				apps.add( app );
-		}
-	}
 
 	private ImarisApplication getApplicationByID( int applicationId, IServerPrx server )
 	{
@@ -167,7 +154,6 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 				e.printStackTrace();
 			}
 			mIceClient = null;
-			apps.clear();
 			idToApp.clear();
 		}
 	}
