@@ -66,58 +66,67 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 	@Override
 	public synchronized List< ImarisApplication > getApplications()
 	{
-		refreshApplications();
-		return unmodifiableApps;
+		final List< ImarisApplication > apps = new ArrayList<>();
+
+		final IServerPrx server = getServer();
+		final int numObjects = server.GetNumberOfObjects();
+		for ( int i = 0; i < numObjects; i++ )
+		{
+			final int applicationId = server.GetObjectID( i );
+			final ImarisApplication app = getApplicationByID( applicationId, server );
+			if ( app != null )
+				apps.add( app );
+		}
+
+		return apps;
 	}
 
 	@Override
 	public synchronized ImarisApplication getApplication()
 	{
-		final List< ImarisApplication > apps = getApplications();
-		return apps.isEmpty() ? null : apps.get( 0 );
+		final IServerPrx server = getServer();
+		final int applicationId = server.GetObjectID( 0 );
+		return getApplicationByID( applicationId, server );
 	}
 
 	@Override
 	public synchronized ImarisApplication getApplicationByID( int applicationId )
 	{
-		refreshApplications();
-		return idToApp.get( applicationId );
+		return getApplicationByID( applicationId, getServer() );
 	}
 
 	//
 	// ========================================================================
 	//
 
-	private final List< ImarisApplication > apps = new ArrayList<>();
-	private final List< ImarisApplication > unmodifiableApps = Collections.unmodifiableList( apps );
 	private final Map< Integer, ImarisApplication > idToApp = new HashMap<>();
 
-	private void refreshApplications()
+	private ImarisApplication getApplicationByID( int applicationId, IServerPrx server )
 	{
-		final Map< Integer, ImarisApplication > existing = new HashMap<>();
-		existing.putAll( idToApp );
-
-		apps.clear();
-		idToApp.clear();
-
-		final IServerPrx server = getServer();
-		final int numObjects = server.GetNumberOfObjects();
-		if ( numObjects < 0 )
-			throw error( "Server returned invalid number of objects" );
-
-		for ( int i = 0; i < numObjects; i++ )
+		ImarisApplication app = idToApp.get( applicationId );
+		if ( app == null )
 		{
-			final int applicationId = server.GetObjectID( i );
-			ImarisApplication app = existing.get( applicationId );
-			if ( app == null )
-			{
-				final IApplicationPrx iApplicationPrx = checkedCast( server.GetObject( applicationId ) );
-				app = new DefaultImarisApplication( iApplicationPrx, applicationId );
-				context().inject( app );
-			}
-			apps.add( app );
-			idToApp.put( applicationId, app );
+			app = initApplication( applicationId, server );
+			if ( app != null )
+				idToApp.put( applicationId, app );
 		}
+		return app;
+	}
+
+	private ImarisApplication initApplication( int applicationId, IServerPrx server )
+	{
+		try
+		{
+			final IApplicationPrx iApplicationPrx = checkedCast( server.GetObject( applicationId ) );
+			final ImarisApplication app = new DefaultImarisApplication( iApplicationPrx, applicationId );
+			context().inject( app );
+			return app;
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	private IceClient mIceClient;
@@ -149,7 +158,6 @@ public class DefaultImarisService extends AbstractService implements ImarisServi
 				e.printStackTrace();
 			}
 			mIceClient = null;
-			apps.clear();
 			idToApp.clear();
 		}
 	}
