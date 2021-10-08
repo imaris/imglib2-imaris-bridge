@@ -10,7 +10,7 @@
 
 	<groupId>com.bitplane</groupId>
 	<artifactId>imglib2-imaris-bridge</artifactId>
-	<version>9.7.2.1-SNAPSHOT</version>
+	<version>9.7.2.1</version>
 
 	<name>imglib2-imaris-bridge</name>
 	<description>Expose the Imaris XT interface as an ImageJ2 service backed by ImgLib2.</description>
@@ -63,7 +63,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/imaris/imglib2-imaris-bridge</connection>
 		<developerConnection>scm:git:git@github.com:imaris/imglib2-imaris-bridge</developerConnection>
-		<tag>HEAD</tag>
+		<tag>imglib2-imaris-bridge-9.7.2.1</tag>
 		<url>https://github.com/imaris/imglib2-imaris-bridge</url>
 	</scm>
 	<issueManagement>
