@@ -31,6 +31,7 @@ package com.bitplane.xt.util;
 import Imaris.Error;
 import Imaris.IDataSetPrx;
 import Imaris.cColorTable;
+import java.util.Arrays;
 import net.imglib2.converter.Converter;
 import net.imglib2.display.ColorTable8;
 import net.imglib2.display.RealARGBColorConverter;
@@ -85,9 +86,27 @@ public final class ColorTableUtils
 	{
 		final double typeMin = dataset.GetChannelRangeMin( channel );
 		final double typeMax = dataset.GetChannelRangeMax( channel );
-		final RealARGBColorConverter< T > converter = RealARGBColorConverter.create( type, typeMin, typeMax );
-		converter.setColor( getChannelColor( dataset, channel ) );
-		return converter;
+
+		final cColorTable vColorTable = dataset.GetChannelColorTable( channel );
+		if ( vColorTable != null && vColorTable.mColorRGB.length > 0 )
+		{
+			final int[] lut = new int[ vColorTable.mColorRGB.length ];
+			final int alpha = ( 255 - UnsignedByteType.getUnsignedByte( vColorTable.mAlpha ) ) << 24;
+			Arrays.setAll( lut, i -> {
+				final int rgba = vColorTable.mColorRGB[ i ];
+				final int r = rgba & 0xff;
+				final int g = ( rgba >> 8 ) & 0xff;
+				final int b = ( rgba >> 16 ) & 0xff;
+				return ARGBType.rgba( r, g, b, alpha );
+			} );
+			return new ColorTableConverter<>( typeMin, typeMax, lut );
+		}
+		else
+		{
+			final RealARGBColorConverter< T > converter = RealARGBColorConverter.create( type, typeMin, typeMax );
+			converter.setColor( getChannelColor( dataset, channel ) );
+			return converter;
+		}
 	}
 
 
@@ -126,8 +145,7 @@ public final class ColorTableUtils
 		final int[] vRGB = aColor.mColorRGB;
 		final byte alpha = UnsignedByteType.getCodedSignedByte(
 				255 - UnsignedByteType.getUnsignedByte(aColor.mAlpha));
-		final int vSize = 256;
-		final int vSourceSize = vRGB.length;
+		final int vSize = vRGB.length;
 
 		final byte[] rLut = new byte[ vSize ];
 		final byte[] gLut = new byte[ vSize ];
@@ -137,8 +155,7 @@ public final class ColorTableUtils
 		final int[] vRGBA = new int[ 4 ];
 		for ( int i = 0; i < vSize; ++i )
 		{
-			final int vIndex = ( i * vSourceSize ) / vSize;
-			components( vRGB[ vIndex ], vRGBA );
+			components( vRGB[ i ], vRGBA );
 			rLut[ i ] = ( byte ) ( vRGBA[ 0 ] );
 			gLut[ i ] = ( byte ) ( vRGBA[ 1 ] );
 			bLut[ i ] = ( byte ) ( vRGBA[ 2 ] );
