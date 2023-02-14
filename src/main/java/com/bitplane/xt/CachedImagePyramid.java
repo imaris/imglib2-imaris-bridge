@@ -30,10 +30,10 @@ package com.bitplane.xt;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
+import bdv.cache.SharedQueue;
 import bdv.img.cache.CreateInvalidVolatileCell;
 import bdv.img.cache.VolatileCachedCellImg;
 import bdv.util.AxisOrder;
-import bdv.util.volatiles.SharedQueue;
 import bdv.util.volatiles.VolatileTypeMatcher;
 import com.bitplane.xt.util.ImarisDirtyLoaderRemover;
 import com.bitplane.xt.util.ImarisLoader;

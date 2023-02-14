@@ -34,6 +34,7 @@ import net.imglib2.cache.Cache;
 import net.imglib2.cache.IoSync;
 import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.img.ImgFactory;
+import net.imglib2.img.basictypeaccess.DataAccess;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 import net.imglib2.img.cell.LazyCellImg;
@@ -53,7 +54,7 @@ import net.imglib2.util.Fraction;
  *
  * @author Tobias Pietzsch
  */
-public class ImarisCachedLabelImg< T extends NativeType< T >, A > extends CachedCellImg< T, A >
+public class ImarisCachedLabelImg< T extends NativeType< T >, A extends DataAccess > extends CachedCellImg< T, A >
 		implements ImarisImg
 {
 	private final ImarisCachedLabelImgFactory< T > factory;
