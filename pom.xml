@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>31.1.0</version>
+		<version>36.0.0</version>
 	</parent>
 
 	<groupId>com.bitplane</groupId>
@@ -87,9 +87,6 @@
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>Bitplane AG</license.copyrightOwners>
 
-		<bigdataviewer-core.version>10.2.1</bigdataviewer-core.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-29</bigdataviewer-vistools.version>
-
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 	</properties>
@@ -101,6 +98,14 @@
 			<version>9.7.2</version>
 		</dependency>
 
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-cache</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>

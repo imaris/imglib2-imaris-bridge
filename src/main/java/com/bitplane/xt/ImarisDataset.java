@@ -30,9 +30,9 @@ package com.bitplane.xt;
 
 import Imaris.Error;
 import Imaris.IDataSetPrx;
+import bdv.cache.SharedQueue;
 import bdv.util.AxisOrder;
 import bdv.util.ChannelSources;
-import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import com.bitplane.xt.util.ColorTableUtils;

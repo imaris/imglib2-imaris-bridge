@@ -55,6 +55,7 @@ import net.imglib2.img.ImgFactory;
 import net.imglib2.img.NativeImg;
 import net.imglib2.img.NativeImgFactory;
 import net.imglib2.img.basictypeaccess.ArrayDataAccessFactory;
+import net.imglib2.img.basictypeaccess.DataAccess;
 import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
@@ -241,7 +242,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	// creates new Imaris dataset
 	// initializes cells using the given backingLoader
 	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
-	public < A > ImarisCachedCellImg< T, A > createWithCacheLoader( final long[] dimensions, final CacheLoader< Long, Cell< A > > backingLoader )
+	public < A extends DataAccess > ImarisCachedCellImg< T, A > createWithCacheLoader( final long[] dimensions, final CacheLoader< Long, Cell< A > > backingLoader )
 	{
 		return create( null, dimensions, backingLoader, null, type(), null );
 	}
@@ -249,7 +250,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	// creates new Imaris dataset
 	// initializes cells using the given backingLoader
 	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
-	public < A > ImarisCachedCellImg< T, A > createWithCacheLoader( final Dimensions dimensions, final CacheLoader< Long, Cell< A > > backingLoader )
+	public < A extends DataAccess > ImarisCachedCellImg< T, A > createWithCacheLoader( final Dimensions dimensions, final CacheLoader< Long, Cell< A > > backingLoader )
 	{
 		return create( null, Intervals.dimensionsAsLongArray( dimensions ), backingLoader, null, type(), null );
 	}
@@ -258,7 +259,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	// initializes cells using the given backingLoader
 	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
 	// additional options specify cache type, access type, cell dimensions, etc
-	public < A > ImarisCachedCellImg< T, A > createWithCacheLoader( final long[] dimensions, final CacheLoader< Long, Cell< A > > backingLoader, final ImarisCachedCellImgOptions additionalOptions )
+	public < A extends DataAccess > ImarisCachedCellImg< T, A > createWithCacheLoader( final long[] dimensions, final CacheLoader< Long, Cell< A > > backingLoader, final ImarisCachedCellImgOptions additionalOptions )
 	{
 		return create( null, dimensions, backingLoader, null, type(), additionalOptions );
 	}
@@ -267,7 +268,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	// initializes cells using the given backingLoader
 	// once loaded, cells are pushed to Imaris when evicted, and retrieved from Imaris when they are accessed again.
 	// additional options specify cache type, access type, cell dimensions, etc
-	public < A > ImarisCachedCellImg< T, A > createWithCacheLoader( final Dimensions dimensions, final CacheLoader< Long, Cell< A > > backingLoader, final ImarisCachedCellImgOptions additionalOptions )
+	public < A extends DataAccess > ImarisCachedCellImg< T, A > createWithCacheLoader( final Dimensions dimensions, final CacheLoader< Long, Cell< A > > backingLoader, final ImarisCachedCellImgOptions additionalOptions )
 	{
 		return create( null, Intervals.dimensionsAsLongArray( dimensions ), backingLoader, null, type(), additionalOptions );
 	}
@@ -347,7 +348,7 @@ public class ImarisCachedCellImgFactory< T extends NativeType< T > > extends Nat
 	 * 		additional options that partially override general factory
 	 * 		options, or {@code null}.
 	 */
-	private < A > ImarisCachedCellImg< T, A > create(
+	private < A extends DataAccess > ImarisCachedCellImg< T, A > create(
 			final IDataSetPrx dataset,
 			final long[] dimensions,
 			final CacheLoader< Long, ? extends Cell< ? extends A > > cacheLoader,

@@ -48,6 +48,7 @@ import net.imglib2.img.ImgFactory;
 import net.imglib2.img.NativeImg;
 import net.imglib2.img.NativeImgFactory;
 import net.imglib2.img.basictypeaccess.ArrayDataAccessFactory;
+import net.imglib2.img.basictypeaccess.DataAccess;
 import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
@@ -202,7 +203,7 @@ public class ImarisCachedProbabilitiesImgFactory< T extends NativeType< T > > ex
 	 * 		additional options that partially override general factory
 	 * 		options, or {@code null}.
 	 */
-	private < A > ImarisCachedProbabilitiesImg< T, A > create(
+	private < A extends DataAccess > ImarisCachedProbabilitiesImg< T, A > create(
 			final IDataSetPrx dataset,
 			final long[] dimensions,
 			final CacheLoader< Long, ? extends Cell< ? extends A > > cacheLoader,
